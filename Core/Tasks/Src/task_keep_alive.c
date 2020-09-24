@@ -32,7 +32,7 @@ void taskKeepAlive(void const * argument){
         }
         if(!(timeout % 5400) && !isRxNewFirmware){
             xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-            while(!simIsGoodCSQ(&csq)){
+            while((csq = simCheckCSQ()) < 10 && csq > 99){
                 osDelay(2000);
             }
             prevRtcTime = getTimeStamp();

@@ -23,57 +23,22 @@ extern CircularBuffer circBufPckgEnergy;
 /*static u8 lenLog[] = {SD_LEN_LOG_ENERGY, SD_LEN_LOG_TEMP, SD_LEN_LOG_RSSI};
 static char* fNamesLog[NUM_READ_FILES] = {FILE_LOG_ENERGY, FILE_LOG_TEMP, FILE_LOG_RSSI};
 static char* fNamesAddr[NUM_READ_FILES] = {FILE_ADDR_ENERGY, FILE_ADDR_TEMP, FILE_ADDR_RSSI};*/
-void bkteInit(u32* pTime){
-
+void bkteInit(){
 	char* retMsg;
-	char* token;
-	/*char posAddr[SD_LEN_ADDR];*/
-	u8 tmpSimBadResponse = 0;
-	ds2482Init();
-
+	
 	HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_SET);
 	bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
 
 	for(u8 i = 0; i < 3; i++)
 		bkte.idMCU[i] = getFlashData(BKTE_ADDR_ID_MCU + (i * 4));
-	printf("%08x%08x%08x\r\n",
-               (uint)bkte.idMCU[0], (uint)bkte.idMCU[1], (uint)bkte.idMCU[2]);
+	D(printf("%08x%08x%08x\r\n",
+               (uint)bkte.idMCU[0], (uint)bkte.idMCU[1], (uint)bkte.idMCU[2]));
 	bkte.idTrain = BKTE_ID_TRAIN;
 	bkte.idTrainCar = BKTE_ID_TRAINCAR;
 	bkte.idReceiver = 1;
 	bkte.idDev = BKTE_ID_DEV_BKTE;
 	bkte.idFirmware = BKTE_ID_FIRMWARE;
 	bkte.idBoot = BKTE_ID_BOOT;
-
-	simOn();
-	osDelay(100);
-	while(1){
-		simInit();
-		retMsg = simTxATCommand("AT\r\n",
-				strlen("AT\r\n"),
-				&gsmUartInfo);
-		token = strtok(retMsg, SIM_SEPARATOR_TEXT);
-		if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
-		printf("simInit AT: %s\r\n", token);
-		HAL_GPIO_TogglePin(LED4R_GPIO_Port, LED4R_Pin);
-		if((strcmp(token, SIM_OK_TEXT)) != 0){
-			tmpSimBadResponse = (tmpSimBadResponse + 1) % 10;
-			if(!tmpSimBadResponse){
-				resetSim();
-				break;
-			}
-			osDelay(100);
-		} else {
-			break;
-		}
-	}
-	
-	HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4G_Pin, GPIO_PIN_SET);
-	httpWriteCommand(SIM_SAPBR, "1,1", 1, SIM_OK_TEXT);
-
-	*pTime = getServerTime();
-
-
 }
 
 u32 getServerTime(){
@@ -81,14 +46,14 @@ u32 getServerTime(){
 	u8 tmpSimBadResponse = 0;
 	char timestamp[LEN_TIMESTAMP + 1];
 	memset(timestamp, '\0', sizeof(timestamp));
-	printf("getServerTime()\r\n");
+	D(printf("getServerTime()\r\n"));
 	while(simGetDateTime(timestamp) != SIM_SUCCESS){
 		memset(timestamp, '\0', sizeof(timestamp));
-		printf("ERROR: bad time\r\n");
+		D(printf("ERROR: bad time\r\n"));
 //		HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_RESET);
 		tmpSimBadResponse = (tmpSimBadResponse + 1) % 10;
 		if(!tmpSimBadResponse){
-			resetSim();
+			simReset();
 			return 0;
 		}
 		osDelay(1000);
@@ -121,13 +86,13 @@ u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg){
 		if(pBuf[head] == BKTE_PREAMBLE_EN2 && pBuf[(head + 1) % szBuf] == BKTE_PREAMBLE_EN1){
 			crc = crc8(pBuf + 2 + head, 20);
 			if(crc == pBuf[head + szPckg - 2]){
-				printf("ok crc GNSSPCKG\r\n");
+				D(printf("ok crc GNSSPCKG\r\n"));
 				memcpy(pPckgGnss, pBuf + head, szPckg);
 				memset(pBuf + head, '\0', szPckg);
 				head += szPckg;
 				return 1;
 			} else {
-				printf("bad crc GNSSPCKG\r\n");
+				D(printf("bad crc GNSSPCKG\r\n"));
 			}
 		}
 		head++;

@@ -14,7 +14,7 @@ extern HttpUrl urls;
 extern PckgJsonEn pckgJsonEn;
 
 void taskWebExchange(void const * argument){
-    vTaskSuspend(webExchangeHandle);    
+    // vTaskSuspend(webExchangeHandle);    
 	PckgEnergy tmpPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
 	s16 delayPages;
 	u16 CNT_CUR_PAGES_TX;
@@ -24,9 +24,14 @@ void taskWebExchange(void const * argument){
 	u32 tmpTimeStamp;
 	offAllLeds();
 	vTaskSuspend(webExchangeHandle);
+	simOn();
+	simInit();
+	if(!getServerTime()){
+		D(printf("ERROR: BAD TIME\r\n"));
+	}
 	CNT_MAX_PAGES_TX = SZ_MAX_TX_DATA / spiFlash64.pgSz / 2 - 1;
 	simHttpInit(urls.addMeasure);
-	vTaskResume(keepAliveHandle);
+	// vTaskResume(keepAliveHandle);
 //	vTaskSuspend(getNewBinHandle);
 //	vTaskSuspend(webExchangeHandle);
 
@@ -77,7 +82,7 @@ void taskWebExchange(void const * argument){
 				xSemaphoreGive(mutexWriteToEnergyBufHandle);
 			}
 		}
-		printf("no pckg in spiflash\r\n");
+		D(printf("no pckg in spiflash\r\n"));
 		osDelay(3000);
 	}
 }
@@ -95,32 +100,30 @@ u8 sendDataToServer(){
 
 	while(cntHttpPostFail){
 
-		while(!simIsGoodCSQ(&csq)){
+		while((csq = simCheckCSQ()) < 10 && csq > 99){
 			osDelay(2000);
 			saveCsq(csq);
 		}
-
-		// saveCsq(csq);
 		
 		if((resCode = httpPost(pckgJsonEn.jsonEnTxBuf,
 			strlen(pckgJsonEn.jsonEnTxBuf), &pRxData, 10, 10000)) != SIM_SUCCESS){
-			printf("ERROR: httpPost()\r\n");
+			D(printf("ERROR: httpPost()\r\n"));
 			simHttpInit(urls.addMeasure);
 			cntHttpPostFail++;
 //			HAL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
 			if(cntHttpPostFail == 3){
-				resetSim();
+				simReset();
 			}else if(cntHttpPostFail == 4){
 				cntHttpPostFail = 0;
-				resetSim();
+				simReset();
 				ret = 1;
 			}	
 		} else{
 			cntHttpPostFail = 0;
-			printf("OK: httpPost()\r\n");
+			D(printf("OK: httpPost()\r\n"));
                         HAL_GPIO_TogglePin(LED2G_GPIO_Port, LED2G_Pin);
 			if((tmpIdFirmware = atoi(pRxData + 11)) != bkte.idFirmware && tmpIdFirmware > 0){
-				printf("New FIRMWARE v.:%d\r\n", (int)tmpIdFirmware);
+				D(printf("New FIRMWARE v.:%d\r\n", (int)tmpIdFirmware));
 				vTaskResume(getNewBinHandle);
 			}
 		  }

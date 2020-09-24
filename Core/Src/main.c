@@ -56,7 +56,7 @@
 
 /* USER CODE BEGIN PV */
 #include "../Utils/Inc/utils_bkte.h"
-#include "../Drivers/Inc/sim800.h"
+#include "../Drivers/Inc/simcom.h"
 #include "../Utils/Inc/circularBuffer.h"
 
 CircularBuffer rxUart1CircBuf = {.buf = NULL, .max = 0};
@@ -68,6 +68,8 @@ u8 uart1Buf[SZ_CIRCULAR_BUF];
 u8 SZ_PCKGENERGY = sizeof(PckgEnergy);
 
 BKTE bkte;
+static char arrUrlFileSz[70];
+HttpUrl urls;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -131,6 +133,10 @@ int main(void)
   };
   cBufInit(&rxUart1CircBuf, uart1Buf);
 	cBufInit(&circBufPckgEnergy, bufPckgEnergy);
+  ds2482Init();
+  urlsInit();
+  bkteInit();
+  uartInitInfo();
 //  simOn();
   /* USER CODE END 2 */
 
@@ -236,6 +242,14 @@ u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout){
 			D(printf("%s timeout: %d\r\n", waitStr, tout));
 	}
   return pFlags->isIrqIdle;
+}
+
+void urlsInit(){
+  sprintf(arrUrlFileSz, "%s%08x%08x%08x", URL_FILE_SZ, bkte.idMCU[0], bkte.idMCU[1], bkte.idMCU[2]);
+	urls.getSzSoft = arrUrlFileSz;
+	urls.getTime = URL_TIME;
+	urls.getPartFirmware = URL_GET_NEW_FIRMWARE;
+  urls.addMeasure = URL_MEASURE;
 }
 
 /* USER CODE END 4 */

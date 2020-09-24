@@ -12,6 +12,8 @@ void taskLora(void const * argument){
 	node.hspi = &hspi1;
 	node.config = &config;
 
+	vTaskSuspend(loraHandle);
+
 	HAL_GPIO_WritePin(RF_PWR_GPIO_Port, RF_PWR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED1R_GPIO_Port, LED1R_Pin, GPIO_PIN_SET);

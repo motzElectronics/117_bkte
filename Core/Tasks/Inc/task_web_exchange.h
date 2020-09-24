@@ -6,7 +6,7 @@
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Utils/Inc/circularBuffer.h"
 #include "../Drivers/Inc/spiflash.h"
-#include "../Drivers/Inc/sim800.h"
+#include "../Drivers/Inc/simcom.h"
 #include "../Utils/Inc/utils_json.h"
 
 u8 sendDataToServer();
