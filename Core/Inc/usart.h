@@ -47,22 +47,34 @@ void MX_USART6_UART_Init(void);
 #define UART_SZ_RX_RESPONSE			1500
 #define SZ_RX_UART1			66
 
-typedef UART_HandleTypeDef*	PtrHuart;
+#define USART_SZ_BUF_RX_USART6    1524
+#define USART_SZ_BUF_TX_USART6    1024
+
+#define USART_TIMEOUT             15000
+
+typedef UART_HandleTypeDef*	PHuart;
 typedef struct{
 	IrqFlags irqFlags;
-	u8	rxBuffer[UART_SZ_RX_RESPONSE];
-	PtrHuart pHuart;
+	u8*	pRxBuf;
+  u8* pTxBuf;
+  u16 szRxBuf;
+  u16 szTxBuf;
+  PHuart pHuart;
 }UartInfo;
 
+extern UartInfo uInfoSim;
 void setBaudRateUart(UART_HandleTypeDef *huart, u32 baudrate);
 //void rxUartSIM_IT();
-void txUart(char* data, u16 sz, UartInfo* pUInf);
+void uartTx(char* data, u16 sz, UartInfo* pUInf);
 //void txUartGNSS(char* data, u16 sz);
 void clearRx(UART_HandleTypeDef *huart);
 //void rxUart1_IT();
 
 void rxUart(UartInfo* pUInf);
 void rxUart1_IT();
+void uartRxDma(UartInfo* pUInf);
+void uartInitInfo();
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

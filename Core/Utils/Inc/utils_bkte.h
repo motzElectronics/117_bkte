@@ -13,7 +13,7 @@
 #include "FreeRTOS.h"
 
 #include "fatfs.h"
-#include "../Drivers/Inc/sim800.h"
+#include "../Drivers/Inc/simcom.h"
 #include "usart.h"
 #include "time.h"
 #include "stdlib.h"
@@ -177,7 +177,7 @@ typedef struct{
 }PckgUpdFirmware;
 
 
-void bkteInit(u32* pTime);
+void bkteInit();
 void getMaxNumDS1820(BKTE* pBkte);
 void resetTempLine(u8 numLine);
 void setTempLine(u8 numLine);

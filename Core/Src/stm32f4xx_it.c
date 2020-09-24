@@ -52,8 +52,7 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#include "../Drivers/Inc/sim800.h"
-extern UartInfo gsmUartInfo;
+#include "../Drivers/Inc/simcom.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -424,7 +423,7 @@ void USART6_IRQHandler(void)
 
     if ((__HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE) != RESET) &&
 		  (__HAL_UART_GET_IT_SOURCE(&huart6, UART_IT_IDLE) != RESET)){
-	  gsmUartInfo.irqFlags.isIrqIdle = 1;
+	  uInfoSim.irqFlags.isIrqIdle = 1;
 //	  printf("INTERRUPT: IDLE\r\n");
   }
 

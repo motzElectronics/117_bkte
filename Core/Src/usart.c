@@ -21,13 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-#include "cmsis_os.h"
-#include "../Drivers/Inc/sim800.h"
-#include "../Utils/Inc/circularBuffer.h"
-extern UartInfo gsmUartInfo;
-extern CircularBuffer rxUart1CircBuf;
-u16 rxBufUart1[SZ_RX_UART1];
-extern u8 isRxNewFirmware;
+
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -311,17 +305,40 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
+#include "cmsis_os.h"
+#include "../Drivers/Inc/simcom.h"
+#include "../Utils/Inc/circularBuffer.h"
+UartInfo uInfoSim;
+
+static u8 usartSimBufRx[USART_SZ_BUF_RX_USART6];
+static u8 usartSimBufTx[USART_SZ_BUF_TX_USART6];
+
+extern CircularBuffer rxUart1CircBuf;
+u16 rxBufUart1[SZ_RX_UART1];
+extern u8 isRxNewFirmware;
+
 u8 cntTmp = 0;
 u8 isRxData = 1;
 
-void rxUart(UartInfo* pUInf){
-	HAL_UART_Receive_DMA(pUInf->pHuart, pUInf->rxBuffer, sizeof(pUInf->rxBuffer));
+void uartInitInfo(){
+  uInfoSim.irqFlags.regIrq = 0;
+  uInfoSim.pRxBuf = usartSimBufRx;
+  uInfoSim.szRxBuf = USART_SZ_BUF_RX_USART6;
+  uInfoSim.szTxBuf = USART_SZ_BUF_TX_USART6;
+  uInfoSim.pTxBuf = usartSimBufTx;
+  uInfoSim.pHuart = &huart6;
+  uartRxDma(&uInfoSim);
+}
+
+
+void uartRxDma(UartInfo* pUInf){
+	HAL_UART_Receive_DMA(pUInf->pHuart, pUInf->pRxBuf, pUInf->szRxBuf);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* uartHandle){
 	if(uartHandle->Instance == USART6){
-		gsmUartInfo.irqFlags.isIrqRx = 1;
-		rxUart(&gsmUartInfo);
+		uInfoSim.irqFlags.isIrqRx = 1;
+		uartRxDma(&uInfoSim);
 	}else if(uartHandle->Instance == USART1){
 		cBufWriteToBuf(&rxUart1CircBuf, (u8*)rxBufUart1, SZ_RX_UART1 * 2);
 		if(!isRxNewFirmware){
@@ -331,25 +348,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* uartHandle){
 
 }
 
-void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
-	if(huart->Instance == USART2){
-//		printf("GPS: RxHalfCpltCallback\r\n");
-//		printf("GNSS HALFIRQ\r\n");
-		gnssUartInfo.irqFlags.isIrqRx = 1;
-//		printf("%s", gnssUartInfo.rxBuffer);
-//		test++;
-//		if(test == 2)
-//			printf("test\r\n");
-	}
-}
-
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 //	printf("TxCpltCallback\r\n");
 //	xQueueSendToBackFromISR(queue1WireHandle, &isRxData, &woke);
 	if(huart->Instance == USART6){
 //		printf("IRQ: TXGSM\r\n");
 		__HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
-		gsmUartInfo.irqFlags.isIrqTx = 1;
+		uInfoSim.irqFlags.isIrqTx = 1;
 	}
 
 }
@@ -358,12 +363,12 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 	u32 error = HAL_UART_GetError(huart);
 	if(huart->Instance == USART6){
 		u32 error = HAL_UART_GetError(huart);
-		printf("HAL_UART_ErrorCallback() sim800 ERROR_CODE: %d\r\n", (int)error);
+		D(printf("HAL_UART_ErrorCallback() sim800 ERROR_CODE: %d\r\n", (int)error));
 //		sprintf(bufResponse, "HAL_UART_ErrorCallback() sim800 ERROR_CODE: %d\r\n", (int)error);
 //		createLog(logError, LOG_SZ_ERROR, bufResponse);
-		rxUart(&gsmUartInfo);
+		uartRxDma(&uInfoSim);
 	} else if(huart == &huart1){
-		printf("HAL_UART_ErrorCallback() Energy: %d\r\n", (int)error);
+		D(printf("HAL_UART_ErrorCallback() Energy: %d\r\n", (int)error));
 		rxUart1_IT();
 	}
 }
@@ -375,29 +380,24 @@ void rxUart1_IT(){
 	HAL_GPIO_WritePin(UART1_RE_GPIO_Port, UART1_RE_Pin, GPIO_PIN_RESET);
 }
 
-//void txUartGNSS(char* data, u16 sz){
-//	gnssUartInfo.irqFlags.isIrqTx = 0;
-//	HAL_UART_Transmit_IT(gnssUartInfo.pHuart, (u8*)data, sz);
-//	waitTx("gpsTx", &gnssUartInfo.irqFlags);
-//
-//}
+void uartClearInfo(UartInfo* pUinf){
+  pUinf->irqFlags.regIrq = 0;
+  memset(pUinf->pRxBuf, '\0', pUinf->szRxBuf);
+}
 
-void txUart(char* data, u16 sz, UartInfo* pUInf){
-	pUInf->irqFlags.isIrqRx = 0;
-	memset(pUInf->rxBuffer, '\0', sizeof(pUInf->rxBuffer));
-//	printf("DISABLE DMA\r\n");
+void uartTx(char* data, u16 sz, UartInfo* pUInf){
+  uartClearInfo(pUInf);
 	__HAL_DMA_DISABLE(pUInf->pHuart->hdmarx);
-	__HAL_DMA_SET_COUNTER(pUInf->pHuart->hdmarx, UART_SZ_RX_RESPONSE);
-//	simUartInfo.pHuart->hdmarx->Instance->NDTR = SIM_SZ_RX_RESPONSE;
+	__HAL_DMA_SET_COUNTER(pUInf->pHuart->hdmarx, pUInf->szRxBuf);
 	__HAL_DMA_ENABLE(pUInf->pHuart->hdmarx);
-	waitRx("wait irqRx\r\n", &(pUInf->irqFlags), 50, WAIT_TIMEOUT);
-//	printf("ENABLE DMA\r\n");
+	waitRx("", &(pUInf->irqFlags), 10, USART_TIMEOUT);
 	__HAL_UART_DISABLE_IT(pUInf->pHuart, UART_IT_IDLE);
-	osDelay(500);
+	osDelay(200);
 	pUInf->irqFlags.regIrq = 0;
-//	printf("TX\r\n");
-	HAL_UART_Transmit_DMA(pUInf->pHuart, (u8*)data, sz);
-	waitTx("wait UART irqTx\r\n", &(pUInf->irqFlags), 100, WAIT_TIMEOUT);
+
+  HAL_UART_Transmit_DMA(pUInf->pHuart, (u8*)data, sz);
+
+	waitTx("", &(pUInf->irqFlags), 50, USART_TIMEOUT);
 
 }
 /* USER CODE END 1 */

@@ -126,6 +126,12 @@ void Error_Handler(void);
 #define LOG_SZ_ERROR	100
 #define WAIT_TIMEOUT 	15000
 #define DUMMY_BYTE		0xFF
+
+#define URL_FILE_SZ							(char*)"http://188.242.176.25:8080/api/filesize?uid="
+#define URL_TIME							(char*)"http://188.242.176.25:8080/api/time"
+#define URL_GET_NEW_FIRMWARE				(char*)"http://188.242.176.25:8080/api/getFile"
+#define URL_MEASURE							(char*)"http://188.242.176.25:8080/api/add/measures"
+
 extern char logError[LOG_SZ_ERROR];
 typedef uint8_t			u8;
 typedef uint16_t		u16;
@@ -156,14 +162,25 @@ typedef struct{
 }DateTime;
 
 typedef struct{
+	char* addMeasure;
+	char* getTime;
+	char* getSzSoft;
+	char* getPartFirmware;
+}HttpUrl;
+
+typedef struct{
 	u64		header;
 	u8		numFirmware;
 	char	verFirmware;
 }FIRMWARE_INFO;
 
+extern HttpUrl urls;
+
 u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
 u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
 u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
+
+void urlsInit();
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

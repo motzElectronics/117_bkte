@@ -1203,7 +1203,7 @@
                         <name>$PROJ_DIR$\..\Core\Drivers\Src\ds2482.c</name>
                     </file>
                     <file>
-                        <name>$PROJ_DIR$\..\Core\Drivers\Src\sim800.c</name>
+                        <name>$PROJ_DIR$\..\Core\Drivers\Src\simcom.c</name>
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\Core\Drivers\Src\spiflash.c</name>

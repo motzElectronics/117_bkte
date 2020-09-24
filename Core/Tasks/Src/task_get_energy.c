@@ -9,25 +9,22 @@ extern CircularBuffer circBufPckgEnergy;
 extern CircularBuffer rxUart1CircBuf;
 
 static u16 testBufUart1[SZ_RX_UART1];
-static EnergyData lastData = {.current = 0, .enAct = 0, .enReact = 0, .volt = 0};
+// static EnergyData lastData = {.current = 0, .enAct = 0, .enReact = 0, .volt = 0};
+extern u8 SZ_PCKGENERGY;
 
 void taskGetEnergy(void const * argument){
-  	vTaskSuspend(getEnergyHandle);
+  	// vTaskSuspend(getEnergyHandle);
 	PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
-	u8 SZ_PCKGENERGY = sizeof(curPckgEnergy);
-
 	u8 numIteration = 0;
 	u16 retLen;
-	u32 time = 0;
 	spiFlashInit(circBufPckgEnergy.buf);
 	cBufReset(&circBufPckgEnergy);
-	bkteInit(&time);
 
 	fillTelemetry(&curPckgEnergy, TEL_ON_DEV, 0);
 	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
 
-	fillTelemetry(&curPckgEnergy, TEL_CHANGE_TIME, time);
-	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
+	// fillTelemetry(&curPckgEnergy, TEL_CHANGE_TIME, time);
+	// cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
 
 	fillTelemetry(&curPckgEnergy, TEL_ID_FIRMWARE, bkte.idFirmware);
 	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
@@ -51,5 +48,6 @@ void taskGetEnergy(void const * argument){
 
         }
         checkBufForWritingToFlash();
+		osDelay(200);
     }
 }
