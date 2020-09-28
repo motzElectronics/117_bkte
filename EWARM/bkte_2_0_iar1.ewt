@@ -1323,6 +1323,9 @@
                 <file>
                     <name>$PROJ_DIR$\..\Core\Utils\Src\utils_json.c</name>
                 </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Core\Utils\Src\utils_sd.c</name>
+                </file>
             </group>
         </group>
     </group>
@@ -1446,6 +1449,9 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FreeRTOS\Source\event_groups.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\Third_Party\FreeRTOS\Source\portable\MemMang\heap_4.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FreeRTOS\Source\list.c</name>

@@ -17,7 +17,12 @@ void taskGetEnergy(void const * argument){
 	PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
 	u8 numIteration = 0;
 	u16 retLen;
+	
 	spiFlashInit(circBufPckgEnergy.buf);
+	if(fatInit() == FAT_ERROR_NOT_MOUNT)
+		D(printf("ERROR: f_mount\r\n"));
+	sdWrite("Hello world\r\n", strlen("Hello world\r\n"));
+
 	cBufReset(&circBufPckgEnergy);
 
 	fillTelemetry(&curPckgEnergy, TEL_ON_DEV, 0);
