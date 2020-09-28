@@ -75,8 +75,8 @@ void sx1272_lora_init(SX1272 *node) {
     /* Set modem configurations. To achieve high immunity to EMI caused by near by transformer, maximum coding rate,
      * spreading factor and minimum bandwidth are selected */
 	sx1272_set_modem_config(
-		(BW_250K << BAND_WIDTH) | (CR_4_8 << CODING_RATE) | (EXPLICIT_HEADER << HEADER_MODE) | (CRC_DISABLED << RX_CRC),
-		(SF_9 << SPREADING_FACTOR) | (INTERNAL << AGC_MODE));
+		(BW_500K << BAND_WIDTH) | (CR_4_8 << CODING_RATE) | (EXPLICIT_HEADER << HEADER_MODE) | (CRC_DISABLED << RX_CRC),
+		(SF_7 << SPREADING_FACTOR) | (INTERNAL << AGC_MODE));
 
 	/* Set max pay load length */
 	sx1272_set_max_payload(MAX_PACKET_LENGTH);
@@ -306,6 +306,7 @@ u8 sx1272_receive(LoraPckg* rxPckg){
     sx1272_set_detect_opt(0x3);
     sx1272_set_pa_ramp(0x09);
     sx1272_set_lna(0x23);
+	//sx1272_set_lna(BOOST_150 | (GAIN_MAX << 5));
     sx1272_set_sync_word(0x34); //LoRa MAC preamble
 
     /* Enables IO interrupts */

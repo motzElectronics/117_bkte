@@ -39,7 +39,9 @@ extern FIL SDFile; /* File object for SD */
 void MX_FATFS_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+#define FAT_OK					0
+#define FAT_ERROR_NOT_MOUNT		1
+u8 fatInit();
 /* USER CODE END Prototypes */
 #ifdef __cplusplus
 }

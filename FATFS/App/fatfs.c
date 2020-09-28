@@ -50,7 +50,16 @@ DWORD get_fattime(void)
 }
 
 /* USER CODE BEGIN Application */
-     
+u8 fatInit(){
+  FRESULT res;
+
+  if((res = f_mount(&SDFatFS, SDPath, 1)) != FR_OK){
+    return FAT_ERROR_NOT_MOUNT;
+  }
+  else{
+    return FAT_OK;
+  }
+}
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

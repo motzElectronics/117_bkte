@@ -58,6 +58,7 @@
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Drivers/Inc/simcom.h"
 #include "../Utils/Inc/circularBuffer.h"
+#include "fatfs.h"
 
 CircularBuffer rxUart1CircBuf = {.buf = NULL, .max = 0};
 CircularBuffer circBufPckgEnergy = {.buf = NULL, .max = 0};
@@ -137,6 +138,7 @@ int main(void)
   urlsInit();
   bkteInit();
   uartInitInfo();
+  
 //  simOn();
   /* USER CODE END 2 */
 
@@ -184,7 +186,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 16;
   RCC_OscInitStruct.PLL.PLLN = 336;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 7;
+  RCC_OscInitStruct.PLL.PLLQ = 15;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();

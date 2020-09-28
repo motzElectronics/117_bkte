@@ -50,34 +50,16 @@
 
 /* USER CODE END Variables */
 osThreadId getEnergyHandle;
-uint32_t getEnergyBuffer[ 256 ];
-osStaticThreadDef_t getEnergyControlBlock;
 osThreadId getNewBinHandle;
-uint32_t getNewBinBuffer[ 256 ];
-osStaticThreadDef_t getNewBinControlBlock;
 osThreadId keepAliveHandle;
-uint32_t keepAliveBuffer[ 256 ];
-osStaticThreadDef_t keepAliveControlBlock;
 osThreadId webExchangeHandle;
-uint32_t webExchangeBuffer[ 256 ];
-osStaticThreadDef_t webExchangeControlBlock;
 osThreadId getTempHandle;
-uint32_t getTempBuffer[ 256 ];
-osStaticThreadDef_t getTempControlBlock;
 osThreadId manageIWDGHandle;
-uint32_t manageIWDGBuffer[ 128 ];
-osStaticThreadDef_t manageIWDGControlBlock;
 osThreadId loraHandle;
-uint32_t loraBuffer[ 256 ];
-osStaticThreadDef_t loraControlBlock;
 osMutexId mutexWriteToEnergyBufHandle;
-osStaticMutexDef_t mutexWriteToEnergyBufControlBlock;
 osMutexId mutexWebHandle;
-osStaticMutexDef_t mutexWebControlBlock;
 osMutexId mutexRTCHandle;
-osStaticMutexDef_t mutexRTCControlBlock;
 osMutexId mutexSDHandle;
-osStaticMutexDef_t mutexSDControlBlock;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -121,19 +103,19 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END Init */
   /* Create the mutex(es) */
   /* definition and creation of mutexWriteToEnergyBuf */
-  osMutexStaticDef(mutexWriteToEnergyBuf, &mutexWriteToEnergyBufControlBlock);
+  osMutexDef(mutexWriteToEnergyBuf);
   mutexWriteToEnergyBufHandle = osMutexCreate(osMutex(mutexWriteToEnergyBuf));
 
   /* definition and creation of mutexWeb */
-  osMutexStaticDef(mutexWeb, &mutexWebControlBlock);
+  osMutexDef(mutexWeb);
   mutexWebHandle = osMutexCreate(osMutex(mutexWeb));
 
   /* definition and creation of mutexRTC */
-  osMutexStaticDef(mutexRTC, &mutexRTCControlBlock);
+  osMutexDef(mutexRTC);
   mutexRTCHandle = osMutexCreate(osMutex(mutexRTC));
 
   /* definition and creation of mutexSD */
-  osMutexStaticDef(mutexSD, &mutexSDControlBlock);
+  osMutexDef(mutexSD);
   mutexSDHandle = osMutexCreate(osMutex(mutexSD));
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -154,31 +136,31 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of getEnergy */
-  osThreadStaticDef(getEnergy, taskGetEnergy, osPriorityNormal, 0, 256, getEnergyBuffer, &getEnergyControlBlock);
+  osThreadDef(getEnergy, taskGetEnergy, osPriorityNormal, 0, 512);
   getEnergyHandle = osThreadCreate(osThread(getEnergy), NULL);
 
   /* definition and creation of getNewBin */
-  osThreadStaticDef(getNewBin, taskGetNewBin, osPriorityNormal, 0, 256, getNewBinBuffer, &getNewBinControlBlock);
+  osThreadDef(getNewBin, taskGetNewBin, osPriorityNormal, 0, 256);
   getNewBinHandle = osThreadCreate(osThread(getNewBin), NULL);
 
   /* definition and creation of keepAlive */
-  osThreadStaticDef(keepAlive, taskKeepAlive, osPriorityNormal, 0, 256, keepAliveBuffer, &keepAliveControlBlock);
+  osThreadDef(keepAlive, taskKeepAlive, osPriorityNormal, 0, 256);
   keepAliveHandle = osThreadCreate(osThread(keepAlive), NULL);
 
   /* definition and creation of webExchange */
-  osThreadStaticDef(webExchange, taskWebExchange, osPriorityNormal, 0, 256, webExchangeBuffer, &webExchangeControlBlock);
+  osThreadDef(webExchange, taskWebExchange, osPriorityNormal, 0, 256);
   webExchangeHandle = osThreadCreate(osThread(webExchange), NULL);
 
   /* definition and creation of getTemp */
-  osThreadStaticDef(getTemp, taskGetTemp, osPriorityNormal, 0, 256, getTempBuffer, &getTempControlBlock);
+  osThreadDef(getTemp, taskGetTemp, osPriorityNormal, 0, 256);
   getTempHandle = osThreadCreate(osThread(getTemp), NULL);
 
   /* definition and creation of manageIWDG */
-  osThreadStaticDef(manageIWDG, taskManageIWDG, osPriorityNormal, 0, 128, manageIWDGBuffer, &manageIWDGControlBlock);
+  osThreadDef(manageIWDG, taskManageIWDG, osPriorityNormal, 0, 256);
   manageIWDGHandle = osThreadCreate(osThread(manageIWDG), NULL);
 
   /* definition and creation of lora */
-  osThreadStaticDef(lora, taskLora, osPriorityNormal, 0, 256, loraBuffer, &loraControlBlock);
+  osThreadDef(lora, taskLora, osPriorityNormal, 0, 256);
   loraHandle = osThreadCreate(osThread(lora), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -268,10 +250,11 @@ __weak void taskWebExchange(void const * argument)
 /* USER CODE END Header_taskGetTemp */
 __weak void taskGetTemp(void const * argument)
 {
+  /* USER CODE BEGIN taskGetTemp */
   /* Infinite loop */
   for(;;)
   {
-      osDelay(1000);
+    osDelay(1);
   }
   /* USER CODE END taskGetTemp */
 }
