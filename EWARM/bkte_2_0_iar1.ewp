@@ -1042,6 +1042,21 @@
     <group>
         <name>Application</name>
         <group>
+            <name>Drivers</name>
+            <file>
+                <name>$PROJ_DIR$\..\Core\Drivers\Src\ds2482.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Core\Drivers\Src\simcom.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Core\Drivers\Src\spiflash.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Core\Drivers\Src\sx1272.c</name>
+            </file>
+        </group>
+        <group>
             <name>EWARM</name>
             <file>
                 <name>$PROJ_DIR$\startup_stm32f407xx.s</name>
@@ -1051,21 +1066,6 @@
             <name>User</name>
             <group>
                 <name>Core</name>
-                <group>
-                    <name>Drivers</name>
-                    <file>
-                        <name>$PROJ_DIR$\..\Core\Drivers\Src\ds2482.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\Core\Drivers\Src\simcom.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\Core\Drivers\Src\spiflash.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\Core\Drivers\Src\sx1272.c</name>
-                    </file>
-                </group>
                 <file>
                     <name>$PROJ_DIR$\..\Core\Src\adc.c</name>
                 </file>
