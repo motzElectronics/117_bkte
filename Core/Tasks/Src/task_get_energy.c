@@ -19,9 +19,7 @@ void taskGetEnergy(void const * argument){
 	u16 retLen;
 	
 	spiFlashInit(circBufPckgEnergy.buf);
-	if(fatInit() == FAT_ERROR_NOT_MOUNT)
-		D(printf("ERROR: f_mount\r\n"));
-	sdWrite("Hello world\r\n", strlen("Hello world\r\n"));
+	sdInit();
 
 	cBufReset(&circBufPckgEnergy);
 
