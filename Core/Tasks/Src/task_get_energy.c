@@ -17,7 +17,7 @@ void taskGetEnergy(void const * argument){
 	PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
 	u8 numIteration = 0;
 	u16 retLen;
-	
+	vTaskSuspend(getEnergyHandle);
 	spiFlashInit(circBufPckgEnergy.buf);
 	sdInit();
 

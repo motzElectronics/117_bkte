@@ -349,3 +349,81 @@ void simReset(){
 	}
 }
 
+u8 testCipCmd(char* command, char* sucMsg){
+	char* retMsg;
+	char* token;
+	retMsg = simExecCommand(command);
+	token = strtok(retMsg, SIM_SEPARATOR_TEXT);
+	if(token == NULL || token[0] == '\0') 
+		token = SIM_NO_RESPONSE_TEXT;
+	if(strcmp((const char*)token, (const char*)sucMsg)){
+		D(printf("ERROR: %s %s\r\n", command, token));
+		return SIM_FAIL;
+	} else{
+		D(printf("OK: %s %s\r\n", command, token));
+	}
+	return SIM_SUCCESS;
+}
+
+u8 simTCPTest(){
+	//AT+CIPSHUT
+
+	char param[40];
+	if(testCipCmd(SIM_CIPSHUT, SIM_OK_CIPSHUT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+
+	memset(param, '\0', 40);
+	sprintf(param,"%d", (int)0);
+	if(httpWriteCommand(SIM_CIPMUX, param, 3, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+
+	memset(param, '\0', 40);
+	sprintf(param,"%d", (int)1);
+	if(httpWriteCommand(SIM_CGATT, param, 3, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+	
+	if(testCipCmd(SIM_CIPSTATUS, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+	osDelay(300);
+
+	memset(param, '\0', 40);
+	sprintf(param,"\"%s\",\"gdata\",\"gdata\"", (char*)"internet");
+	if(httpWriteCommand(SIM_CSTT, param, 3, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+
+	if(testCipCmd(SIM_CIPSTATUS, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+	osDelay(300);
+
+	if(testCipCmd(SIM_CIICR, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+
+	if(testCipCmd(SIM_CIPSTATUS, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+	osDelay(300);
+
+	simExecCommand(SIM_CIFSR);
+
+	if(testCipCmd(SIM_CIPSTATUS, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+	osDelay(300);
+
+	memset(param, '\0', 40);
+	sprintf(param,"\"%s\",\"%s\",\"%s\"", (char*)"TCP", (char*)"92.53.104.16", (char*)"40471");
+	if(httpWriteCommand(SIM_CIPSTART, param, 3, SIM_OK_TEXT) == SIM_FAIL){
+		return SIM_FAIL;
+	}
+    
+	osDelay(500);
+
+
+}

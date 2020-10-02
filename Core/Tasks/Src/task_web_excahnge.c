@@ -26,6 +26,7 @@ void taskWebExchange(void const * argument){
 	vTaskSuspend(webExchangeHandle);
 	simOn();
 	simInit();
+	simTCPTest();
 	if(!getServerTime()){
 		D(printf("ERROR: BAD TIME\r\n"));
 	}
@@ -105,8 +106,8 @@ u8 sendDataToServer(){
 			saveCsq(csq);
 		}
 		
-		if((resCode = httpPost(pckgJsonEn.jsonEnTxBuf,
-			strlen(pckgJsonEn.jsonEnTxBuf), &pRxData, 10, 10000)) != SIM_SUCCESS){
+		if((resCode = httpPost(pckgJsonEn.jsonEnTxBuf, strlen(pckgJsonEn.jsonEnTxBuf), &pRxData, 
+			10, 10000)) != SIM_SUCCESS){
 			D(printf("ERROR: httpPost()\r\n"));
 			simHttpInit(urls.addMeasure);
 			cntHttpPostFail++;
@@ -126,7 +127,7 @@ u8 sendDataToServer(){
 				D(printf("New FIRMWARE v.:%d\r\n", (int)tmpIdFirmware));
 				vTaskResume(getNewBinHandle);
 			}
-		  }
+		}
 
 	}
 	xSemaphoreGive(mutexWebHandle);
@@ -140,3 +141,4 @@ void saveCsq(u8 csq){
 	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&pckgEnergy, SZ_PCKGENERGY);
 	xSemaphoreGive(mutexWriteToEnergyBufHandle);
 }
+

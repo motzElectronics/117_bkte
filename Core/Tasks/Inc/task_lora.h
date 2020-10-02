@@ -8,8 +8,8 @@
 #include "cmsis_os.h"
 #include "../Utils/Inc/utils_bkte.h"
 
-#define LORA_MAX_NUM_RECEIVER   2
-#define LORA_NUM_RECEIVER       2
+#define LORA_MAX_NUM_RECEIVER   1
+#define LORA_NUM_RECEIVER       1
 #define LORA_NUM_MASTER         0
 
 #endif

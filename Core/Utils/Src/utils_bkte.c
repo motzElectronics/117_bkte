@@ -75,8 +75,10 @@ u32 getServerTime(){
 		tmpDate.Month = pTm->tm_mon;
 		tmpDate.Year = pTm->tm_year - 100;
 
-		HAL_RTC_SetTime(&hrtc, &tmpTime, RTC_FORMAT_BIN);
-		HAL_RTC_SetDate(&hrtc, &tmpDate, RTC_FORMAT_BIN);
+		if(tmpDate.Year < 30){  //sometimes timestamp is wrong and has value like 2066 year
+			HAL_RTC_SetTime(&hrtc, &tmpTime, RTC_FORMAT_BIN);
+			HAL_RTC_SetDate(&hrtc, &tmpDate, RTC_FORMAT_BIN);
+		}
 	}
 	return t;
 }
