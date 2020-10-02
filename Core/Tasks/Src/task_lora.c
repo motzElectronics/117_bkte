@@ -6,13 +6,14 @@ extern osThreadId loraHandle;
 LoraPckg loraPckgTx = {.data.numTrain = BKTE_ID_TRAIN};
 static LoraPckg loraPckgRx;
 void taskLora(void const * argument){
+	u8 curLen = 2;
 	//   vTaskSuspend(loraHandle);
 	config.CarrierFreq = 0;
 
 	node.hspi = &hspi1;
 	node.config = &config;
 
-	vTaskSuspend(loraHandle);
+	// vTaskSuspend(loraHandle);
 
 	HAL_GPIO_WritePin(RF_PWR_GPIO_Port, RF_PWR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_SET);
@@ -25,9 +26,10 @@ void taskLora(void const * argument){
 		loraPckgTx.data.addrLora.addrRx = loraPckgTx.data.addrLora.addrRx < LORA_MAX_NUM_RECEIVER ? loraPckgTx.data.addrLora.addrRx + 1 : 1;
 		loraPckgTx.data.addrLora.addrTx = LORA_NUM_MASTER;
 		loraPckgTx.data.addrLora.addrCurTx = LORA_NUM_MASTER;
-		loraPckgTx.data.rssiFromRemoteLora = 0xCC; // test data
-		loraPckgTx.crc = calcCrc16((u8*)(&(loraPckgTx.data)), PAYLOAD_LENGTH);
-		sx1272_send((u8*)&loraPckgTx);
+		loraPckgTx.data.rssiFromRemoteLora = 0xAABB; // test data
+		loraPckgTx.data.numTrain = 0xCCDD;
+		// loraPckgTx.crc = calcCrc16((u8*)(&(loraPckgTx.data)), curLen);
+		sx1272_send((u8*)&loraPckgTx, curLen);
 		HAL_GPIO_WritePin(LED1R_GPIO_Port, LED1R_Pin, GPIO_PIN_RESET);
 		do{
 			sx1272_receive(&loraPckgRx);
@@ -41,6 +43,7 @@ void taskLora(void const * argument){
 		HAL_GPIO_WritePin(LED1R_GPIO_Port, LED1R_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_SET);
 		osDelay(500);
+		curLen = curLen == PAYLOAD_LENGTH ? 2 : curLen + 2;
 #else
 		if(sx1272_receive(&loraPckgRx) == LR_STAT_OK && loraPckgRx.data.numTrain == BKTE_ID_TRAIN){
 			if((loraPckgRx.data.addrLora.addrCurTx == LORA_NUM_RECEIVER - 1 && loraPckgRx.data.addrLora.addrRx >= LORA_NUM_RECEIVER) || 
@@ -58,7 +61,7 @@ void taskLora(void const * argument){
 				
 				loraPckgTx.crc = calcCrc16((u8*)(&(loraPckgTx.data)), PAYLOAD_LENGTH);
 				osDelay(800);
-				sx1272_send((u8*)&loraPckgTx);
+				sx1272_send((u8*)&loraPckgTx, PAYLOAD_LENGTH);
 				// osDelay(500);
 				HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_SET);
 			}

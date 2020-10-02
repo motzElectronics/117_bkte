@@ -78,8 +78,6 @@
 
 #define MAX_PACKET_LENGTH                           64
 #define PAYLOAD_LENGTH                              6
-#define HEADER_LENGTH                               2
-#define CRC_LENGTH                                  2
 
 #define MAP_DIO0_LORA_RXDONE   0x00  // 00------
 #define MAP_DIO0_LORA_TXDONE   0x40  // 01------
@@ -440,7 +438,7 @@ void sx1272_set_dio_mapping(uint8_t map);
 
 void sx1272_clear_irq_flags();
 //void sx1272_write_fifo(uint8_t value);
-void sx1272_write_fifo(u8* value);
+void sx1272_write_fifo(u8* value, u8 sz);
 void sx1272_read_fifo(uint8_t* data, uint8_t sz);
 void sx1272_clear_fifo();
 void sx1272_sleep();
@@ -454,7 +452,7 @@ uint8_t sx1272_get_hop_channel();
 uint8_t sx1272_get_ocp();
 
 //uint8_t sx1272_send(uint8_t dest_addr, uint8_t *data, uint8_t size, uint8_t ret, uint32_t timeout);
-void sx1272_send(u8 *data);
+void sx1272_send(u8 *data, u8 sz);
 u8 sx1272_get_rssi(void);
 //uint8_t sx1272_receive(uint8_t *rx_buffer, uint8_t size, uint32_t timeout);
 u8 sx1272_receive(LoraPckg* rxPckg);

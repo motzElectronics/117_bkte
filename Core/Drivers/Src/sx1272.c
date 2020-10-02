@@ -15,7 +15,7 @@
 #define SX1272_SET_SLEEP_MODE()	sx1272_set_op_mode((LORA << LRANGE_MODE) | (LORA_ACCESS << REG_SHARE) | (SLEEP << MODE))
 #define SX1272_SET_STDBY_MODE()	sx1272_set_op_mode((LORA << LRANGE_MODE) | (LORA_ACCESS << REG_SHARE) | (STDBY << MODE))
 static SX1272 *sx1272;
-u8 rxBuf[PAYLOAD_LENGTH + CRC_LENGTH + HEADER_LENGTH];
+u8 rxBuf[PAYLOAD_LENGTH];
 extern CRC_HandleTypeDef hcrc;
 extern osMutexId pckgBlthMutexHandle;
 //extern osSemaphoreId semIRQLoraHandle;
@@ -23,7 +23,7 @@ extern LoraPckg loraPckgTx;
 
 extern u8 isRxLora;
 char* waitStrLora = "wait Rx LORA";
-u8 bufTx[PAYLOAD_LENGTH + CRC_LENGTH + HEADER_LENGTH + 1];
+u8 bufTx[PAYLOAD_LENGTH + 1];
 u8 numsNoConnect = 0;
 
 PckgRssi pckgRssi;
@@ -75,12 +75,12 @@ void sx1272_lora_init(SX1272 *node) {
     /* Set modem configurations. To achieve high immunity to EMI caused by near by transformer, maximum coding rate,
      * spreading factor and minimum bandwidth are selected */
 	sx1272_set_modem_config(
-		(BW_500K << BAND_WIDTH) | (CR_4_8 << CODING_RATE) | (EXPLICIT_HEADER << HEADER_MODE) | (CRC_DISABLED << RX_CRC),
+		(BW_500K << BAND_WIDTH) | (CR_4_8 << CODING_RATE) | (EXPLICIT_HEADER << HEADER_MODE) | (CRC_ENABLED << RX_CRC),
 		(SF_7 << SPREADING_FACTOR) | (INTERNAL << AGC_MODE));
 
 	/* Set max pay load length */
 	sx1272_set_max_payload(MAX_PACKET_LENGTH);
-	sx1272_set_payload_length(PAYLOAD_LENGTH + HEADER_LENGTH + CRC_LENGTH);
+	// sx1272_set_payload_length(PAYLOAD_LENGTH + HEADER_LENGTH + CRC_LENGTH);
 
 	/* Set base frequency */
 	sx1272_set_freq(CH_8675);
@@ -228,32 +228,38 @@ void sx1272_set_dio_mapping(uint8_t map) {
 	spiTx(data, 2);
 }
 
+u8 sx1272_get_received_payload_length() {
+	u8 data[2] = {REG_LR_RXNBBYTES | READ, 1};
+	spiTxRx(data, 2);
+
+    return data[1];
+}
+
 void sx1272_clear_irq_flags() {
 	uint8_t cmd[2] = {REG_LR_IRQFLAGS | WRITE, 0xFF};
 
 	spiTx(cmd, 2);
 }
 
-void sx1272_write_fifo(u8* data) {
+void sx1272_write_fifo(u8* data, u8 sz) {
 	bufTx[0] = REG_LR_FIFO | WRITE;
-	bufTx[1] = LR_HEADER1;
-	bufTx[2] = LR_HEADER2;
 
-	memcpy(bufTx + 3, data, PAYLOAD_LENGTH + CRC_LENGTH);
-	spiTx(bufTx, PAYLOAD_LENGTH + 1 + HEADER_LENGTH + CRC_LENGTH);
+	memcpy(bufTx + 1, data, sz);
+	spiTx(bufTx, sz + 1);
 }
 
 inline void sx1272_clear_fifo() {
     SX1272_SET_SLEEP_MODE();
 }
 
-void sx1272_send(u8 *data){
+void sx1272_send(u8 *data, u8 sz){
     uint8_t op = 0;
 
     /* Save the current mode */
     op = sx1272_get_op_mode();
     SX1272_SET_STDBY_MODE();
     sx1272_set_sync_word(0x34); //LoRa MAC preamble
+    sx1272_set_payload_length(sz);
 //    sx1272_set_dio_mapping(MAP_DIO0_LORA_TXDONE);
 //    /* GPIO-based interrupt has been set, mask out this bit */
 //    sx1272_set_irq_mask(~(TX_DONE));
@@ -266,7 +272,7 @@ void sx1272_send(u8 *data){
     sx1272_set_fifo_addr_ptr(0x00);
 
     /* Writes pay load */
-    sx1272_write_fifo(data);
+    sx1272_write_fifo(data, sz);
     /* 2 bytes CRC for pay load */
     //  sx1272_set_fifo_addr_ptr(0x00);
 	//  uint8_t buf[10];
@@ -298,7 +304,7 @@ void sx1272_send(u8 *data){
 }
 
 u8 sx1272_receive(LoraPckg* rxPckg){
-    u8 flags = 0, op = 0, prev;
+    u8 flags = 0, op = 0, prev, cntNewData = 0;
     /* Saves the current mode */
     op = sx1272_get_op_mode();
 
@@ -321,7 +327,7 @@ u8 sx1272_receive(LoraPckg* rxPckg){
     sx1272_set_fifo_addr_ptr(prev);
 
     /* Registers the packet length */
-    sx1272_set_payload_length(PAYLOAD_LENGTH + CRC_LENGTH + HEADER_LENGTH);
+    // sx1272_set_payload_length(PAYLOAD_LENGTH + CRC_LENGTH + HEADER_LENGTH);
 
     /* Initializes RxContinuous mode to receive packets */
     sx1272_set_op_mode((LORA << LRANGE_MODE) | (LORA_ACCESS << REG_SHARE) | (RX_CONT << MODE));
@@ -333,6 +339,7 @@ u8 sx1272_receive(LoraPckg* rxPckg){
     waitLora();
 #if(LR_IS_TRANSMITTER)
     if(isRxLora){
+		cntNewData = sx1272_get_received_payload_length();
 		isRxLora = 0;
         flags = sx1272_get_irq_flags();
         /* Polls for ValidHeader flag */
@@ -351,43 +358,29 @@ u8 sx1272_receive(LoraPckg* rxPckg){
             return LR_STAT_ERROR;
         }
         /* Reads and copies received data in FIFO to buffer */
-        sx1272_read_fifo(rxBuf, PAYLOAD_LENGTH + CRC_LENGTH + HEADER_LENGTH);
-        memcpy(rxPckg, rxBuf + 2, PAYLOAD_LENGTH + CRC_LENGTH);
+        sx1272_read_fifo(rxBuf, cntNewData);
+        memcpy(rxPckg, rxBuf, cntNewData);
 
-        numsNoConnect = 0;
+		++pckgRssi.rxNumPckg;
+		pckgRssi.rssi.r2 = rxPckg->data.rssiFromRemoteLora;
+		pckgRssi.rssi.statePckg = LR_STAT_OK;
 
-//        xSemaphoreTake(pckgBlthMutexHandle, portMAX_DELAY);
-        if(rxPckg->crc == calcCrc16((u8*)(&(rxPckg->data)), PAYLOAD_LENGTH + CRC_LENGTH)){
-        	++pckgRssi.rxNumPckg;
-        	pckgRssi.rssi.r2 = rxPckg->data.rssiFromRemoteLora;
-        	pckgRssi.rssi.statePckg = LR_STAT_OK;
-        } else{
-        	pckgRssi.rssi.statePckg = LR_STAT_BAD_CRC;
-        }
         ++pckgRssi.allNumPckg;
         pckgRssi.rssi.r1 = sx1272_get_rssi();
         D(printf("OK RSSI: %d, %d\r\n", (int)pckgRssi.rssi.r1, (int)pckgRssi.rssi.r2));
-//        xQueueSendToBack(blthPckgQueueHandle, &pckgRssi, 100);
-//        xSemaphoreGive(pckgBlthMutexHandle);
+
     } else{
-//    	++numsNoConnect;
-//        xSemaphoreTake(pckgBlthMutexHandle, portMAX_DELAY);
+
         ++pckgRssi.allNumPckg;
         pckgRssi.rssi.r1 = 0;
         pckgRssi.rssi.r2 = 0;
         pckgRssi.rssi.statePckg = LR_STAT_NO_PCKG;
 		rxPckg->data.rssiFromRemoteLora = 0;
         D(printf("ERROR: no rssi\r\n"));
-
-//        if(numsNoConnect == LIMIT_NO_CON){
-//        	pckgBlth.dataBlth.rssi.regRssi = 0;
-//        	numsNoConnect = 1;
-//        }
-//        xQueueSendToBack(blthPckgQueueHandle, &pckgRssi, 100);
-//        xSemaphoreGive(pckgBlthMutexHandle);
     }
 #else
     if(isRxLora){
+			cntNewData = sx1272_get_received_payload_length();
 			isRxLora = 0;
             flags = sx1272_get_irq_flags();
             /* Polls for ValidHeader flag */
@@ -406,16 +399,9 @@ u8 sx1272_receive(LoraPckg* rxPckg){
                 return LR_STAT_ERROR;
             }
             /* Reads and copies received data in FIFO to buffer */
-            sx1272_read_fifo(rxBuf, PAYLOAD_LENGTH + CRC_LENGTH + HEADER_LENGTH);
-            memcpy(rxPckg, rxBuf + 2, PAYLOAD_LENGTH + CRC_LENGTH);
-
-            numsNoConnect = 0;
-
-    //        xSemaphoreTake(pckgBlthMutexHandle, portMAX_DELAY);
-            if(rxPckg->crc == calcCrc16((u8*)(&(rxPckg->data)), PAYLOAD_LENGTH))
-            	loraPckgTx.data.rssiFromRemoteLora = sx1272_get_rssi();
-            else
-            	return LR_STAT_ERROR;
+            sx1272_read_fifo(rxBuf, cntNewData);
+            memcpy(rxPckg, rxBuf, cntNewData );
+            loraPckgTx.data.rssiFromRemoteLora = sx1272_get_rssi();
         }
 #endif
 

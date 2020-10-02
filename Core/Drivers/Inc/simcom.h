@@ -86,6 +86,15 @@
 
 #define SIM_CGNSINF							(char*)"CGNSINF"
 
+#define SIM_CIPSHUT							(char*)"CIPSHUT"
+#define SIM_CIPMUX							(char*)"CIPMUX"
+#define SIM_CGATT							(char*)"CGATT"
+#define SIM_CSTT							(char*)"CSTT"
+#define SIM_CIICR							(char*)"CIICR"
+#define SIM_CIFSR							(char*)"CIFSR"
+#define SIM_CIPSTART						(char*)"CIPSTART"
+#define SIM_CIPSTATUS						(char*)"CIPSTATUS"
+
 
 
 
@@ -95,6 +104,7 @@
 #define SIM_OK								(char*)"0"
 #define SIM_OK_CHAR							(u8)'0'
 #define SIM_OK_TEXT							(char*) "OK"
+#define SIM_OK_CIPSHUT						(char*) "SHUT OK"
 
 /* A connection has been established; the DCE is moving from
  * Command state to online data state
@@ -219,6 +229,8 @@ u8 simCheckCSQ();
 void simReset();
 
 void simOn();
+
+u8 simTCPTest();
 
 #define SIM_GPS_INIT() httpWriteCommand(SIM_SAPBR, "1,1", 1, SIM_OK_TEXT)
 
