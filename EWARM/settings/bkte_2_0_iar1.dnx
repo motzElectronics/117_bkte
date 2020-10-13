@@ -12,7 +12,7 @@
         <ByteLimit>50</ByteLimit>
     </Stack>
     <StLinkDriver>
-        <stlinkserialNo>81142513</stlinkserialNo>
+        <stlinkserialNo>34333935</stlinkserialNo>
         <stlinkfoundProbes />
         <CStepIntDis>_ 0</CStepIntDis>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
@@ -20,7 +20,7 @@
         <stlinkResetStrategy>3</stlinkResetStrategy>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>2503525696</Checksum>
+        <Checksum>2431215581</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -39,10 +39,10 @@
     <SWOTraceHWSettings>
         <OverrideDefaultClocks>0</OverrideDefaultClocks>
         <CpuClock>168000000</CpuClock>
-        <ClockAutoDetect>0</ClockAutoDetect>
-        <ClockWanted>1000000</ClockWanted>
-        <JtagSpeed>1000000</JtagSpeed>
-        <Prescaler>168</Prescaler>
+        <ClockAutoDetect>1</ClockAutoDetect>
+        <ClockWanted>2000000</ClockWanted>
+        <JtagSpeed>2000000</JtagSpeed>
+        <Prescaler>84</Prescaler>
         <TimeStampPrescIndex>0</TimeStampPrescIndex>
         <TimeStampPrescData>0</TimeStampPrescData>
         <PcSampCYCTAP>1</PcSampCYCTAP>
@@ -64,9 +64,8 @@
         <Fmt6>EnergyData-current	4	0</Fmt6>
         <Fmt7>EnergyData-enAct	4	0</Fmt7>
         <Fmt8>EnergyData-enReact	4	0</Fmt8>
-        <Fmt9>LoraPckg-crc	4	0</Fmt9>
-        <Fmt10>RTC_TimeTypeDef-Hours	3	0</Fmt10>
-        <Fmt11>RTC_TimeTypeDef-Minutes	3	0</Fmt11>
+        <Fmt9>RTC_TimeTypeDef-Hours	3	0</Fmt9>
+        <Fmt10>RTC_TimeTypeDef-Minutes	3	0</Fmt10>
     </struct_types>
     <array_types>
         <Fmt0>u8[11]	1	0</Fmt0>
@@ -120,10 +119,7 @@
         <mode>0</mode>
     </DisassembleMode>
     <Breakpoints2>
-        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Tasks\Src\task_lora.c}.67.4" 0 0 1 "" 0 "" 0</Bp0>
-        <Bp1>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Drivers\Src\simcom.c}.177.2" 0 0 1 "" 0 "" 0</Bp1>
-        <Bp2>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Drivers\Src\simcom.c}.394.2" 0 0 1 "" 0 "" 0</Bp2>
-        <Count>3</Count>
+        <Count>0</Count>
     </Breakpoints2>
     <TermIOLog>
         <LoggingEnabled>_ 0</LoggingEnabled>

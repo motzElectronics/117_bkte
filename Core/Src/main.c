@@ -127,6 +127,7 @@ int main(void)
   MX_IWDG_Init();
   MX_USART1_UART_Init();
   MX_TIM6_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   D(printf("OK: start main prog"));
   FIRMWARE_INFO info = {.header = 0x1122334455667788,

@@ -67,6 +67,8 @@ void Error_Handler(void);
 #define SIM_PWR_EN_GPIO_Port GPIOC
 #define ADC_BAT_Pin GPIO_PIN_0
 #define ADC_BAT_GPIO_Port GPIOA
+#define USART2_RE_Pin GPIO_PIN_1
+#define USART2_RE_GPIO_Port GPIOA
 #define SPI1_CS_LORA_Pin GPIO_PIN_4
 #define SPI1_CS_LORA_GPIO_Port GPIOA
 #define IRQ_LORA_Pin GPIO_PIN_4
@@ -132,7 +134,7 @@ void Error_Handler(void);
 #define URL_GET_NEW_FIRMWARE				(char*)"http://188.242.176.25:8080/api/getFile"
 #define URL_MEASURE							(char*)"http://188.242.176.25:8080/api/add/measures"
 
-extern char logError[LOG_SZ_ERROR];
+extern char logError[LOG_SZ_ERROR]; 
 typedef uint8_t			u8;
 typedef uint16_t		u16;
 typedef uint32_t		u32;
