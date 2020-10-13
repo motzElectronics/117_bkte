@@ -21,6 +21,12 @@
 #include "../Drivers/Inc/spiflash.h"
 #include "../Utils/Inc/circularBuffer.h"
 
+//!-------------CONFIGURE PARAMS---------------
+#define BKTE_ID_TRAINCAR		0
+#define BKTE_ID_TRAINCAR_MAX	3
+#define BKTE_IS_LORA_MASTER		1
+//!------------CONFIGURE PARAMS----------------
+
 #define BKTE_ADDR_ID_MCU	0x1FFF7A10
 #define BKTE_MAX_CNT_1WIRE	4
 #define LEN_TIMESTAMP		13
@@ -47,11 +53,6 @@
 
 #define BKTE_ID_TRAIN			1706
 
-#if LR_IS_TRANSMITTER
-#define BKTE_ID_TRAINCAR		0
-#else
-#define BKTE_ID_TRAINCAR		1
-#endif
 #define SZ_PART_NEW_SOFTWARE	1360
 
 #define BKTE_VER_BETA_FIRMWARE		(char)'B'

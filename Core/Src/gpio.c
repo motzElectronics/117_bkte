@@ -55,7 +55,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, BAT_PWR_EN_Pin|SIM_PWR_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SPI1_CS_LORA_Pin|UART1_RE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, USART2_RE_Pin|SPI1_CS_LORA_Pin|UART1_RE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, ONEWIRE_3_EN_Pin|ONEWIRE_2_EN_Pin|ONEWIRE_4_EN_Pin|ONEWIRE_1_EN_Pin
@@ -81,8 +81,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(IS_CHRG_BAT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin */
-  GPIO_InitStruct.Pin = SPI1_CS_LORA_Pin|UART1_RE_Pin;
+  /*Configure GPIO pins : PAPin PAPin PAPin */
+  GPIO_InitStruct.Pin = USART2_RE_Pin|SPI1_CS_LORA_Pin|UART1_RE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -141,11 +141,17 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
+#include "cmsis_os.h"
+static BaseType_t xHigherPriorityTaskWoken;
+extern osSemaphoreId semLoraRxPckgHandle;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		if(GPIO_Pin == PWR_STATE_Pin){ //  
       bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
 		}if(GPIO_Pin == IRQ_LORA_Pin){
 		  isRxLora = 1;
+      xSemaphoreGiveFromISR(semLoraRxPckgHandle, &xHigherPriorityTaskWoken);
+      D(printf("OK: LORA IRQ\r\n"));
+      portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 	}
 
 }

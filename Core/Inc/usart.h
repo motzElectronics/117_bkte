@@ -31,6 +31,7 @@
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 
@@ -39,6 +40,7 @@ extern UART_HandleTypeDef huart6;
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);
+void MX_USART2_UART_Init(void);
 void MX_USART3_UART_Init(void);
 void MX_USART6_UART_Init(void);
 
@@ -50,7 +52,11 @@ void MX_USART6_UART_Init(void);
 #define USART_SZ_BUF_RX_USART6    1524
 #define USART_SZ_BUF_TX_USART6    1024
 
+#define USART_SZ_BUF_TX_USART2    10
+
 #define USART_TIMEOUT             15000
+
+#define USART_RE2_WRITE_EN()  HAL_GPIO_WritePin(USART2_RE_GPIO_Port, USART2_RE_Pin, GPIO_PIN_SET)
 
 typedef UART_HandleTypeDef*	PHuart;
 typedef struct{
@@ -63,6 +69,8 @@ typedef struct{
 }UartInfo;
 
 extern UartInfo uInfoSim;
+extern UartInfo uInfoLCD;
+
 void setBaudRateUart(UART_HandleTypeDef *huart, u32 baudrate);
 //void rxUartSIM_IT();
 void uartTx(char* data, u16 sz, UartInfo* pUInf);
@@ -75,6 +83,7 @@ void rxUart1_IT();
 void uartRxDma(UartInfo* pUInf);
 void uartInitInfo();
 
+void uartTxLCD(char* data, u16 sz, UartInfo* pUInf);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

@@ -14,6 +14,7 @@
 #include "stm32f4xx_hal.h"
 #include "main.h"
 #include "spi.h"
+#include "../Utils/Inc/utils_bkte.h"
 
 /* Registers Map */
 #define REG_LR_FIFO									0x00
@@ -77,7 +78,7 @@
 
 
 #define MAX_PACKET_LENGTH                           64
-#define PAYLOAD_LENGTH                              6
+#define PAYLOAD_LENGTH                              16
 
 #define MAP_DIO0_LORA_RXDONE   0x00  // 00------
 #define MAP_DIO0_LORA_TXDONE   0x40  // 01------
@@ -120,50 +121,8 @@
 
 #define LR_RESET_STAT	0x00
 
-#define LR_IS_TRANSMITTER	0
 
 
-
-typedef union{
-	u16 regAddrLora;
-	struct{
-		u16 addrTx:		4;
-		u16 addrRx:		4;
-		u16 addrCurTx:	4;
-	};
-}AddrLora;
-
-typedef struct{
-	AddrLora addrLora;
-	u16 numTrain;
-	u16 rssiFromRemoteLora;
-}Data;
-
-typedef union{
-	u32 regRssi;
-	struct{
-		u32 r1:			8;
-		u32 r2: 		8;
-		u32 statePckg:	8;
-	};
-}Rssi;
-
-typedef struct{
-	u32 rxNumPckg;
-	u32 allNumPckg;
-	Rssi rssi;
-	DateTime dateTime;
-}PckgRssi;
-
-typedef struct{
-	u8 h1;
-	u8 h2;
-}LoraHeader;
-
-typedef struct{
-	u16 crc;
-	Data data;
-}LoraPckg;
 
 typedef enum {
 	LORA = 1,
@@ -408,6 +367,26 @@ typedef struct {
 	Config_Group *config;
 } SX1272;
 
+#define LORA_TRANSITION_CMD_MONITOR	1
+
+typedef struct{
+	u16 idTrain;
+	u16	flagsReq;
+	u16 flagsAnsw;
+	u8	cmd;
+	u8	idTxRx;
+}LoraTrainGenInfo;
+
+typedef struct{
+	s8	temperature;
+	u8	statusInfo;
+}LoraTrainCarInfo;
+
+typedef struct{
+	LoraTrainGenInfo	loraGenInfo;
+	LoraTrainCarInfo	loraCarInfo[BKTE_ID_TRAINCAR_MAX + 1];
+}LoraAlgTransition;
+
 /* SPI Driver */
 void spi_select();
 void spi_deselect();
@@ -455,7 +434,7 @@ uint8_t sx1272_get_ocp();
 void sx1272_send(u8 *data, u8 sz);
 u8 sx1272_get_rssi(void);
 //uint8_t sx1272_receive(uint8_t *rx_buffer, uint8_t size, uint32_t timeout);
-u8 sx1272_receive(LoraPckg* rxPckg);
+u8 sx1272_receive(u8* pBuf);
 uint16_t sx1272_get_modem_config();
 uint32_t sx1272_get_freq();
 

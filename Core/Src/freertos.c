@@ -60,6 +60,7 @@ osMutexId mutexWriteToEnergyBufHandle;
 osMutexId mutexWebHandle;
 osMutexId mutexRTCHandle;
 osMutexId mutexSDHandle;
+osSemaphoreId semLoraRxPckgHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -121,6 +122,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
+
+  /* Create the semaphores(s) */
+  /* definition and creation of semLoraRxPckg */
+  osSemaphoreDef(semLoraRxPckg);
+  semLoraRxPckgHandle = osSemaphoreCreate(osSemaphore(semLoraRxPckg), 1);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */

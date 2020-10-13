@@ -12,21 +12,20 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "../Utils/Inc/utils_crc.h"
+#include "../Tasks/Inc/task_lora.h"
 #define SX1272_SET_SLEEP_MODE()	sx1272_set_op_mode((LORA << LRANGE_MODE) | (LORA_ACCESS << REG_SHARE) | (SLEEP << MODE))
 #define SX1272_SET_STDBY_MODE()	sx1272_set_op_mode((LORA << LRANGE_MODE) | (LORA_ACCESS << REG_SHARE) | (STDBY << MODE))
 static SX1272 *sx1272;
-u8 rxBuf[PAYLOAD_LENGTH];
-extern CRC_HandleTypeDef hcrc;
 extern osMutexId pckgBlthMutexHandle;
+extern osSemaphoreId semLoraRxPckgHandle;
 //extern osSemaphoreId semIRQLoraHandle;
-extern LoraPckg loraPckgTx;
 
 extern u8 isRxLora;
 char* waitStrLora = "wait Rx LORA";
-u8 bufTx[PAYLOAD_LENGTH + 1];
+u8 bufTx[PAYLOAD_LENGTH + 3];
 u8 numsNoConnect = 0;
 
-PckgRssi pckgRssi;
+
 
 /**
  * Explicitly selects the device to start SPI communication protocol.
@@ -36,7 +35,7 @@ void spiTx(u8 *txData, u8 sz) {
 	spiLoraInfo.irqFlags.regIrq = 0;
 	SPI1_LORA_CS_SEL();
 	HAL_SPI_Transmit_IT(sx1272->hspi, txData, sz);
-	waitTx("", &spiLoraInfo.irqFlags, 50, SPI_LORA_TIMEOUT);
+	waitTx("", &spiLoraInfo.irqFlags, 2, SPI_LORA_TIMEOUT);
 	SPI1_LORA_CS_DESEL();
 }
 
@@ -44,7 +43,7 @@ void spiTxRx(u8* pData, u8 sz){
 	spiLoraInfo.irqFlags.regIrq = 0;
 	SPI1_LORA_CS_SEL();
 	HAL_SPI_TransmitReceive_IT(sx1272->hspi, pData, pData, sz);
-	waitRx("",  &spiLoraInfo.irqFlags, 50, SPI_LORA_TIMEOUT);
+	waitRx("",  &spiLoraInfo.irqFlags, 2, SPI_LORA_TIMEOUT);
 	SPI1_LORA_CS_DESEL();
 }
 
@@ -52,9 +51,9 @@ void spiRx(u8 cmd, u8 *pData, u8 sz){
 	spiLoraInfo.irqFlags.regIrq = 0;
 	SPI1_LORA_CS_SEL();
 	HAL_SPI_Transmit_IT(sx1272->hspi, &cmd, 1);
-	waitTx("",  &spiLoraInfo.irqFlags, 50, SPI_LORA_TIMEOUT);
+	waitTx("",  &spiLoraInfo.irqFlags, 2, SPI_LORA_TIMEOUT);
 	HAL_SPI_Receive_IT(sx1272->hspi, pData, sz);
-	waitRx("",  &spiLoraInfo.irqFlags, 100, SPI_LORA_TIMEOUT);
+	waitRx("",  &spiLoraInfo.irqFlags, 2, SPI_LORA_TIMEOUT);
 	SPI1_LORA_CS_DESEL();
 }
 
@@ -75,8 +74,8 @@ void sx1272_lora_init(SX1272 *node) {
     /* Set modem configurations. To achieve high immunity to EMI caused by near by transformer, maximum coding rate,
      * spreading factor and minimum bandwidth are selected */
 	sx1272_set_modem_config(
-		(BW_500K << BAND_WIDTH) | (CR_4_8 << CODING_RATE) | (EXPLICIT_HEADER << HEADER_MODE) | (CRC_ENABLED << RX_CRC),
-		(SF_7 << SPREADING_FACTOR) | (INTERNAL << AGC_MODE));
+		(BW_250K << BAND_WIDTH) | (CR_4_8 << CODING_RATE) | (IMPLICIT_HEADER << HEADER_MODE) | (CRC_DISABLED << RX_CRC),
+		(SF_9 << SPREADING_FACTOR) | (INTERNAL << AGC_MODE));
 
 	/* Set max pay load length */
 	sx1272_set_max_payload(MAX_PACKET_LENGTH);
@@ -243,9 +242,10 @@ void sx1272_clear_irq_flags() {
 
 void sx1272_write_fifo(u8* data, u8 sz) {
 	bufTx[0] = REG_LR_FIFO | WRITE;
-
-	memcpy(bufTx + 1, data, sz);
-	spiTx(bufTx, sz + 1);
+	u16 crc = calcCrc16(data, sz);
+	memcpy(bufTx + 1, &crc, 2);
+	memcpy(bufTx + 3, data, sz);
+	spiTx(bufTx, sz + 3);
 }
 
 inline void sx1272_clear_fifo() {
@@ -259,7 +259,7 @@ void sx1272_send(u8 *data, u8 sz){
     op = sx1272_get_op_mode();
     SX1272_SET_STDBY_MODE();
     sx1272_set_sync_word(0x34); //LoRa MAC preamble
-    sx1272_set_payload_length(sz);
+    sx1272_set_payload_length(sz + 2);
 //    sx1272_set_dio_mapping(MAP_DIO0_LORA_TXDONE);
 //    /* GPIO-based interrupt has been set, mask out this bit */
 //    sx1272_set_irq_mask(~(TX_DONE));
@@ -303,8 +303,11 @@ void sx1272_send(u8 *data, u8 sz){
     sx1272_clear_irq_flags();
 }
 
-u8 sx1272_receive(LoraPckg* rxPckg){
-    u8 flags = 0, op = 0, prev, cntNewData = 0;
+u8 sx1272_receive(u8* pBuf){
+	static u8 rxBuf[PAYLOAD_LENGTH + 2];
+	u16 crc, crcPckg;
+    u8 flags = 0, op = 0, prev, cntNewData = 0, ret = LR_STAT_NO_PCKG;
+
     /* Saves the current mode */
     op = sx1272_get_op_mode();
 
@@ -327,7 +330,7 @@ u8 sx1272_receive(LoraPckg* rxPckg){
     sx1272_set_fifo_addr_ptr(prev);
 
     /* Registers the packet length */
-    // sx1272_set_payload_length(PAYLOAD_LENGTH + CRC_LENGTH + HEADER_LENGTH);
+    sx1272_set_payload_length(PAYLOAD_LENGTH + 2);
 
     /* Initializes RxContinuous mode to receive packets */
     sx1272_set_op_mode((LORA << LRANGE_MODE) | (LORA_ACCESS << REG_SHARE) | (RX_CONT << MODE));
@@ -335,80 +338,49 @@ u8 sx1272_receive(LoraPckg* rxPckg){
     flags = sx1272_get_irq_flags();
     /* Polls for ValidHeader flag */
 
+	if(xSemaphoreTake(semLoraRxPckgHandle, LR_TASK_TIME_SLOT) == pdPASS){
 
-    waitLora();
-#if(LR_IS_TRANSMITTER)
-    if(isRxLora){
-		cntNewData = sx1272_get_received_payload_length();
-		isRxLora = 0;
-        flags = sx1272_get_irq_flags();
-        /* Polls for ValidHeader flag */
-        if(!(flags & VALID_HDR) >> VALID_HDR_MASK) {
-        	sx1272_clear_irq_flags();
-        	return LR_STAT_ERROR;
-        }
-        /* Polls for RxDone flag */
-        if (!((flags & RXDONE) >> RXDONE_MASK)) {
-        	sx1272_clear_irq_flags();
-        	return LR_STAT_ERROR;
-        }
-        /* Checks for valid header CRC */
-        if ((flags & CRC_ERR) >> CRC_ERR_MASK) {
-            sx1272_clear_irq_flags();
-            return LR_STAT_ERROR;
-        }
-        /* Reads and copies received data in FIFO to buffer */
-        sx1272_read_fifo(rxBuf, cntNewData);
-        memcpy(rxPckg, rxBuf, cntNewData);
+		flags = sx1272_get_irq_flags();
+		/* Polls for ValidHeader flag */
+		if(!(flags & VALID_HDR) >> VALID_HDR_MASK) {
+			sx1272_clear_irq_flags();
+			D(printf("ERROR: LORA HDR MASK\r\n"));
+			return LR_STAT_ERROR;
+		}
+		/* Polls for RxDone flag */
+		if (!((flags & RXDONE) >> RXDONE_MASK)) {
+			sx1272_clear_irq_flags();
+			D(printf("ERROR: LORA RXDONE\r\n"));
+			return LR_STAT_ERROR;
+		}
+		/* Checks for valid header CRC */
+		/*if ((flags & CRC_ERR) >> CRC_ERR_MASK) {
+			sx1272_clear_irq_flags();
+			D(printf("ERROR: LORA CRC\r\n"));
+			return LR_STAT_ERROR;
+		}*/
+		/* Reads and copies received data in FIFO to buffer */
+		sx1272_read_fifo(rxBuf, PAYLOAD_LENGTH + 2);
 
-		++pckgRssi.rxNumPckg;
-		pckgRssi.rssi.r2 = rxPckg->data.rssiFromRemoteLora;
-		pckgRssi.rssi.statePckg = LR_STAT_OK;
+		memcpy(&crcPckg, rxBuf, 2);
+		if((crc = calcCrc16(rxBuf + 2, PAYLOAD_LENGTH)) != crcPckg){
+			sx1272_clear_irq_flags();
+			HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4R_Pin);
+			D(printf("ERROR: LORA CRC\r\n"));
+			return LR_STAT_ERROR;
+		} else {
+			memcpy(pBuf, rxBuf + 2, PAYLOAD_LENGTH);
+		}
+		ret = LR_STAT_OK;
 
-        ++pckgRssi.allNumPckg;
-        pckgRssi.rssi.r1 = sx1272_get_rssi();
-        D(printf("OK RSSI: %d, %d\r\n", (int)pckgRssi.rssi.r1, (int)pckgRssi.rssi.r2));
 
-    } else{
-
-        ++pckgRssi.allNumPckg;
-        pckgRssi.rssi.r1 = 0;
-        pckgRssi.rssi.r2 = 0;
-        pckgRssi.rssi.statePckg = LR_STAT_NO_PCKG;
-		rxPckg->data.rssiFromRemoteLora = 0;
-        D(printf("ERROR: no rssi\r\n"));
-    }
-#else
-    if(isRxLora){
-			cntNewData = sx1272_get_received_payload_length();
-			isRxLora = 0;
-            flags = sx1272_get_irq_flags();
-            /* Polls for ValidHeader flag */
-            if(!(flags & VALID_HDR) >> VALID_HDR_MASK) {
-            	sx1272_clear_irq_flags();
-            	return LR_STAT_ERROR;
-            }
-            /* Polls for RxDone flag */
-            if (!((flags & RXDONE) >> RXDONE_MASK)) {
-            	sx1272_clear_irq_flags();
-            	return LR_STAT_ERROR;
-            }
-            /* Checks for valid header CRC */
-            if ((flags & CRC_ERR) >> CRC_ERR_MASK) {
-                sx1272_clear_irq_flags();
-                return LR_STAT_ERROR;
-            }
-            /* Reads and copies received data in FIFO to buffer */
-            sx1272_read_fifo(rxBuf, cntNewData);
-            memcpy(rxPckg, rxBuf, cntNewData );
-            loraPckgTx.data.rssiFromRemoteLora = sx1272_get_rssi();
-        }
-#endif
+		// loraPckgTx.data.rssiFromRemoteLora = sx1272_get_rssi();
+	}
 
     SX1272_SET_SLEEP_MODE();
     sx1272_set_op_mode(op);
     sx1272_clear_irq_flags();
-    return LR_STAT_OK;
+    return ret;
 }
 
 uint8_t sx1272_get_rx_current_ptr() {
@@ -498,7 +470,7 @@ u8 sx1272_get_rssi(void){
 void waitLora(){
 	u16 timeout = 0;
 
-#if(LR_IS_TRANSMITTER)
+#if(BKTE_IS_LORA_MASTER)
 	while(!isRxLora && timeout < LR_TIME_OUT_MS){
 		osDelay(500);
 		timeout += 500;

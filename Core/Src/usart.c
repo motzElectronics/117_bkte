@@ -25,6 +25,7 @@
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 DMA_HandleTypeDef hdma_usart1_rx;
@@ -45,6 +46,25 @@ void MX_USART1_UART_Init(void)
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+/* USART2 init function */
+
+void MX_USART2_UART_Init(void)
+{
+
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -138,6 +158,33 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
   /* USER CODE BEGIN USART1_MspInit 1 */
 
   /* USER CODE END USART1_MspInit 1 */
+  }
+  else if(uartHandle->Instance==USART2)
+  {
+  /* USER CODE BEGIN USART2_MspInit 0 */
+
+  /* USER CODE END USART2_MspInit 0 */
+    /* USART2 clock enable */
+    __HAL_RCC_USART2_CLK_ENABLE();
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    /**USART2 GPIO Configuration
+    PA2     ------> USART2_TX
+    PA3     ------> USART2_RX
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* USART2 interrupt Init */
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
+  /* USER CODE BEGIN USART2_MspInit 1 */
+
+  /* USER CODE END USART2_MspInit 1 */
   }
   else if(uartHandle->Instance==USART3)
   {
@@ -258,6 +305,26 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
   /* USER CODE END USART1_MspDeInit 1 */
   }
+  else if(uartHandle->Instance==USART2)
+  {
+  /* USER CODE BEGIN USART2_MspDeInit 0 */
+
+  /* USER CODE END USART2_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_USART2_CLK_DISABLE();
+
+    /**USART2 GPIO Configuration
+    PA2     ------> USART2_TX
+    PA3     ------> USART2_RX
+    */
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2|GPIO_PIN_3);
+
+    /* USART2 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USART2_IRQn);
+  /* USER CODE BEGIN USART2_MspDeInit 1 */
+
+  /* USER CODE END USART2_MspDeInit 1 */
+  }
   else if(uartHandle->Instance==USART3)
   {
   /* USER CODE BEGIN USART3_MspDeInit 0 */
@@ -309,9 +376,12 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 #include "../Drivers/Inc/simcom.h"
 #include "../Utils/Inc/circularBuffer.h"
 UartInfo uInfoSim;
+UartInfo uInfoLCD;
 
 static u8 usartSimBufRx[USART_SZ_BUF_RX_USART6];
 static u8 usartSimBufTx[USART_SZ_BUF_TX_USART6];
+
+static u8 usartLCDBufTx[USART_SZ_BUF_TX_USART2];
 
 extern CircularBuffer rxUart1CircBuf;
 u16 rxBufUart1[SZ_RX_UART1];
@@ -328,6 +398,13 @@ void uartInitInfo(){
   uInfoSim.pTxBuf = usartSimBufTx;
   uInfoSim.pHuart = &huart6;
   uartRxDma(&uInfoSim);
+
+  uInfoLCD.irqFlags.regIrq = 0;
+  uInfoLCD.pHuart = &huart2;
+  uInfoLCD.pTxBuf = usartLCDBufTx;
+  uInfoLCD.szTxBuf = USART_SZ_BUF_TX_USART2;
+
+  USART_RE2_WRITE_EN();
 }
 
 
@@ -355,7 +432,9 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 //		printf("IRQ: TXGSM\r\n");
 		__HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
 		uInfoSim.irqFlags.isIrqTx = 1;
-	}
+	} else if(huart->Instance == USART2){
+    uInfoLCD.irqFlags.isIrqTx = 1;
+  }
 
 }
 
@@ -370,7 +449,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 	} else if(huart == &huart1){
 		D(printf("HAL_UART_ErrorCallback() Energy: %d\r\n", (int)error));
 		rxUart1_IT();
-	}
+	} else if(huart->Instance == USART2){
+    D(printf("ERROR: HAL_UART_ErrorCallback() USART2 LCD\r\n"));
+  }
 }
 
 void rxUart1_IT(){
@@ -399,6 +480,12 @@ void uartTx(char* data, u16 sz, UartInfo* pUInf){
 
 	waitTx("", &(pUInf->irqFlags), 50, USART_TIMEOUT);
 
+}
+
+void uartTxLCD(char* data, u16 sz, UartInfo* pUInf){
+  pUInf->irqFlags.regIrq = 0;
+  HAL_UART_Transmit_IT(pUInf->pHuart, (u8*)data, sz);
+  waitTx("", &(pUInf->irqFlags), 50, USART_TIMEOUT);
 }
 /* USER CODE END 1 */
 
