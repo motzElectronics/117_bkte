@@ -71,7 +71,7 @@ u32 addEnPckgToJson(PckgEnergy* pckg){
 u16 closeGnssJson(){
 	u16 numPckg;
 	strcat(pckgJsonEn.jsonEnTxBuf, "]}\n");
-	printf("%s\r\n", pckgJsonEn.jsonEnTxBuf);
+	D(printf("%s\r\n", pckgJsonEn.jsonEnTxBuf));
 	numPckg = pckgJsonEn.numPckg;
 	pckgJsonEn.numPckg = 0;
 	return numPckg;

@@ -6,7 +6,7 @@
  */
 
 #include "../Utils/Inc/utils_bkte.h"
-
+#include "../Utils/Inc/utils_sd.h"
 GPIO_TypeDef* oneWirePorts[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_GPIO_Port, ONEWIRE_2_EN_GPIO_Port, ONEWIRE_3_EN_GPIO_Port, ONEWIRE_4_EN_GPIO_Port};
 u16 oneWirePins[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_Pin, ONEWIRE_2_EN_Pin, ONEWIRE_3_EN_Pin, ONEWIRE_4_EN_Pin};
 //extern osMessageQId queue1WireHandle;
@@ -41,7 +41,10 @@ void bkteInit(){
 	bkte.idDev = BKTE_ID_DEV_BKTE;
 	bkte.idFirmware = BKTE_ID_FIRMWARE;
 	bkte.idBoot = BKTE_ID_BOOT;
+	bkte.isFatMount = 0;
 }
+
+
 
 u32 getServerTime(){
 
@@ -51,6 +54,7 @@ u32 getServerTime(){
 	D(printf("getServerTime()\r\n"));
 	while(simGetDateTime(timestamp) != SIM_SUCCESS){
 		memset(timestamp, '\0', sizeof(timestamp));
+		sdWriteLog(SD_ER_MSG_HTTPINIT_MYFUN, SD_LEN_MYFUN, NULL, 0, &sdSectorLogError);
 		D(printf("ERROR: bad time\r\n"));
 //		HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_RESET);
 		tmpSimBadResponse = (tmpSimBadResponse + 1) % 10;
@@ -75,7 +79,7 @@ u32 getServerTime(){
 		tmpDate.Month = pTm->tm_mon;
 		tmpDate.Year = pTm->tm_year - 100;
 
-		if(tmpDate.Year < 30){  //sometimes timestamp is wrong and has value like 2066 year
+		if(tmpDate.Year < 30 && tmpDate.Year > 19){  //sometimes timestamp is wrong and has value like 2066 year
 			HAL_RTC_SetTime(&hrtc, &tmpTime, RTC_FORMAT_BIN);
 			HAL_RTC_SetDate(&hrtc, &tmpDate, RTC_FORMAT_BIN);
 		}
@@ -298,9 +302,16 @@ void toggleRedLeds(){
 }*/
 
 void checkBufForWritingToFlash(){
-	u8 isFullSpiFlash = 0;
+	
 	xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 	if((circBufPckgEnergy.numPckgInBuf + 1) * SZ_PCKGENERGY + 1 > spiFlash64.pgSz){
+		updSpiFlash();
+	}
+	xSemaphoreGive(mutexWriteToEnergyBufHandle);
+}
+
+void updSpiFlash(){
+		u8 isFullSpiFlash = 0;
 		PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
 		isFullSpiFlash =  spiFlashWrPg(circBufPckgEnergy.buf, circBufPckgEnergy.numPckgInBuf * SZ_PCKGENERGY, 0, spiFlash64.headNumPg);
 		cBufReset(&circBufPckgEnergy);
@@ -316,7 +327,4 @@ void checkBufForWritingToFlash(){
 			fillTelemetry(&curPckgEnergy, TEL_SERV_FLASH_CIRC_BUF_HALF_HEAD, 0);
 			cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
 		}
-
-	}
-	xSemaphoreGive(mutexWriteToEnergyBufHandle);
 }

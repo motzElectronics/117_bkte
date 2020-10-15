@@ -1,35 +1,56 @@
 #include "../Utils/Inc/utils_sd.h"
+extern FATFS SDFatFS;
 static FIL fil;
 static char* fileNameError = (char*)"er.txt";
 static char* fileNameWarning = (char*)"wr.txt";
 static u8 bufSectorLogError[SZ_SECTOR];
 static u8 bufSectorLogWarning[SZ_SECTOR];
 SdSector sdSectorLogError;
-SdSector sdSectorLogWarning;
+SdSector sdSectorLogs;
 
 void sdInit(){
-    if(fatInit() == FAT_ERROR_NOT_MOUNT){
-		D(printf("ERROR: f_mount\r\n"));
-    }else{
+    if(fatInit() != FAT_ERROR_NOT_MOUNT){
+        D(printf("OK: f_mount\r\n"));
         sdSectorLogError.szSector = SZ_SECTOR;
         sdSectorLogError.pBufSec = bufSectorLogError;
         sdSectorLogError.fileName = fileNameError;
         cleanSector(&sdSectorLogError);
 
-        sdSectorLogWarning.szSector = SZ_SECTOR;
-        sdSectorLogWarning.pBufSec = bufSectorLogWarning;
-        sdSectorLogWarning.fileName = fileNameWarning;
-        cleanSector(&sdSectorLogWarning);
+        sdSectorLogs.szSector = SZ_SECTOR;
+        sdSectorLogs.pBufSec = bufSectorLogWarning;
+        sdSectorLogs.fileName = fileNameWarning;
+        cleanSector(&sdSectorLogs);
+        bkte.isFatMount = 1;
+    }else{
+        HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4G_Pin, GPIO_PIN_RESET);
+        D(printf("ERROR: f_mount\r\n"));
     }
 }
 
-void sdWrite(char* str, u16 szStr, SdSector* pSdSector){
-    if(pSdSector->freeSz < szStr){
-        sdWriteSector(pSdSector);
-        cleanSector(pSdSector);
+void sdWriteLog(char* strMsg, u16 szMsg, char* strParams, u16 szParams, SdSector* pSec){
+    if(bkte.isFatMount && SDFatFS.free_clst > 10){
+        u32 time = getTimeStamp();
+        u32 sz = szMsg + LEN_TIMESTAMP + szParams + LEN_SYMB_ENDL;
+        char strTimestamp[LEN_TIMESTAMP];
+        sprintf(strTimestamp, "%08x ", time);
+        if(pSec->freeSz < sz){
+            sdUpdLog(pSec);
+        }
+        strcat(pSec->pBufSec, strTimestamp);
+        strcat(pSec->pBufSec, strMsg);
+        if(szParams > 0){
+            strcat(pSec->pBufSec, strParams);
+        }
+        strcat(pSec->pBufSec, STR_ENDL);
+        pSec->freeSz -= sz;
     }
-    strcat(pSdSector->pBufSec, str);
-    pSdSector->freeSz -= szStr;
+}
+
+void sdUpdLog(SdSector* pSec){
+    if(pSec->freeSz != SZ_SECTOR){
+        sdWriteSector(pSec);
+        cleanSector(pSec);
+    }
 }
 
 void sdWriteSector(SdSector* pSdSector){

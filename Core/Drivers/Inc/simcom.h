@@ -13,6 +13,7 @@
 #include "usart.h"
 #include "cmsis_os.h"
 #include "../Utils/Inc/utils_bkte.h"
+#include "../Utils/Inc/utils_sd.h"
 #define RESPONSE_BUF_SZ				990
 #define COMMAND_BUF_SZ				100
 #define COMMAND_BUF_SZ				100
@@ -229,6 +230,8 @@ u8 simCheckCSQ();
 void simReset();
 
 void simOn();
+
+void simHardwareReset();
 
 u8 simTCPTest();
 

@@ -18,12 +18,12 @@ static void lcdShow(u8* str);
 LoraStatPckg loraStatPckg;
 
 void taskLora(void const * argument){
-	//   vTaskSuspend(loraHandle);
+	vTaskSuspend(loraHandle);
 	config.CarrierFreq = 0;
 	node.hspi = &hspi1;
 	node.config = &config;
 
-	// vTaskSuspend(loraHandle);
+	vTaskSuspend(loraHandle);
 	initLoraStat(&loraStatPckg);
 	HAL_GPIO_WritePin(RF_PWR_GPIO_Port, RF_PWR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_SET);

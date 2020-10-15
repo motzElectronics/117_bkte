@@ -25,6 +25,9 @@
 #define BKTE_ID_TRAINCAR		0
 #define BKTE_ID_TRAINCAR_MAX	3
 #define BKTE_IS_LORA_MASTER		1
+
+#define BKTE_ID_FIRMWARE		3
+#define BKTE_ID_TRAIN			1706
 //!------------CONFIGURE PARAMS----------------
 
 #define BKTE_ADDR_ID_MCU	0x1FFF7A10
@@ -48,10 +51,7 @@
 #define BKTE_SZ_UART_MSG		132
 #define BKTE_SZ_TEMP_MSG		4
 
-#define BKTE_ID_FIRMWARE		5
 #define BKTE_ID_BOOT			1
-
-#define BKTE_ID_TRAIN			1706
 
 #define SZ_PART_NEW_SOFTWARE	1360
 
@@ -65,7 +65,7 @@
 #define BKTE_PREAMBLE_EN1		0xAB
 #define BKTE_PREAMBLE_EN2		0xCD
 
-#define SZ_MAX_TX_DATA			8192
+#define SZ_MAX_TX_DATA			4096
 
 #define BKTE_MAX_TEMP                   100
 #define BKTE_MIN_TEMP                   -100
@@ -201,6 +201,7 @@ time_t getTimeStamp();
 
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 void checkBufForWritingToFlash();
+void updSpiFlash();
 extern BKTE bkte;
 
 #endif /* INC_UTILS_BKTE_H_ */

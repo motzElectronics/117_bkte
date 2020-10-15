@@ -2,6 +2,7 @@
 extern osThreadId getEnergyHandle;
 extern osThreadId webExchangeHandle;
 extern osThreadId getTempHandle;
+extern osThreadId keepAliveHandle;
 
 extern osMutexId mutexWriteToEnergyBufHandle;
 
@@ -17,9 +18,10 @@ void taskGetEnergy(void const * argument){
 	PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
 	u8 numIteration = 0;
 	u16 retLen;
-	vTaskSuspend(getEnergyHandle);
+	// vTaskSuspend(getEnergyHandle);
 	spiFlashInit(circBufPckgEnergy.buf);
 	sdInit();
+	sdWriteLog(SD_MSG_START_BKTE, SD_LEN_START_BKTE, NULL, 0, &sdSectorLogs);
 
 	cBufReset(&circBufPckgEnergy);
 
@@ -34,6 +36,7 @@ void taskGetEnergy(void const * argument){
 
 	vTaskResume(webExchangeHandle);
 	vTaskResume(getTempHandle);
+	vTaskResume(keepAliveHandle);
 
 	rxUart1_IT();
 
