@@ -2,6 +2,8 @@
 #define CIRCULAR_BUFFER_H_
 
 #include "main.h"
+#include "../Utils/Inc/utils_bkte.h"
+#include "cmsis_os.h"
 
 #define SZ_CIRCULAR_BUF		1000
 #define CIRC_BUF_END_MSG	(u8)'\0'
@@ -78,6 +80,8 @@ u8 cBufIsEmpty(CBufHandle cbuf);
 u8 cBufGetQuantity(CBufHandle cbuf);
 
 void cBufWriteToBuf(CBufHandle cbuf, u8* data, u8 sz);
+
+void cBufSafeWrite(CBufHandle cbuf, u8* data, u8 sz, osMutexId mutex, TickType_t ticks);
 
 u16 cBufRead(CBufHandle cbuf, u8* dist, CircTypeBuf typeBuf, u8 sz);
 void copyGetDatafromBuf(CBufHandle cbuf, u8* dist, u16 sz, CircTypeBuf type);

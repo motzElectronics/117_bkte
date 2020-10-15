@@ -21,6 +21,13 @@ typedef struct{
     u8  isTimerOn;
 }LoraTimer;
 
+typedef struct{
+    u32 txPckg;
+    u32 rxPckg;
+    u32 rxPckgAnsw[BKTE_ID_TRAINCAR_MAX + 1];
+    u32 rxPckgRcv[BKTE_ID_TRAINCAR_MAX + 1];
+}LoraStatPckg;
+
 
 void initTransmition();
 void lrStartTim(LoraTimer* pTim, u16 shift);
@@ -28,11 +35,15 @@ void lrUpdTim(LoraTimer* pTim);
 void lrStopTim(LoraTimer* pTim);
 u8 parceReq(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
 u8 parceAnsw(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
+u8 parceAnswMaster(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
 void updReq(LoraAlgTransition* pTx);
 void updAnsw(LoraAlgTransition* pTx);
 void serializeLoraAlgTrans(u8* pBuf, LoraAlgTransition* pTx);
 void deserializeLoraAlgTrans(LoraAlgTransition* pTx, u8* pBuf);
 void clearLoraAlgTrans(LoraAlgTransition* pckg);
+
+void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg);
+void initLoraStat(LoraStatPckg* pckg);
 
 
 #endif

@@ -26,17 +26,19 @@ void simInit(){
 		if(token == NULL || token[0] == '\0')
 			token = SIM_NO_RESPONSE_TEXT;
 		if((strcmp(token, SIM_OK_TEXT)) != 0){
+			sdWriteLog(SD_ER_MSG_AT, SD_LEN_MSG_AT, NULL, 0, &sdSectorLogError);
 			D(printf("ERROR: simInit() AT: %s\r\n", token));
 			simBadAnsw = (simBadAnsw + 1) % 10;
 			if(!simBadAnsw){
 				D(printf("ERROR: need reset\r\n"));
-				simReset();
+				simHardwareReset();
 			}
 			continue;
 		}
-		if(SIM_GPS_INIT() != SIM_SUCCESS){        
+		if(SIM_GPS_INIT() != SIM_SUCCESS){  
+			sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, NULL, 0, &sdSectorLogError);      
 			D(printf("ERROR: NOT CONNECT GPS\r\n"));
-        	simReset();
+        	simHardwareReset();
 			continue;
 		} else {
 			break;
@@ -113,6 +115,7 @@ void simHttpInit(char* url){
 	for(u8 i = 0; i < 3; i++){
 		if((resCode = httpInit(url, 2)) != SIM_SUCCESS){
 			D(printf("ERROR: httpInit()\r\n"));
+			sdWriteLog(SD_ER_MSG_HTTPINIT_MYFUN, SD_LEN_HTTP, url, strlen(url), &sdSectorLogError);
 			httpDeInit();
 			if(resCode == SIM_RESTART) 
 				simReset();
@@ -144,12 +147,15 @@ u8 httpInit(char* httpAddr, u8 retriesCount){
 			break;
 		}
 	}
-	if(!retriesCount)
+	if(!retriesCount){
+		sdWriteLog(SD_ER_MSG_HTTPINIT, SD_LEN_HTTP, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
+	}
 
 	memset(tmpSimBuf, '\0', COMMAND_BUF_SZ);
 	sprintf((char*)tmpSimBuf,"\"%s\",\"%s\"", URL_HTTP_PARAMETER, httpAddr);
 	if(httpWriteCommand(SET_HTTP_PARAMETERS_VALUE, tmpSimBuf, retriesCount, SIM_OK_TEXT) == SIM_FAIL){
+		sdWriteLog(SD_ER_MSG_HTTPINIT, SD_LEN_HTTP, tmpSimBuf, strlen(tmpSimBuf), &sdSectorLogError);
 		return SIM_FAIL;
 	}
 
@@ -157,6 +163,7 @@ u8 httpInit(char* httpAddr, u8 retriesCount){
 	if(isJson)sprintf((char*)tmpSimBuf,"\"%s\",\"application/json\"", CONTENT_HTTP_PARAMETER);
 	else sprintf((char*)tmpSimBuf,"\"%s\",\"text/plain\"", CONTENT_HTTP_PARAMETER);
 	if(httpWriteCommand(SET_HTTP_PARAMETERS_VALUE, tmpSimBuf, retriesCount, SIM_OK_TEXT) == SIM_FAIL){
+		sdWriteLog(SD_ER_MSG_HTTPINIT, SD_LEN_HTTP, tmpSimBuf, strlen(tmpSimBuf), &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	return SIM_SUCCESS;
@@ -175,6 +182,7 @@ char* simExecCommand(char* httpCommand){
 
 u8 httpGet(char** pRxData, u8 retriesCount, u32 httpTimeout){
 	if(httpWriteCommand(HTTP_METHOD_ACTION, "0", retriesCount, SIM_OK_TEXT) == SIM_FAIL){
+		sdWriteLog(SD_ER_HTTPACTION, SD_LEN_HTTP, "0", 1, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	if(uInfoSim.pRxBuf[6] == '\0')
@@ -191,6 +199,7 @@ u8 httpGet(char** pRxData, u8 retriesCount, u32 httpTimeout){
 		// sprintf(bufResponse, "HTTP_CODE_OK: %d\r\n", atoi((char*)gsmUartInfo.rxBuffer + 23));
 //		createLog(logError, LOG_SZ_ERROR, bufResponse);
 	}
+	sdWriteLog(SD_ER_MSG_HTTPGET_MYFUN, SD_LEN_MYFUN, NULL, 0, &sdSectorLogError);
 	return SIM_FAIL;
 }
 
@@ -201,6 +210,7 @@ u8 httpRead(char** pRxData){
 	osDelay(100);
 //	waitIdle("waitIdle status httpRead", &gsmUartInfo.irqFlags);
 	if(uInfoSim.pRxBuf[0] == '\0'){
+		sdWriteLog(SD_ER_HTTPACTION, SD_LEN_HTTP, NULL, 0, &sdSectorLogError);
 		D(printf("ERROR: HTTPREAD sim no resp\r\n"));
 //		createLog(logError, LOG_SZ_ERROR, "HTTPREAD sim no resp\r\n");
 		return SIM_FAIL;
@@ -208,9 +218,12 @@ u8 httpRead(char** pRxData){
 		token = strtok((char*)uInfoSim.pRxBuf, SIM_SEPARATOR_TEXT);
 
 //	waitSim("wait HTTPREAD resp server");
-	if(token == NULL || token[0] == '\0')
+	if(token == NULL || token[0] == '\0'){
+		sdWriteLog(SD_ER_HTTPACTION, SD_LEN_HTTP, "1", 1, &sdSectorLogError);
 		return SIM_HTTP_BAD_CODE_REQUEST;
+	}
 	else if(uInfoSim.pRxBuf[strlen(token) + 4] == '\0'){
+		sdWriteLog(SD_ER_HTTPACTION, SD_LEN_HTTP, "2", 1, &sdSectorLogError);
 		D(printf("ERROR: HTTPREAD server no response\r\n"));
 //		createLog(logError, LOG_SZ_ERROR, "HTTPREAD server no resp\r\n");
 		return SIM_HTTP_BAD_CODE_REQUEST;
@@ -219,6 +232,7 @@ u8 httpRead(char** pRxData){
 
 		//	httpWriteCommand(READ_THE_HTTP_SERVER_RESPONSE, "0,39", 3, SIM_OK);
 	if(token == NULL || token[0] == '\0'){
+		sdWriteLog(SD_ER_HTTPACTION, SD_LEN_HTTP, "3", 1, &sdSectorLogError);
 		D(printf("ERROR: httpRead() token NULL\r\n"));
 //		token = SIM_NO_RESPONSE_TEXT;
 		return SIM_FAIL;
@@ -227,10 +241,12 @@ u8 httpRead(char** pRxData){
 	*pRxData = responseSIMbuf;*/
 	*pRxData = token;
 	if((httpCode = atoi(token + strlen(token) - 4)) == HTTP_CODE_OK){
+		
 		D(printf("status POST: 200\r\n"));
 		return SIM_SUCCESS;
 	}else{
 		D(printf("ERROR status POST: %d\r\n", httpCode));
+		sdWriteLog(SD_ER_HTTPCODE, SD_LEN_HTTP, token, strlen(token), &sdSectorLogError);
 //		char tmpBuf[50];
 //		sprintf(tmpBuf, "HTTPREAD server code: %s\r\n", token);
 //		createLog(logError, LOG_SZ_ERROR, tmpBuf);
@@ -247,6 +263,7 @@ u8 httpPost(char* txData, u16 szTx, char** pRxData, u8 retriesCount, u32 httpTim
 
 	sprintf(param,"%d,%d", (int)szTx, (int)httpTimeout);
 	if(httpWriteCommand(INPUT_HTTP_DATA, param, retriesCount, SIM_DOWNLOAD) == SIM_FAIL){
+		sdWriteLog(SD_ER_HTTPDATA, SD_LEN_HTTP, param, strlen(param), &sdSectorLogError);
 		return SIM_FAIL;
 	}
 
@@ -254,12 +271,14 @@ u8 httpPost(char* txData, u16 szTx, char** pRxData, u8 retriesCount, u32 httpTim
 	char* token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 	if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
 	if(strcmp((const char*)token, (const char*)SIM_OK_TEXT)){
+		sdWriteLog(SD_ER_HTTPDATA_UART, SD_LEN_HTTP, NULL, 0, &sdSectorLogError);
 		D(printf("ERROR: txData %s\r\n", retMsg));
 		return SIM_FAIL;
 	}
 	D(printf("OK: txData %s return : %s\r\n", txData, retMsg));
 
 	if(httpWriteCommand(HTTP_METHOD_ACTION, "1", 1, SIM_OK_TEXT) == SIM_FAIL){
+		sdWriteLog(SD_ER_HTTPACTION, SD_LEN_HTTP, "1", 1, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	if(uInfoSim.pRxBuf[6] == '\0')
@@ -271,6 +290,7 @@ u8 httpPost(char* txData, u16 szTx, char** pRxData, u8 retriesCount, u32 httpTim
 		return httpRead(pRxData);
 	}else{
 		D(printf("%s\r\n", uInfoSim.pRxBuf + 8));
+		sdWriteLog(SD_ER_HTTPACTION, SD_LEN_HTTP, uInfoSim.pRxBuf + 8, strlen(uInfoSim.pRxBuf + 8), &sdSectorLogError);
 	}
 	return SIM_FAIL;
 }
@@ -318,15 +338,19 @@ void simOff(){
 	osDelay(1000);
 }
 
+void simHardwareReset(){
+	D(printf("WARINIG!: R E S E T !\r\n"));
+	sdWriteLog(SD_MSG_SIM_RESET, SD_LEN_SIM_RESET, NULL, 0, &sdSectorLogs);
+	simOff();
+	simOn();
+}
+
 void simReset(){
 	u8 tmpSimBadResponse = 0;
 	char* retMsg;
 	char* token;
-	D(printf("WARINIG!: R E S E T !\r\n"));
-	simOff();
-	simOn();
+	simHardwareReset();
 	while(1){
-		simInit();
 		retMsg = simTxATCommand("AT\r\n", strlen("AT\r\n"));
 		token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 		if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
@@ -336,10 +360,11 @@ void simReset(){
 	//				sdWriteError("simInit() ISSUE:BAD_RESPONSE_AT_COMMAND\r\n");
 			tmpSimBadResponse = (tmpSimBadResponse + 1) % 10;
 			if(!tmpSimBadResponse){
-			  D(printf("WARINTING!: T O T A L  R E S E T\r\n"));
-	//				  createLog(logError, LOG_SZ_ERROR, "ERROR: TOTAL RESET \r\n");
-			  osDelay(3000);
-			  HAL_NVIC_SystemReset();
+				sdWriteLog(SD_MSG_MCU_RESET, SD_LEN_MCU_RESET, NULL, 0, &sdSectorLogs);
+				D(printf("WARINTING!: T O T A L  R E S E T\r\n"));
+		//				  createLog(logError, LOG_SZ_ERROR, "ERROR: TOTAL RESET \r\n");
+				osDelay(3000);
+				HAL_NVIC_SystemReset();
 			}
 			osDelay(5000);
 		} else {

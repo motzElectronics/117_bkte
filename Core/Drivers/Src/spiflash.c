@@ -19,7 +19,7 @@ void spiFlashInit(u8* buf){
 
 	id = spiFlashReadID();
 	tmp = id & 0x0000FFFF;
-	printf("spiFlashId, series: %d %x\r\n", (int)id, (int)tmp);
+	D(printf("spiFlashId, series: %d %x\r\n", (int)id, (int)tmp));
 
 	spiFlash64.blCnt = 128;
 	spiFlash64.pgSz = 256;
@@ -116,7 +116,7 @@ void spiFlashWrEn(){
 }
 
 u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
-	printf("spiFlash WrPg\r\n");
+	D(printf("spiFlash WrPg\r\n"));
 	u32 addr;
 	u8 ret = 0;
 	if(spiFlash64.tailNumPg > spiFlash64.headNumPg && 
@@ -141,19 +141,19 @@ u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 
 	addr = (numPage * spiFlash64.pgSz) + offset;
 	u8 data[] = {SPIFLASH_PP, ((addr & 0xFF0000) >> 16), ((addr & 0xFF00) >> 8), (addr & 0xFF)};
-	printf("spiFlashWaitReady()\r\n");
+	D(printf("spiFlashWaitReady()\r\n"));
 	spiFlashWaitReady();
-	printf("spiFlashWrEn()\r\n");
+	D(printf("spiFlashWrEn()\r\n"));
 	spiFlashWrEn();
 
 	SPIFLASH_CS_SEL;
-	printf("SPIFLASH_PP()\r\n");
+	D(printf("SPIFLASH_PP()\r\n"));
 	spiFlashTxRxCmd(data, 4);
-	printf("spiFlashTxData()\r\n");
+	D(printf("spiFlashTxData()\r\n"));
 	spiFlashTxData(pBuf, sz);
 	SPIFLASH_CS_UNSEL;
 
-	printf("spiFlashWaitReady()\r\n");
+	D(printf("spiFlashWaitReady()\r\n"));
 	spiFlashWaitReady();
 	osDelay(10);
 	spiFlash64.headNumPg = (spiFlash64.headNumPg + 1) % SPIFLASH_NUM_PG_GNSS;
@@ -162,7 +162,7 @@ u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 }
 
 void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
-	printf("spiFlash RdPg");
+	D(printf("spiFlash RdPg"));
 	u32 addr;
 	while(spiFlash64.lock == 1)
 		osDelay(200);

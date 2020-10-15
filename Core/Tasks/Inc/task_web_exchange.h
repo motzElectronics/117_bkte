@@ -9,6 +9,9 @@
 #include "../Drivers/Inc/simcom.h"
 #include "../Utils/Inc/utils_json.h"
 
+#define PCKG_WAS_lOST   1
+#define PCKG_WAS_SENT   0
+
 u8 sendDataToServer();
 void saveCsq(u8 csq);
 

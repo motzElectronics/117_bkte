@@ -26,7 +26,6 @@ void taskWebExchange(void const * argument){
 	vTaskSuspend(webExchangeHandle);
 	simOn();
 	simInit();
-	simTCPTest();
 	if(!getServerTime()){
 		D(printf("ERROR: BAD TIME\r\n"));
 	}
@@ -69,7 +68,7 @@ void taskWebExchange(void const * argument){
 			if(pckgJsonEn.numPckg){
 				tmpCntPckg = closeGnssJson();
 				allTxPckg += tmpCntPckg;
-				if(sendDataToServer()){
+				if(sendDataToServer() == PCKG_WAS_lOST){
 					notTxCntPckg += tmpCntPckg;
 					fillTelemetry(&tmpPckgEnergy, TEL_BAD_RESPONSE_SERVER, (u32)((float)notTxCntPckg / allTxPckg * 1000));
 					xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
@@ -94,10 +93,9 @@ u8 sendDataToServer(){
 	u8 cntHttpPostFail = 1;
 	u8 tmpIdFirmware;
 	u8 csq = 0;
-	u8 ret = 0;
+	u8 ret = PCKG_WAS_SENT;
 
 	xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-
 
 	while(cntHttpPostFail){
 
@@ -107,7 +105,8 @@ u8 sendDataToServer(){
 		}
 		
 		if((resCode = httpPost(pckgJsonEn.jsonEnTxBuf, strlen(pckgJsonEn.jsonEnTxBuf), &pRxData, 
-			10, 10000)) != SIM_SUCCESS){
+		10, 10000)) != SIM_SUCCESS){
+			sdWriteLog(SD_ER_MSG_HTTPPOST_MYFUN, SD_LEN_MYFUN, NULL, 0, &sdSectorLogError);
 			D(printf("ERROR: httpPost()\r\n"));
 			simHttpInit(urls.addMeasure);
 			cntHttpPostFail++;
@@ -117,13 +116,14 @@ u8 sendDataToServer(){
 			}else if(cntHttpPostFail == 4){
 				cntHttpPostFail = 0;
 				simReset();
-				ret = 1;
+				ret = PCKG_WAS_lOST;
 			}	
 		} else{
 			cntHttpPostFail = 0;
 			D(printf("OK: httpPost()\r\n"));
-                        HAL_GPIO_TogglePin(LED2G_GPIO_Port, LED2G_Pin);
+			HAL_GPIO_TogglePin(LED2G_GPIO_Port, LED2G_Pin);
 			if((tmpIdFirmware = atoi(pRxData + 11)) != bkte.idFirmware && tmpIdFirmware > 0){
+				sdWriteLog(SD_MSG_NEW_BIN, SD_LEN_MYFUN, NULL, 0, &sdSectorLogs);
 				D(printf("New FIRMWARE v.:%d\r\n", (int)tmpIdFirmware));
 				vTaskResume(getNewBinHandle);
 			}

@@ -7,7 +7,8 @@
 
 
 #include "../Utils/Inc/circularBuffer.h"
-#include "../Utils/Inc/utils_bkte.h"
+
+
 
 //u8 circularBuffer[SZ_CIRCULAR_BUF] = {0};
 
@@ -18,7 +19,7 @@ void cBufInit(CBufHandle cbuf, u8* buf){
 	cbuf->buf = buf;
 	cbuf->max = SZ_CIRCULAR_BUF;
 	cBufReset(cbuf);
-	printf("cBufInit()\r\n");
+	D(printf("cBufInit()\r\n"));
 }
 
 void cBufReset(CBufHandle cbuf){
@@ -61,9 +62,15 @@ void cBufWriteToBuf(CBufHandle cbuf, u8* data, u8 sz){
 		cbuf->writeAvailable -= sz;
 		cbuf->readAvailable += sz;
 	} else {
-		printf("FULL CIRC BUFFER\r\n");
+		D(printf("FULL CIRC BUFFER\r\n"));
 	}
 
+}
+
+void cBufSafeWrite(CBufHandle cbuf, u8* data, u8 sz, osMutexId mutex, TickType_t ticks){
+	xSemaphoreTake(mutex, ticks);
+	cBufWriteToBuf(cbuf, data, sz);
+	xSemaphoreGive(mutex);
 }
 
 //u8 cBufRead(CBufHandle cbuf, u8* dist, u8 sz){
@@ -98,7 +105,7 @@ u16 cBufRead(CBufHandle cbuf, u8* dist, CircTypeBuf typeBuf, u8 sz){
 		}
 		else if(lenMsg){
 			cBufReset(cbuf);
-			printf("ERROR: CIRC_TYPE_ENERGY_UART lenMsg: %d\r\n", lenMsg);
+			D(printf("ERROR: CIRC_TYPE_ENERGY_UART lenMsg: %d\r\n", lenMsg));
 		}
 		break;
 	case CIRC_TYPE_PCKG_ENERGY:
@@ -172,7 +179,7 @@ u8 getLenMsgEnergyUart(CBufHandle cbuf){
 					if(tail == cbuf->head){
 						lenMsg = 0;
 						cBufReset(cbuf);
-						printf("ERROR: NOHEADER\r\n");
+						D(printf("ERROR: NOHEADER\r\n"));
 					}
 					tail = (tail + 1) % cbuf->max;
 
