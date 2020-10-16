@@ -162,7 +162,7 @@ void MX_FREERTOS_Init(void) {
   getTempHandle = osThreadCreate(osThread(getTemp), NULL);
 
   /* definition and creation of manageIWDG */
-  osThreadDef(manageIWDG, taskManageIWDG, osPriorityNormal, 0, 256);
+  osThreadDef(manageIWDG, taskManageIWDG, osPriorityNormal, 0, 128);
   manageIWDGHandle = osThreadCreate(osThread(manageIWDG), NULL);
 
   /* definition and creation of lora */

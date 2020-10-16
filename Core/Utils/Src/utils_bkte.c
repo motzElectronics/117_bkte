@@ -24,7 +24,6 @@ extern CircularBuffer circBufPckgEnergy;
 static char* fNamesLog[NUM_READ_FILES] = {FILE_LOG_ENERGY, FILE_LOG_TEMP, FILE_LOG_RSSI};
 static char* fNamesAddr[NUM_READ_FILES] = {FILE_ADDR_ENERGY, FILE_ADDR_TEMP, FILE_ADDR_RSSI};*/
 void bkteInit(){
-	char* retMsg;
 
 	HAL_GPIO_WritePin(SD_PWR_EN_GPIO_Port, SD_PWR_EN_Pin, GPIO_PIN_RESET);
 	

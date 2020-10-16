@@ -3,6 +3,7 @@ extern osThreadId getEnergyHandle;
 extern osThreadId webExchangeHandle;
 extern osThreadId getTempHandle;
 extern osThreadId keepAliveHandle;
+extern osThreadId loraHandle;
 
 extern osMutexId mutexWriteToEnergyBufHandle;
 
@@ -10,7 +11,7 @@ extern CircularBuffer circBufPckgEnergy;
 extern CircularBuffer rxUart1CircBuf;
 
 static u16 testBufUart1[SZ_RX_UART1];
-// static EnergyData lastData = {.current = 0, .enAct = 0, .enReact = 0, .volt = 0};
+static EnergyData lastData = {.current = 0, .enAct = 0, .enReact = 0, .volt = 0};
 extern u8 SZ_PCKGENERGY;
 
 void taskGetEnergy(void const * argument){
@@ -37,6 +38,7 @@ void taskGetEnergy(void const * argument){
 	vTaskResume(webExchangeHandle);
 	vTaskResume(getTempHandle);
 	vTaskResume(keepAliveHandle);
+	vTaskResume(loraHandle);
 
 	rxUart1_IT();
 
@@ -46,11 +48,12 @@ void taskGetEnergy(void const * argument){
         if(retLen == BKTE_SZ_UART_MSG){
             numIteration = (numIteration + 1) % BKTE_ENERGY_FULL_LOOP;
             fillPckgEnergy(&curPckgEnergy, testBufUart1);
-            // if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
-                xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+            if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
+				cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+                /*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
                 cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
-                xSemaphoreGive(mutexWriteToEnergyBufHandle);
-            // }			
+                xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
+            }			
 
         }
         checkBufForWritingToFlash();

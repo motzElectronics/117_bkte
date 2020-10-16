@@ -136,8 +136,8 @@ int main(void)
   cBufInit(&rxUart1CircBuf, uart1Buf);
 	cBufInit(&circBufPckgEnergy, bufPckgEnergy);
   ds2482Init();
-  urlsInit();
   bkteInit();
+  urlsInit();
   uartInitInfo();
   
 //  simOn();

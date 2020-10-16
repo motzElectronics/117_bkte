@@ -22,7 +22,7 @@ void sdInit(){
         cleanSector(&sdSectorLogs);
         bkte.isFatMount = 1;
     }else{
-        HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4G_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_RESET);
         D(printf("ERROR: f_mount\r\n"));
     }
 }
@@ -30,8 +30,8 @@ void sdInit(){
 void sdWriteLog(char* strMsg, u16 szMsg, char* strParams, u16 szParams, SdSector* pSec){
     if(bkte.isFatMount && SDFatFS.free_clst > 10){
         u32 time = getTimeStamp();
-        u32 sz = szMsg + LEN_TIMESTAMP + szParams + LEN_SYMB_ENDL;
-        char strTimestamp[LEN_TIMESTAMP];
+        u32 sz = szMsg + LEN_TIME + szParams + LEN_SYMB_ENDL;
+        char strTimestamp[LEN_TIME];
         sprintf(strTimestamp, "%08x ", time);
         if(pSec->freeSz < sz){
             sdUpdLog(pSec);

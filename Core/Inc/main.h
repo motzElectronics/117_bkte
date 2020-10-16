@@ -117,7 +117,7 @@ void Error_Handler(void);
 #include "stdlib.h"
 #include "string.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG
   #define D(x)  x

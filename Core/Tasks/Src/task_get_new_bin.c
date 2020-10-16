@@ -4,6 +4,7 @@ extern osThreadId webExchangeHandle;
 extern osThreadId getTempHandle;
 extern osThreadId getNewBinHandle;
 extern osThreadId keepAliveHandle;
+extern osThreadId loraHandle;
 
 static char tmpBufPage[256];
 
@@ -26,6 +27,7 @@ void taskGetNewBin(void const * argument){
 	vTaskSuspend(getEnergyHandle);
 	vTaskSuspend(getTempHandle);
 	vTaskSuspend(keepAliveHandle);
+	vTaskSuspend(loraHandle);
 	isRxNewFirmware = 1;
 	while(simGetSzSoft(&szSoft) == SIM_FAIL){
 		sdWriteLog(SD_ER_MSG_GET_SZ_NEW_BIN_MYFUN, SD_LEN_MYFUN, NULL, 0, &sdSectorLogError);

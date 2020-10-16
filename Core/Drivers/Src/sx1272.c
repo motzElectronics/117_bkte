@@ -75,7 +75,7 @@ void sx1272_lora_init(SX1272 *node) {
      * spreading factor and minimum bandwidth are selected */
 	sx1272_set_modem_config(
 		(BW_250K << BAND_WIDTH) | (CR_4_8 << CODING_RATE) | (IMPLICIT_HEADER << HEADER_MODE) | (CRC_DISABLED << RX_CRC),
-		(SF_9 << SPREADING_FACTOR) | (INTERNAL << AGC_MODE));
+		(SF_11 << SPREADING_FACTOR) | (INTERNAL << AGC_MODE));
 
 	/* Set max pay load length */
 	sx1272_set_max_payload(MAX_PACKET_LENGTH);

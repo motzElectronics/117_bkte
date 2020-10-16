@@ -18,6 +18,7 @@ u8 isJson = 1;
 void simInit(){
 	char* retMsg;
 	char* token;
+	u8 fail = 0; 
 	u8 simBadAnsw;
 	while(1){
 		simWriteCommand("ATE0");
@@ -35,7 +36,14 @@ void simInit(){
 			}
 			continue;
 		}
-		if(SIM_GPS_INIT() != SIM_SUCCESS){  
+		if(SIM_GPS_INIT() != SIM_SUCCESS){ 
+			fail++;
+			if(fail > 5){
+				sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, "1", 1, &sdSectorLogError);
+				sdUpdLog(&sdSectorLogError);
+				sdUpdLog(&sdSectorLogs);  
+				HAL_NVIC_SystemReset();
+			}
 			sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, NULL, 0, &sdSectorLogError);      
 			D(printf("ERROR: NOT CONNECT GPS\r\n"));
         	simHardwareReset();
@@ -390,7 +398,8 @@ u8 testCipCmd(char* command, char* sucMsg){
 	return SIM_SUCCESS;
 }
 
-u8 simTCPTest(){
+
+/*u8 simTCPTest(){
 	//AT+CIPSHUT
 
 	char param[40];
@@ -451,4 +460,5 @@ u8 simTCPTest(){
 	osDelay(500);
 
 
-}
+}*/
+
