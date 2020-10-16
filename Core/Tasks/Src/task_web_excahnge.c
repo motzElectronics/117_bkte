@@ -50,18 +50,20 @@ void taskWebExchange(void const * argument){
 
 				if(!spiFlash64.tailNumPg){
 					fillTelemetry(&tmpPckgEnergy, TEL_SERV_FLASH_CIRC_BUF_END_TAIL, 0);
-					xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+					cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+					/*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 					cBufWriteToBuf(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY);
-					xSemaphoreGive(mutexWriteToEnergyBufHandle);
+					xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 				}
 
 				while(getGnssPckg((u8*)tmpBufPage, 256, &tmpPckgEnergy, SZ_PCKGENERGY)){
 					tmpTimeStamp = addEnPckgToJson(&tmpPckgEnergy);
 					if(tmpTimeStamp > BKTE_BAD_TIMESTAMP){
 						fillTelemetry(&tmpPckgEnergy, TEL_BAD_RTC_TIME, 0);
-						xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+						cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+						/*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 						cBufWriteToBuf(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY);
-						xSemaphoreGive(mutexWriteToEnergyBufHandle);
+						xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 					}
 				}
 			}
@@ -71,15 +73,17 @@ void taskWebExchange(void const * argument){
 				if(sendDataToServer() == PCKG_WAS_lOST){
 					notTxCntPckg += tmpCntPckg;
 					fillTelemetry(&tmpPckgEnergy, TEL_BAD_RESPONSE_SERVER, (u32)((float)notTxCntPckg / allTxPckg * 1000));
-					xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+					cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+					/*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 					cBufWriteToBuf(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY);
-					xSemaphoreGive(mutexWriteToEnergyBufHandle);
+					xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 				}
 			} else {
 				fillTelemetry(&tmpPckgEnergy, TEL_BAD_ALL_CRC, 0);
-				xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+				cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+				/*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 				cBufWriteToBuf(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY);
-				xSemaphoreGive(mutexWriteToEnergyBufHandle);
+				xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 			}
 		}
 		D(printf("no pckg in spiflash\r\n"));
@@ -137,8 +141,9 @@ u8 sendDataToServer(){
 void saveCsq(u8 csq){
 	PckgEnergy pckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
 	fillTelemetry(&pckgEnergy, TEL_LVL_CSQ, csq);
-	xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+	cBufSafeWrite(&circBufPckgEnergy, (u8*)&pckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+	/*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&pckgEnergy, SZ_PCKGENERGY);
-	xSemaphoreGive(mutexWriteToEnergyBufHandle);
+	xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 }
 

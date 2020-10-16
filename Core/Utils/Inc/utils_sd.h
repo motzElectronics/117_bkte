@@ -5,7 +5,7 @@
 #include "fatfs.h"
 
 #define SZ_SECTOR   4096
-#define LEN_TIMESTAMP   9
+#define LEN_TIME       9
 
 #define LEN_SYMB_ENDL   2
 #define STR_ENDL        (char*)"\r\n"

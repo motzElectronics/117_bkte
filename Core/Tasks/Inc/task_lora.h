@@ -24,8 +24,8 @@ typedef struct{
 typedef struct{
     u32 txPckg;
     u32 rxPckg;
-    u32 rxPckgAnsw[BKTE_ID_TRAINCAR_MAX + 1];
-    u32 rxPckgRcv[BKTE_ID_TRAINCAR_MAX + 1];
+    u32 rxPckgAnsw[BKTE_AMOUNTS];
+    u32 rxPckgRcv[BKTE_AMOUNTS];
 }LoraStatPckg;
 
 

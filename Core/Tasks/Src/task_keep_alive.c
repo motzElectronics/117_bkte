@@ -3,6 +3,7 @@
 extern osThreadId keepAliveHandle;
 extern osThreadId getTempHandle;
 extern osThreadId getEnergyHandle;
+extern osThreadId loraHandle;
 extern u8 isRxNewFirmware;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
@@ -46,6 +47,7 @@ void pwrOffBkte(){
     char strVolts[4];
     vTaskSuspend(getEnergyHandle);
     vTaskSuspend(getTempHandle);
+    vTaskSuspend(loraHandle);
 
     osDelay(2000);
     cBufReset(&circBufPckgEnergy);

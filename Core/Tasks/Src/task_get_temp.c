@@ -49,9 +49,10 @@ void taskGetTemp(void const * argument){
         }
 
         fillTempPckgEnergy(&curPckgTemp, temps);
-        xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+        cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+        /*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
         cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY);
-        xSemaphoreGive(mutexWriteToEnergyBufHandle);
+        xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
         checkBufForWritingToFlash();
 
         osDelay(1000);
