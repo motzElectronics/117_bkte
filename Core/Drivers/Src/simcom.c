@@ -38,10 +38,11 @@ void simInit(){
 		}
 		if(SIM_GPS_INIT() != SIM_SUCCESS){ 
 			fail++;
-			if(fail > 5){
+			if(fail > 10){
 				sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, "1", 1, &sdSectorLogError);
 				sdUpdLog(&sdSectorLogError);
-				sdUpdLog(&sdSectorLogs);  
+				sdUpdLog(&sdSectorLogs);
+				fail = 0;  
 				HAL_NVIC_SystemReset();
 			}
 			sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, NULL, 0, &sdSectorLogError);      
@@ -373,6 +374,8 @@ void simReset(){
 		//				  createLog(logError, LOG_SZ_ERROR, "ERROR: TOTAL RESET \r\n");
 				osDelay(3000);
 				HAL_NVIC_SystemReset();
+				sdUpdLog(&sdSectorLogError);
+				sdUpdLog(&sdSectorLogs);
 			}
 			osDelay(5000);
 		} else {
