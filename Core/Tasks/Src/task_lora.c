@@ -315,7 +315,7 @@ void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg){
 		D(printf("STAT: %d rcv: %d ; answ: %d\r\n", i,  perRcv, perAnsw));
 
 		if(!cnt){
-			fillTelemetry(&tmpPckg, TEL_LORA_LINK_EDGE, ((i & 0xFF) << 16) | ((perRcv & 0xFF) << 8) | perMaster & 0xFF);
+			fillTelemetry(&tmpPckg, TEL_LORA_LINK_EDGE, ((i & 0xFF) << 16) | ((perRcv & 0xFF) << 8) | perAnsw & 0xFF);
 			cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 		}
 
