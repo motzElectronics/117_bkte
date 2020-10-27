@@ -14,14 +14,13 @@ static u16 testBufUart1[SZ_RX_UART1];
 static EnergyData lastData = {.current = 0, .enAct = 0, .enReact = 0, .volt = 0};
 extern u8 SZ_PCKGENERGY;
 
-u8 test = 0;
+// u8 test = 0;
 
 void taskGetEnergy(void const * argument){
   	// vTaskSuspend(getEnergyHandle);
 	PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
 	u8 numIteration = 0;
 	u16 retLen;
-	// vTaskSuspend(getEnergyHandle);
 	spiFlashInit(circBufPckgEnergy.buf);
 	sdInit();
 	sdWriteLog(SD_MSG_START_BKTE, SD_LEN_START_BKTE, NULL, 0, &sdSectorLogs);
@@ -48,18 +47,18 @@ void taskGetEnergy(void const * argument){
     for(;;){
         memset(testBufUart1, '\0', sizeof(testBufUart1));
         retLen = cBufRead(&rxUart1CircBuf, (u8*)testBufUart1, CIRC_TYPE_ENERGY_UART, 0);
-        if(retLen == BKTE_SZ_UART_MSG || test == 4){
+        if(retLen == BKTE_SZ_UART_MSG){
             numIteration = (numIteration + 1) % BKTE_ENERGY_FULL_LOOP;
             fillPckgEnergy(&curPckgEnergy, testBufUart1);
-            // if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
+            if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
 				cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
                 /*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
                 cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
                 xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
-            // }			
+            }			
 
         }
-		test = (test + 1) % 5;
+		// test = (test + 1) % 3;
         checkBufForWritingToFlash();
 		osDelay(200);
     }

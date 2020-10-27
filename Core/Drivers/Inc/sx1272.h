@@ -378,6 +378,8 @@ typedef struct{
 }LoraTrainGenInfo;
 
 typedef struct{
+	//u32 timeRcv;
+	//u32 timeAnsw;
 	s8	temperature;
 	u8	statusInfo;
 }LoraTrainCarInfo;
@@ -434,7 +436,7 @@ uint8_t sx1272_get_ocp();
 void sx1272_send(u8 *data, u8 sz);
 u8 sx1272_get_rssi(void);
 //uint8_t sx1272_receive(uint8_t *rx_buffer, uint8_t size, uint32_t timeout);
-u8 sx1272_receive(u8* pBuf);
+u8 sx1272_receive(u8* pBuf, u8* pRssi, u16 timeOut);
 uint16_t sx1272_get_modem_config();
 uint32_t sx1272_get_freq();
 

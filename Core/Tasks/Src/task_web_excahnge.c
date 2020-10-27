@@ -24,7 +24,7 @@ void taskWebExchange(void const * argument){
 	u32 tmpTimeStamp;
 	offAllLeds();
 	vTaskSuspend(webExchangeHandle);
-	simOn();
+	// simOn();
 	simInit();
 	if(!getServerTime()){
 		D(printf("ERROR: BAD TIME\r\n"));
@@ -103,7 +103,7 @@ u8 sendDataToServer(){
 
 	while(cntHttpPostFail){
 
-		while((csq = simCheckCSQ()) < 10 && csq > 99){
+		while((csq = simCheckCSQ()) < 15 && csq > 99){
 			osDelay(2000);
 			saveCsq(csq);
 		}
@@ -112,7 +112,7 @@ u8 sendDataToServer(){
 		10, 10000)) != SIM_SUCCESS){
 			sdWriteLog(SD_ER_MSG_HTTPPOST_MYFUN, SD_LEN_MYFUN, NULL, 0, &sdSectorLogError);
 			D(printf("ERROR: httpPost()\r\n"));
-			simHttpInit(urls.addMeasure);
+			
 			cntHttpPostFail++;
 //			HAL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
 			if(cntHttpPostFail == 3){
@@ -121,7 +121,8 @@ u8 sendDataToServer(){
 				cntHttpPostFail = 0;
 				simReset();
 				ret = PCKG_WAS_lOST;
-			}	
+			}
+			simHttpInit(urls.addMeasure);	
 		} else{
 			cntHttpPostFail = 0;
 			D(printf("OK: httpPost()\r\n"));

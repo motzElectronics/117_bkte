@@ -40,7 +40,7 @@ void taskGetNewBin(void const * argument){
 
 	for(;;)
 	{
-		if((csq = simCheckCSQ()) > 10 && csq < 99){
+		if((csq = simCheckCSQ()) > 12 && csq < 99){
 				if(szSoft != curSzSoft){
 					if(szSoft - curSzSoft > SZ_PART_NEW_SOFTWARE) szPartSoft = SZ_PART_NEW_SOFTWARE;
 					else szPartSoft = szSoft - curSzSoft;
@@ -56,11 +56,11 @@ void taskGetNewBin(void const * argument){
 						HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);
 					} else{
 						D(printf("ERROR: httpPost() DOWNLOAD\r\n"));
-						simHttpInit(urls.getPartFirmware);
 						cntHttpPostFail++;
 						if(cntHttpPostFail > 10) simReset();
+						simHttpInit(urls.getPartFirmware);
 					}
-				} else{
+				} else{ 
 					while(HAL_FLASH_Unlock() != HAL_OK) D(printf("ERROR: HAL_FLASH_Unlock()\r\n"));
 					FLASH_Erase_Sector(FLASH_SECTOR_3, VOLTAGE_RANGE_3);
 					D(printf("FLASH_Erase_Sector\r\n"));

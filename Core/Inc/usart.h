@@ -52,7 +52,7 @@ void MX_USART6_UART_Init(void);
 #define USART_SZ_BUF_RX_USART6    1524
 #define USART_SZ_BUF_TX_USART6    1024
 
-#define USART_SZ_BUF_TX_USART2    15
+#define USART_SZ_BUF_TX_USART2    20
 
 #define USART_TIMEOUT             15000
 

@@ -55,14 +55,14 @@ void spiFlashInit(u8* buf);
 void spiFlashEC();
 void spiFlashES(u32 numSec);
 void spiFlashEB(u32 numBl);
-void spiFlashWaitReady();
+u8 spiFlashWaitReady();
 
 u32 spiFlashReadID();
 void spiFlashWrEn();
 
-void spiFlashTxRxCmd(u8* data, u16 sz);
-void spiFlashTxData(u8* data, u16 sz);
-void spiFlashRxData(u8* data, u16);
+u8 spiFlashTxRxCmd(u8* data, u16 sz);
+u8 spiFlashTxData(u8* data, u16 sz);
+u8 spiFlashRxData(u8* data, u16);
 u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage);
 void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage);
 

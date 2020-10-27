@@ -81,7 +81,7 @@ void updRTC(){
     time_t prevRtcTime;
     u32 time = 0;
     xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-    while((csq = simCheckCSQ()) < 10 && csq > 99){
+    while((csq = simCheckCSQ()) < 12 && csq > 99){
         osDelay(2000);
     }
     prevRtcTime = getTimeStamp();
