@@ -131,7 +131,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   D(printf("OK: start main prog"));
   FIRMWARE_INFO info = {.header = 0x1122334455667788,
-		  .numFirmware = BKTE_ID_FIRMWARE, .verFirmware = BKTE_VER_BETA_FIRMWARE
+		  .numFirmware = BKTE_ID_FIRMWARE, .verFirmware = BKTE_VER_BETA_FIRMWARE, .numTrainCar = BKTE_ID_TRAINCAR
   };
   cBufInit(&rxUart1CircBuf, uart1Buf);
 	cBufInit(&circBufPckgEnergy, bufPckgEnergy);

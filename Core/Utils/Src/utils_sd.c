@@ -55,18 +55,20 @@ void sdUpdLog(SdSector* pSec){
 
 void sdWriteSector(SdSector* pSdSector){
     u32 bWrite;
-    if(f_open(&fil, pSdSector->fileName, FA_WRITE | FA_OPEN_APPEND) == FR_OK){
+    if(bkte.isFatMount && SDFatFS.free_clst > 10){
+        if(f_open(&fil, pSdSector->fileName, FA_WRITE | FA_OPEN_APPEND) == FR_OK){
 
-        if(f_write(&fil, pSdSector->pBufSec, pSdSector->szSector - pSdSector->freeSz, (UINT*)&bWrite) != FR_OK){
-            D(printf("ERROR: f_write\r\n"));
+            if(f_write(&fil, pSdSector->pBufSec, pSdSector->szSector - pSdSector->freeSz, (UINT*)&bWrite) != FR_OK){
+                D(printf("ERROR: f_write\r\n"));
+            }
+
+            if((f_close(&fil)) == FR_OK)
+                D(printf("OK: f_close\r\n"));
+            else 
+                D(printf("ERROR: f_close\r\n"));
+        } else{
+            D(printf("ERROR: f_open\r\n"));
         }
-
-        if((f_close(&fil)) == FR_OK)
-            D(printf("OK: f_close\r\n"));
-        else 
-            D(printf("ERROR: f_close\r\n"));
-    } else{
-        D(printf("ERROR: f_open\r\n"));
     }
 }
 

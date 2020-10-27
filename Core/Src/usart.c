@@ -413,6 +413,7 @@ void uartRxDma(UartInfo* pUInf){
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* uartHandle){
+  // D(printf("OK: UART RxCpltCallback\r\n"));
 	if(uartHandle->Instance == USART6){
 		uInfoSim.irqFlags.isIrqRx = 1;
 		uartRxDma(&uInfoSim);
@@ -426,7 +427,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* uartHandle){
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
-//	printf("TxCpltCallback\r\n");
+	// D(printf("OK: UART TxCpltCallback\r\n"));
 //	xQueueSendToBackFromISR(queue1WireHandle, &isRxData, &woke);
 	if(huart->Instance == USART6){
 //		printf("IRQ: TXGSM\r\n");
@@ -440,6 +441,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 	u32 error = HAL_UART_GetError(huart);
+  D(printf("HAL_UART_ErrorCallback\r\n"));
 	if(huart->Instance == USART6){
 		u32 error = HAL_UART_GetError(huart);
 		D(printf("HAL_UART_ErrorCallback() sim800 ERROR_CODE: %d\r\n", (int)error));
@@ -452,6 +454,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 	} else if(huart->Instance == USART2){
     D(printf("ERROR: HAL_UART_ErrorCallback() USART2 LCD\r\n"));
   }
+
 }
 
 void rxUart1_IT(){

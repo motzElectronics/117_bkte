@@ -53,22 +53,23 @@ u32 spiFlashReadID(void){
 	return id;
 }
 
-void spiFlashTxRxCmd(u8* data, u16 sz){
+u8 spiFlashTxRxCmd(u8* data, u16 sz){
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_TransmitReceive_DMA(spiMemInfo.pHSpi, data, data, sz); // spi2
-	waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	return waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+
 }
 
-void spiFlashTxData(u8* data, u16 sz){
+u8 spiFlashTxData(u8* data, u16 sz){
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_Transmit_DMA(spiMemInfo.pHSpi, data, sz); // spi2
-	waitTx("wait txSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	return waitTx("wait txSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
 }
 
-void spiFlashRxData(u8* data, u16 sz){
+u8 spiFlashRxData(u8* data, u16 sz){
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_Receive_DMA(spiMemInfo.pHSpi, data, sz); // spi2
-	waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	return waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
 }
 
 void spiFlashES(u32 numSec)
@@ -76,7 +77,7 @@ void spiFlashES(u32 numSec)
 	u32 secAddr;
 
 	while(spiFlash64.lock == 1)
-		osDelay(200);
+		osDelay(100);
 
 	secAddr = numSec * spiFlash64.secSz;
 	u8 data[] = {SPIFLASH_SE, ((secAddr & 0xFF0000) >> 16),
@@ -95,16 +96,19 @@ void spiFlashES(u32 numSec)
 	spiFlash64.lock = 0;
 }
 
-void spiFlashWaitReady(){
+u8 spiFlashWaitReady(){
 	u8 data[] = {SPIFLASH_RDSR, DUMMY_BYTE};
 	osDelay(50);
-	SPIFLASH_CS_SEL;
+	u8 i = 0, ret = 0;
 	do{
-		spiFlashTxRxCmd(data, sizeof(data));
+		SPIFLASH_CS_SEL;
 		osDelay(50);
-	} while((data[1] & 0x01) == 0x01);
-
-	SPIFLASH_CS_UNSEL;
+		ret = spiFlashTxRxCmd(data, sizeof(data));
+		i++;
+		SPIFLASH_CS_UNSEL;
+		osDelay(50);
+	} while(((data[1] & 0x01) == 0x01) && (i < 3));
+	return ret;
 }
 
 void spiFlashWrEn(){

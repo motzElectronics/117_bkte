@@ -20,37 +20,43 @@ void simInit(){
 	char* token;
 	u8 fail = 0; 
 	u8 simBadAnsw;
-	while(1){
+	u8 isInit = 0;
+	while(!isInit){
+		simHardwareReset();
 		simWriteCommand("ATE0");
 		retMsg = simTxATCommand("AT\r\n", strlen("AT\r\n"));
 		token = strtok(retMsg, SIM_SEPARATOR_TEXT);
-		if(token == NULL || token[0] == '\0')
-			token = SIM_NO_RESPONSE_TEXT;
+		if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
+		D(printf("simInit AT: %s\r\n", token));
 		if((strcmp(token, SIM_OK_TEXT)) != 0){
 			sdWriteLog(SD_ER_MSG_AT, SD_LEN_MSG_AT, NULL, 0, &sdSectorLogError);
 			D(printf("ERROR: simInit() AT: %s\r\n", token));
 			simBadAnsw = (simBadAnsw + 1) % 10;
 			if(!simBadAnsw){
-				D(printf("ERROR: need reset\r\n"));
-				simHardwareReset();
-			}
-			continue;
-		}
-		if(SIM_GPS_INIT() != SIM_SUCCESS){ 
-			fail++;
-			if(fail > 10){
-				sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, "1", 1, &sdSectorLogError);
+				sdWriteLog(SD_MSG_MCU_RESET, SD_LEN_MCU_RESET, NULL, 0, &sdSectorLogs);
+				D(printf("WARINTING!: T O T A L  R E S E T\r\n"));
 				sdUpdLog(&sdSectorLogError);
 				sdUpdLog(&sdSectorLogs);
-				fail = 0;  
+		//				  createLog(logError, LOG_SZ_ERROR, "ERROR: TOTAL RESET \r\n");
+				osDelay(3000);
 				HAL_NVIC_SystemReset();
 			}
-			sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, NULL, 0, &sdSectorLogError);      
-			D(printf("ERROR: NOT CONNECT GPS\r\n"));
-        	simHardwareReset();
-			continue;
-		} else {
-			break;
+		} else{
+			osDelay(5000);
+			if(SIM_GPS_INIT() != SIM_SUCCESS){ 
+				fail++;
+				if(fail > 10){
+					sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, "1", 1, &sdSectorLogError);
+					sdUpdLog(&sdSectorLogError);
+					sdUpdLog(&sdSectorLogs);
+					fail = 0;  
+					HAL_NVIC_SystemReset();
+				}
+				sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, NULL, 0, &sdSectorLogError);      
+				D(printf("ERROR: NOT CONNECT GPS\r\n"));
+			} else {
+				isInit = 1;
+			}
 		}
 	}
 
@@ -59,7 +65,7 @@ void simInit(){
 }
 
 char* simGetStatusAnsw(){
-	waitIdle("wait simGetStatusAnsw()", &(uInfoSim.irqFlags), 200, USART_TIMEOUT);
+	waitIdle("wait simGetStatusAnsw()", &(uInfoSim.irqFlags), 200, 20000);
 	if(uInfoSim.irqFlags.isIrqIdle){
 		uInfoSim.irqFlags.isIrqIdle = 0;
 		return (char*)uInfoSim.pRxBuf;
@@ -144,7 +150,7 @@ u8 httpInit(char* httpAddr, u8 retriesCount){
 		if(token == NULL || token[0] == '\0') 
 			token = SIM_NO_RESPONSE_TEXT;
 		if(strcmp((const char*)token, (const char*)SIM_OK_TEXT)){
-			copyStr(simBufError, token, RESPONSE_BUF_SZ);
+			copyStr(simBufError, token, COMMAND_BUF_SZ);
 			if(strcmp((const char*)token, "AT+HTTPINIT") == 0 ||
 				strcmp((const char*)token, SIM_NO_RESPONSE_TEXT) == 0){
 				return SIM_RESTART;
@@ -344,7 +350,7 @@ void simOn(){
 
 void simOff(){
 	HAL_GPIO_WritePin(SIM_PWR_EN_GPIO_Port, SIM_PWR_EN_Pin, GPIO_PIN_RESET);
-	osDelay(1000);
+	osDelay(3000);
 }
 
 void simHardwareReset(){
@@ -355,35 +361,39 @@ void simHardwareReset(){
 }
 
 void simReset(){
-	u8 tmpSimBadResponse = 0;
+	/*u8 tmpSimBadResponse = 0;
 	char* retMsg;
 	char* token;
-	simHardwareReset();
-	while(1){
+	simHardwareReset();*/
+	simInit();
+	/*while(1){
+		
+		simWriteCommand("ATE0");
 		retMsg = simTxATCommand("AT\r\n", strlen("AT\r\n"));
 		token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 		if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
 		D(printf("simInit AT: %s\r\n", token));
-		if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
 		if((strcmp(token, SIM_OK_TEXT)) != 0){
 	//				sdWriteError("simInit() ISSUE:BAD_RESPONSE_AT_COMMAND\r\n");
 			tmpSimBadResponse = (tmpSimBadResponse + 1) % 10;
 			if(!tmpSimBadResponse){
 				sdWriteLog(SD_MSG_MCU_RESET, SD_LEN_MCU_RESET, NULL, 0, &sdSectorLogs);
 				D(printf("WARINTING!: T O T A L  R E S E T\r\n"));
+				sdUpdLog(&sdSectorLogError);
+				sdUpdLog(&sdSectorLogs);
 		//				  createLog(logError, LOG_SZ_ERROR, "ERROR: TOTAL RESET \r\n");
 				osDelay(3000);
 				HAL_NVIC_SystemReset();
-				sdUpdLog(&sdSectorLogError);
-				sdUpdLog(&sdSectorLogs);
+
 			}
-			osDelay(5000);
 		} else {
 			httpWriteCommand(SIM_SAPBR, "1,1", 1, SIM_OK);
 			break;
 		}
-	}
+	}*/
 }
+
+
 
 u8 testCipCmd(char* command, char* sucMsg){
 	char* retMsg;

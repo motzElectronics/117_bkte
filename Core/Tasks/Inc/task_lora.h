@@ -16,8 +16,8 @@
 
 typedef struct{
     u32 timeStart;
-    u16 timeShift;
-    u16 time;
+    u32 timeShift;
+    u32 time;
     u8  isTimerOn;
 }LoraTimer;
 
@@ -35,7 +35,7 @@ void lrUpdTim(LoraTimer* pTim);
 void lrStopTim(LoraTimer* pTim);
 u8 parceReq(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
 u8 parceAnsw(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
-u8 parceAnswMaster(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
+// u8 parceAnswMaster(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
 void updReq(LoraAlgTransition* pTx);
 void updAnsw(LoraAlgTransition* pTx);
 void serializeLoraAlgTrans(u8* pBuf, LoraAlgTransition* pTx);

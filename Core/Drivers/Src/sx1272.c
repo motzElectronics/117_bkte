@@ -35,7 +35,7 @@ void spiTx(u8 *txData, u8 sz) {
 	spiLoraInfo.irqFlags.regIrq = 0;
 	SPI1_LORA_CS_SEL();
 	HAL_SPI_Transmit_IT(sx1272->hspi, txData, sz);
-	waitTx("", &spiLoraInfo.irqFlags, 2, SPI_LORA_TIMEOUT);
+	waitTx("", &spiLoraInfo.irqFlags, 1, SPI_LORA_TIMEOUT);
 	SPI1_LORA_CS_DESEL();
 }
 
@@ -43,7 +43,7 @@ void spiTxRx(u8* pData, u8 sz){
 	spiLoraInfo.irqFlags.regIrq = 0;
 	SPI1_LORA_CS_SEL();
 	HAL_SPI_TransmitReceive_IT(sx1272->hspi, pData, pData, sz);
-	waitRx("",  &spiLoraInfo.irqFlags, 2, SPI_LORA_TIMEOUT);
+	waitRx("",  &spiLoraInfo.irqFlags, 1, SPI_LORA_TIMEOUT);
 	SPI1_LORA_CS_DESEL();
 }
 
@@ -51,9 +51,9 @@ void spiRx(u8 cmd, u8 *pData, u8 sz){
 	spiLoraInfo.irqFlags.regIrq = 0;
 	SPI1_LORA_CS_SEL();
 	HAL_SPI_Transmit_IT(sx1272->hspi, &cmd, 1);
-	waitTx("",  &spiLoraInfo.irqFlags, 2, SPI_LORA_TIMEOUT);
+	waitTx("",  &spiLoraInfo.irqFlags, 1, SPI_LORA_TIMEOUT);
 	HAL_SPI_Receive_IT(sx1272->hspi, pData, sz);
-	waitRx("",  &spiLoraInfo.irqFlags, 2, SPI_LORA_TIMEOUT);
+	waitRx("",  &spiLoraInfo.irqFlags, 1, SPI_LORA_TIMEOUT);
 	SPI1_LORA_CS_DESEL();
 }
 
@@ -303,7 +303,7 @@ void sx1272_send(u8 *data, u8 sz){
     sx1272_clear_irq_flags();
 }
 
-u8 sx1272_receive(u8* pBuf){
+u8 sx1272_receive(u8* pBuf, u8* pRssi, u16 timeOut){
 	static u8 rxBuf[PAYLOAD_LENGTH + 2];
 	u16 crc, crcPckg;
     u8 flags = 0, op = 0, prev, cntNewData = 0, ret = LR_STAT_NO_PCKG;
@@ -338,7 +338,7 @@ u8 sx1272_receive(u8* pBuf){
     flags = sx1272_get_irq_flags();
     /* Polls for ValidHeader flag */
 
-	if(xSemaphoreTake(semLoraRxPckgHandle, LR_TASK_TIME_SLOT) == pdPASS){
+	if(xSemaphoreTake(semLoraRxPckgHandle, timeOut / portTICK_RATE_MS) == pdPASS){
 
 		flags = sx1272_get_irq_flags();
 		/* Polls for ValidHeader flag */
@@ -367,14 +367,12 @@ u8 sx1272_receive(u8* pBuf){
 			sx1272_clear_irq_flags();
 			HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4R_Pin);
 			D(printf("ERROR: LORA CRC\r\n"));
-			return LR_STAT_ERROR;
+			return LR_STAT_BAD_CRC;
 		} else {
 			memcpy(pBuf, rxBuf + 2, PAYLOAD_LENGTH);
 		}
 		ret = LR_STAT_OK;
-
-
-		// loraPckgTx.data.rssiFromRemoteLora = sx1272_get_rssi();
+		*pRssi = sx1272_get_rssi();
 	}
 
     SX1272_SET_SLEEP_MODE();

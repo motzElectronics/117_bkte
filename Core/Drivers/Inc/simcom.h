@@ -14,7 +14,7 @@
 #include "cmsis_os.h"
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Utils/Inc/utils_sd.h"
-#define RESPONSE_BUF_SZ				990
+// #define RESPONSE_BUF_SZ				990
 #define COMMAND_BUF_SZ				100
 #define COMMAND_BUF_SZ				100
 #define SIM_LEN_HTTP_CODE			3
