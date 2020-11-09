@@ -5,12 +5,12 @@ extern osMutexId mutexWriteToEnergyBufHandle;
 extern CircularBuffer circBufPckgEnergy;
 
 extern u8 SZ_PCKGENERGY;
-
+static PckgEnergy curPckgTemp = {.preambule=BKTE_PREAMBLE_EN};
 void taskGetTemp(void const * argument){
 
 	u8 tempBytes[2];
 	s8 temps[BKTE_MAX_CNT_1WIRE];
-	PckgEnergy curPckgTemp = {.preambule=BKTE_PREAMBLE_EN};
+	
 	vTaskSuspend(getTempHandle);
     HAL_GPIO_WritePin(LED3G_GPIO_Port, LED3G_Pin, GPIO_PIN_RESET);
     s8 tmpTemp;
@@ -19,24 +19,48 @@ void taskGetTemp(void const * argument){
         for(u8 num1Wire = 0; num1Wire < BKTE_MAX_CNT_1WIRE; num1Wire++){
             setTempLine(num1Wire);
             osDelay(500);
-            ds2482OneWireReset();
+            if(ds2482OneWireReset() != DS2482_OK){
+                saveErrorToTel();
+                continue;
+            }
             osDelay(200);
-            ds2482WriteByte(0xCC); // Skip ROM command
+            if(ds2482WriteByte(0xCC) != DS2482_OK){ // Skip ROM command
+                saveErrorToTel();
+                continue;
+            }
             osDelay(200);
                 // Test reading the temperature from the DS18S20
             //	  ds2482WriteConfig(false, true, true);  // Enable strong pullup for temp conversion
-            ds2482WriteByte(0x44);  // Get the temp
+            if(ds2482WriteByte(0x44) != DS2482_OK){  // Get the temp
+                saveErrorToTel();
+                continue;
+            }
             osDelay(750); // Wait for the temp conversion
-            ds2482OneWireReset();
+            if(ds2482OneWireReset() != DS2482_OK){
+                saveErrorToTel();
+                continue;
+            }
             osDelay(200);
-            ds2482WriteByte(0xCC); // Skip ROM command
+            if(ds2482WriteByte(0xCC) != DS2482_OK){ // Skip ROM command
+                saveErrorToTel();
+                continue;
+            }
             osDelay(200);
-            ds2482WriteByte(0xbe); 	// Read scratchpad command
+            if(ds2482WriteByte(0xbe) != DS2482_OK){ 	// Read scratchpad command
+                saveErrorToTel();
+                continue;
+            }
             osDelay(200);
             memset(tempBytes, '\0', 2);
 
-            ds2482ReadByte(&tempBytes[0]); 	// LSB temp byte
-            ds2482ReadByte(&tempBytes[1]); 	// MSB temp byte
+            if(ds2482ReadByte(&tempBytes[0]) != DS2482_OK){ 	// LSB temp byte
+                saveErrorToTel();
+                continue;
+            }
+            if(ds2482ReadByte(&tempBytes[1]) != DS2482_OK){ 	// MSB temp byte
+                saveErrorToTel();
+                continue;
+            }
 
             if((tmpTemp = ds2482ConvTemp(tempBytes[0], tempBytes[1])) > BKTE_MAX_TEMP ||
             tmpTemp < BKTE_MIN_TEMP){
@@ -57,4 +81,10 @@ void taskGetTemp(void const * argument){
 
         osDelay(1000);
     }
+}
+
+void saveErrorToTel(){
+    fillTelemetry(&curPckgTemp, TEL_NO_DS2482, 0);
+    cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY);
+    osDelay(2000);
 }

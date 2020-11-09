@@ -17,16 +17,26 @@ extern u8 SZ_PCKGENERGY;
 // u8 test = 0;
 
 void taskGetEnergy(void const * argument){
-  	// vTaskSuspend(getEnergyHandle);
+  	vTaskSuspend(getEnergyHandle);
 	PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
 	u8 numIteration = 0;
 	u16 retLen;
+	cBufReset(&circBufPckgEnergy);
 	spiFlashInit(circBufPckgEnergy.buf);
-	sdInit();
+	if(sdInit() != FAT_OK){
+		fillTelemetry(&curPckgEnergy, TEL_NO_FATFS, 0);
+		cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
+	}
 	sdWriteLog(SD_MSG_START_BKTE, SD_LEN_START_BKTE, NULL, 0, &sdSectorLogs);
 	sdUpdLog(&sdSectorLogs);
+	simInit();
+	if(!getServerTime()){
+		sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_MYFUN, NULL, 0, &sdSectorLogs);
+		sdUpdLog(&sdSectorLogs);
+		D(printf("ERROR: BAD TIME\r\n"));
+	}
 
-	cBufReset(&circBufPckgEnergy);
+	
 
 	fillTelemetry(&curPckgEnergy, TEL_ON_DEV, 0);
 	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
@@ -50,12 +60,12 @@ void taskGetEnergy(void const * argument){
         if(retLen == BKTE_SZ_UART_MSG){
             numIteration = (numIteration + 1) % BKTE_ENERGY_FULL_LOOP;
             fillPckgEnergy(&curPckgEnergy, testBufUart1);
-            if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
+            // if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
 				cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
                 /*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
                 cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
                 xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
-            }			
+            // }			
 
         }
 		// test = (test + 1) % 3;

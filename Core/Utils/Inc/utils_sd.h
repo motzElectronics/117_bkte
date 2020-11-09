@@ -17,10 +17,10 @@
 #define SD_ER_SAPBR             (char*)"1 "
 #define SD_LEN_SAPBR            2
 
-#define SD_ER_MSG_HTTPINIT     (char*)"10 "
+#define SD_ER_HTTPINIT     (char*)"10 "
 #define SD_LEN_HTTP            3
 
-#define SD_ER_MSG_HTTPPARA      (char*)"11 "
+#define SD_ER_HTTPPARA      (char*)"11 "
 
 #define SD_ER_HTTPDATA          (char*)"12 "
 #define SD_ER_HTTPDATA_UART     (char*)"13 "
@@ -28,6 +28,10 @@
 #define SD_ER_HTTPACTION        (char*)"14 "
 
 #define SD_ER_HTTPCODE          (char*)"15 "
+
+#define SD_ER_HTTPREAD          (char*)"16 "
+
+#define SD_ER_CSQINF            (char*)"17 "
 
 
 #define SD_ER_MSG_HTTPINIT_MYFUN   (char*)"100 "
@@ -38,6 +42,8 @@
 #define SD_ER_MSG_HTTPGET_MYFUN     (char*)"102 "
 
 #define SD_ER_MSG_GET_SZ_NEW_BIN_MYFUN    (char*)"103 "
+
+#define SD_ER_BAD_SERVERTIME        (char*)"104 "
 
 //!-------MSG-------------
 #define SD_MSG_START_BKTE       (char*)"1 "
@@ -70,7 +76,7 @@ typedef struct{
 extern SdSector sdSectorLogError;
 extern SdSector sdSectorLogs;
 
-void sdInit();
+u8 sdInit();
 void sdWriteLog(char* strMsg, u16 szMsg, char* strParams, u16 szParams, SdSector* pSec);
 void sdWriteSector(SdSector* pSdSector);
 void cleanSector(SdSector* pSec);

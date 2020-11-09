@@ -41,6 +41,8 @@ void bkteInit(){
 	bkte.idFirmware = BKTE_ID_FIRMWARE;
 	bkte.idBoot = BKTE_ID_BOOT;
 	bkte.isFatMount = 0;
+
+	bkte.erFlags.errReg = 0;
 }
 
 
@@ -57,9 +59,11 @@ u32 getServerTime(){
 		D(printf("ERROR: bad time\r\n"));
 //		HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_RESET);
 		tmpSimBadResponse = (tmpSimBadResponse + 1) % 10;
-		if(!tmpSimBadResponse){
+		if(tmpSimBadResponse % 4 == 0){
 			simReset();
 			return 0;
+		} else if(!tmpSimBadResponse){
+			HAL_NVIC_SystemReset();
 		}
 		osDelay(1000);
 //		rxUartSIM_IT();
@@ -326,4 +330,21 @@ void updSpiFlash(){
 			fillTelemetry(&curPckgEnergy, TEL_SERV_FLASH_CIRC_BUF_HALF_HEAD, 0);
 			cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
 		}
+}
+
+
+void waitGoodCsq(){
+	u8 csq = 0;
+	u16 cntNOCsq = 0;
+	while((csq = simCheckCSQ()) < 15 && csq > 99){
+		osDelay(2000);
+		// saveCsq(csq);
+		cntNOCsq++;
+		if(cntNOCsq == 1800){
+			bkte.erFlags.simCSQINF = 1;
+			sdWriteLog(SD_ER_CSQINF, SD_LEN_HTTP, NULL, 0, &sdSectorLogError);
+			cntNOCsq = 0;
+		}
+	}
+	bkte.erFlags.simCSQINF = 0;
 }

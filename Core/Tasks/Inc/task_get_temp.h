@@ -6,4 +6,6 @@
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Utils/Inc/circularBuffer.h"
 
+void saveErrorToTel();
+
 #endif

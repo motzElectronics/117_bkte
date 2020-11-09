@@ -25,10 +25,7 @@ void taskWebExchange(void const * argument){
 	offAllLeds();
 	vTaskSuspend(webExchangeHandle);
 	// simOn();
-	simInit();
-	if(!getServerTime()){
-		D(printf("ERROR: BAD TIME\r\n"));
-	}
+
 	CNT_MAX_PAGES_TX = SZ_MAX_TX_DATA / spiFlash64.pgSz / 2 - 1;
 	simHttpInit(urls.addMeasure);
 	// vTaskResume(keepAliveHandle);
@@ -96,17 +93,11 @@ u8 sendDataToServer(){
 	char* pRxData;
 	u8 cntHttpPostFail = 1;
 	u8 tmpIdFirmware;
-	u8 csq = 0;
 	u8 ret = PCKG_WAS_SENT;
 
 	xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-
 	while(cntHttpPostFail){
-
-		while((csq = simCheckCSQ()) < 15 && csq > 99){
-			osDelay(2000);
-			saveCsq(csq);
-		}
+		waitGoodCsq();
 		
 		if((resCode = httpPost(pckgJsonEn.jsonEnTxBuf, strlen(pckgJsonEn.jsonEnTxBuf), &pRxData, 
 		10, 10000)) != SIM_SUCCESS){
@@ -147,4 +138,6 @@ void saveCsq(u8 csq){
 	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&pckgEnergy, SZ_PCKGENERGY);
 	xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 }
+
+
 

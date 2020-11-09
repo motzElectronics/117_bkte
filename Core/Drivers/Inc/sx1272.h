@@ -367,7 +367,10 @@ typedef struct {
 	Config_Group *config;
 } SX1272;
 
-#define LORA_TRANSITION_CMD_MONITOR	1
+typedef enum{
+	LORA_CMD_MONITOR = 1,
+	LORA_CMD_SERVICES
+}LoraCmd;
 
 typedef struct{
 	u16 idTrain;

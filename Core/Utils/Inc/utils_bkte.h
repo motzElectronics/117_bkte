@@ -23,10 +23,10 @@
 
 //!-------------CONFIGURE PARAMS---------------
 #define BKTE_ID_TRAINCAR		0
-#define BKTE_ID_TRAINCAR_MAX	4
+#define BKTE_ID_TRAINCAR_MAX	1
 #define BKTE_IS_LORA_MASTER		1
 
-#define BKTE_ID_FIRMWARE		7
+#define BKTE_ID_FIRMWARE		0
 #define BKTE_ID_TRAIN			1706
 //!------------CONFIGURE PARAMS----------------
 #define BKTE_AMOUNTS		(BKTE_ID_TRAINCAR_MAX + 1)
@@ -77,6 +77,22 @@
 
 #define BKTE_BIG_DIF_RTC_SERVTIME		600
 
+typedef union{
+	struct {
+		u16 simAT:		1;
+		u16 simSAPBR:	1;
+		u16 simHINIT:	1;
+		u16 simHPARA:	1;
+		u16	simHDATA:	1;
+		u16 simHDATAU:	1;
+		u16 simHACT:	1;
+		u16 simHREAD:	1;
+		u16	simHCODE:	1;
+		u16 simCSQINF:	1;
+		u16 flashNOIRQ:	1;	
+	};
+	u16 errReg;
+}ErrorFlags;
 
 typedef struct{
 	u8 canMeasure;
@@ -117,6 +133,7 @@ typedef struct{
 	u8	idFirmware;
 	u8	idBoot;
 	PWRInfo pwrInfo;
+	ErrorFlags erFlags;
 //	FInfo	fInfo[NUM_READ_FILES];
 }BKTE;
 
@@ -145,6 +162,9 @@ typedef enum{
 	TEL_LORA_LINK_MASTER = 0x2021,
 	TEL_LORA_FLAGS = 0x2022,
 	TEL_LORA_BAD_CRC = 0x2023,
+	TEL_NO_FATFS = 2030,
+	TEL_NO_DS2482 = 2031,
+	TEL_PERIPH_STAT = 2032,
 	TEL_LVL_CSQ = 0x7010
 }TYPE_TELEMETRY;
 
@@ -206,6 +226,7 @@ time_t getTimeStamp();
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 void checkBufForWritingToFlash();
 void updSpiFlash();
+void waitGoodCsq();
 extern BKTE bkte;
 
 #endif /* INC_UTILS_BKTE_H_ */
