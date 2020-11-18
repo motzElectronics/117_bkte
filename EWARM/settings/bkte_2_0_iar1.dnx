@@ -14,13 +14,13 @@
     <StLinkDriver>
         <stlinkserialNo>81142513</stlinkserialNo>
         <stlinkfoundProbes />
-        <stlinkResetStyle>0</stlinkResetStyle>
-        <stlinkResetStrategy>3</stlinkResetStrategy>
         <CStepIntDis>_ 0</CStepIntDis>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
+        <stlinkResetStyle>0</stlinkResetStyle>
+        <stlinkResetStrategy>3</stlinkResetStrategy>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>2845725916</Checksum>
+        <Checksum>1984418580</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -55,19 +55,12 @@
         <ITMlogFile>$PROJ_DIR$\ITM.log</ITMlogFile>
     </SWOTraceHWSettings>
     <struct_types>
-        <Fmt0>DateTime-day	3	0</Fmt0>
-        <Fmt1>DateTime-hour	3	0</Fmt1>
-        <Fmt2>DateTime-min	3	0</Fmt2>
-        <Fmt3>DateTime-month	3	0</Fmt3>
-        <Fmt4>DateTime-sec	3	0</Fmt4>
-        <Fmt5>DateTime-year	3	0</Fmt5>
-        <Fmt6>EnergyData-current	4	0</Fmt6>
-        <Fmt7>EnergyData-enAct	4	0</Fmt7>
-        <Fmt8>EnergyData-enReact	4	0</Fmt8>
-        <Fmt9>LoraTrainGenInfo-flagsAnsw	1	0</Fmt9>
-        <Fmt10>LoraTrainGenInfo-flagsReq	1	0</Fmt10>
-        <Fmt11>RTC_TimeTypeDef-Hours	3	0</Fmt11>
-        <Fmt12>RTC_TimeTypeDef-Minutes	3	0</Fmt12>
+        <Fmt0>ErrorFlags-errReg	1	0</Fmt0>
+        <Fmt1>LoraTrainCarInfo-statusInfo	1	0</Fmt1>
+        <Fmt2>LoraTrainGenInfo-flagsAnsw	1	0</Fmt2>
+        <Fmt3>LoraTrainGenInfo-flagsReq	1	0</Fmt3>
+        <Fmt4>RTC_TimeTypeDef-Hours	3	0</Fmt4>
+        <Fmt5>RTC_TimeTypeDef-Minutes	3	0</Fmt5>
     </struct_types>
     <array_types>
         <Fmt0>u32[4]	1	0</Fmt0>
@@ -118,6 +111,13 @@
         <ShowTimeSum>1</ShowTimeSum>
         <SumSortOrder>0</SumSortOrder>
     </EventLog>
+    <DisassembleMode>
+        <mode>0</mode>
+    </DisassembleMode>
+    <Breakpoints2>
+        <Bp0>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Tasks\Src\task_web_excahnge.c}.211.2" 0 0 1 "" 0 "" 0</Bp0>
+        <Count>1</Count>
+    </Breakpoints2>
     <TermIOLog>
         <LoggingEnabled>_ 0</LoggingEnabled>
         <LogFile>_ ""</LogFile>
@@ -127,6 +127,10 @@
         <LogFile>_ ""</LogFile>
         <Category>_ 0</Category>
     </LogFile>
+    <Aliases>
+        <Count>0</Count>
+        <SuppressDialog>0</SuppressDialog>
+    </Aliases>
     <DriverProfiling>
         <Enabled>0</Enabled>
         <Mode>3</Mode>
@@ -140,14 +144,4 @@
     <CallStackStripe>
         <ShowTiming>1</ShowTiming>
     </CallStackStripe>
-    <DisassembleMode>
-        <mode>0</mode>
-    </DisassembleMode>
-    <Breakpoints2>
-        <Count>0</Count>
-    </Breakpoints2>
-    <Aliases>
-        <Count>0</Count>
-        <SuppressDialog>0</SuppressDialog>
-    </Aliases>
 </settings>

@@ -134,6 +134,19 @@ void Error_Handler(void);
 #define URL_GET_NEW_FIRMWARE				(char*)"http://188.242.176.25:8080/api/getFile"
 #define URL_MEASURE							(char*)"http://188.242.176.25:8080/api/add/measures"
 
+#define BKTE_SZ_UART_MSG		132
+#define BKTE_SZ_TEMP_MSG		4
+
+#define SZ_CMD_ENERGY		  12
+#define SZ_CMD_VOLTAMPER	8
+#define SZ_CMD_TEMP			  8
+
+#define SZ_PAGE 255
+
+#define BKTE_PREAMBLE			0xABCD
+#define BKTE_PREAMBLE_LSB		0xAB
+#define BKTE_PREAMBLE_MSB		0xCD
+
 extern char logError[LOG_SZ_ERROR]; 
 typedef uint8_t			u8;
 typedef uint16_t		u16;

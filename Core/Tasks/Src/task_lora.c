@@ -15,10 +15,8 @@ static char binaryTest[BKTE_AMOUNTS + 1];
 static void strrev();
 static void lcdShow(u8* str);
 
-extern CircularBuffer circBufPckgEnergy;
-extern u8 SZ_PCKGENERGY;
 extern osMutexId mutexWriteToEnergyBufHandle;
-static PckgEnergy tmpPckg = {.preambule=BKTE_PREAMBLE_EN};
+static PckgEnergy tmpPckg;
 
 LoraStatPckg loraStatPckg;
 
@@ -70,7 +68,7 @@ void taskLora(void const * argument){
 				parceAnsw(bufData, &loraTransitionPckgRx, &loraTransitionPckgTx);
 			} else if(retStatus == LR_STAT_BAD_CRC){
 				fillTelemetry(&tmpPckg, TEL_LORA_BAD_CRC, 0);
-				cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+				//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 			}
 			lrUpdTim(&lrTim);
 		}
@@ -144,7 +142,7 @@ void initTransmition(){
 		loraTransitionPckgTx.loraCarInfo[i].temperature = 0;	
 	}
 
-	if(loraStatPckg.txPckg % 3 == 0 && !loraStatPckg.txPckg){
+	if(loraStatPckg.txPckg % 3 == 0 && loraStatPckg.txPckg){
 		loraTransitionPckgTx.loraGenInfo.cmd = LORA_CMD_SERVICES;
 		updServices(&loraTransitionPckgTx);
 	} else {
@@ -330,7 +328,7 @@ void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg){
 
 	if(!cnt){
 		fillTelemetry(&tmpPckg, TEL_LORA_LINK_MASTER, perMaster);
-		cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+		//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 	}
 
 	for(u8 i = 0; i < BKTE_AMOUNTS; i++){
@@ -347,7 +345,7 @@ void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg){
 
 		if(!cnt){
 			fillTelemetry(&tmpPckg, TEL_LORA_LINK_EDGE, ((i & 0xFF) << 16) | ((perRcv & 0xFF) << 8) | perAnsw & 0xFF);
-			cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+			//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 		}
 	}
 
@@ -368,7 +366,7 @@ void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg){
 
 
 	fillTelemetry(&tmpPckg, TEL_LORA_FLAGS, (((pckg->loraGenInfo.flagsReq & 0xFFFF) << 16) | pckg->loraGenInfo.flagsAnsw & 0xFFFF));
-	cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+	//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 	D(printf("flags telemetry: %d\r\n", (((pckg->loraGenInfo.flagsReq & 0xFFFF) << 16) | pckg->loraGenInfo.flagsAnsw & 0xFFFF)));
 	D(printf("\r\n"));
 }
@@ -380,7 +378,7 @@ void parceServicesData(LoraAlgTransition* pRx){
 			loraTransitionPckgTx.loraCarInfo[BKTE_ID_TRAINCAR].statusInfo = bkte.erFlags.errReg & 0xFF;
 			fillTelemetry(&tmpPckg, TEL_PERIPH_STAT, 
 				(i << 16) |(pRx->loraCarInfo[i].temperature << 8) | (pRx->loraCarInfo[i].statusInfo) & 0xFF);
-			cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+			//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 			checkBufForWritingToFlash();
 		}
 	}

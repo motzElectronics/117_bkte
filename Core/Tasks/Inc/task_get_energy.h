@@ -7,4 +7,6 @@
 #include "../Utils/Inc/circularBuffer.h"
 #include "../Utils/Inc/utils_sd.h"
 
+void unLockTasks();
+
 #endif

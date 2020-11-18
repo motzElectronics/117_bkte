@@ -61,12 +61,10 @@
 #include "fatfs.h"
 
 CircularBuffer rxUart1CircBuf = {.buf = NULL, .max = 0};
-CircularBuffer circBufPckgEnergy = {.buf = NULL, .max = 0};
+CircularBuffer circBufAllPckgs = {.buf = NULL, .max = 0};
 
-u8 bufPckgEnergy[SZ_CIRCULAR_BUF];
+u8 bufPckgs[SZ_PAGE];
 u8 uart1Buf[SZ_CIRCULAR_BUF];
-
-u8 SZ_PCKGENERGY = sizeof(PckgEnergy);
 
 BKTE bkte;
 static char arrUrlFileSz[70];
@@ -133,8 +131,8 @@ int main(void)
   FIRMWARE_INFO info = {.header = 0x1122334455667788,
 		  .numFirmware = BKTE_ID_FIRMWARE, .verFirmware = BKTE_VER_BETA_FIRMWARE, .numTrainCar = BKTE_ID_TRAINCAR
   };
-  cBufInit(&rxUart1CircBuf, uart1Buf);
-	cBufInit(&circBufPckgEnergy, bufPckgEnergy);
+  cBufInit(&rxUart1CircBuf, uart1Buf, sizeof(uart1Buf), CIRC_TYPE_ENERGY_UART);
+	cBufInit(&circBufAllPckgs, bufPckgs, SZ_PAGE, CIRC_TYPE_PCKG_ALL);
   ds2482Init();
   bkteInit();
   urlsInit();

@@ -23,10 +23,10 @@
 
 //!-------------CONFIGURE PARAMS---------------
 #define BKTE_ID_TRAINCAR		0
-#define BKTE_ID_TRAINCAR_MAX	1
+#define BKTE_ID_TRAINCAR_MAX	2
 #define BKTE_IS_LORA_MASTER		1
 
-#define BKTE_ID_FIRMWARE		0
+#define BKTE_ID_FIRMWARE		7
 #define BKTE_ID_TRAIN			1706
 //!------------CONFIGURE PARAMS----------------
 #define BKTE_AMOUNTS		(BKTE_ID_TRAINCAR_MAX + 1)
@@ -48,8 +48,7 @@
 #define BKTE_ID_DEV_BKT			0x11
 #define BKTE_ID_DEV_BSG			0x12
 
-#define BKTE_SZ_UART_MSG		132
-#define BKTE_SZ_TEMP_MSG		4
+
 
 #define BKTE_ID_BOOT			1
 
@@ -60,10 +59,6 @@
 
 #define BKTE_PERCENT_DEVIATION_ENERGY_DATA 	(float)0.03
 #define BKTE_ENERGY_FULL_LOOP				(u8)10
-
-#define BKTE_PREAMBLE_EN		0xABCD
-#define BKTE_PREAMBLE_EN1		0xAB
-#define BKTE_PREAMBLE_EN2		0xCD
 
 #define SZ_MAX_TX_DATA			4096
 
@@ -76,6 +71,8 @@
 #define BKTE_BAD_TIMESTAMP				2997993600
 
 #define BKTE_BIG_DIF_RTC_SERVTIME		600
+
+
 
 typedef union{
 	struct {
@@ -169,16 +166,28 @@ typedef enum{
 }TYPE_TELEMETRY;
 
 typedef enum{
+	CMD_DATA_VOLTAMPER = 1,
+	CMD_DATA_ENERGY,
+	CMD_DATA_TEMP
+}CMD_DATA;
+
+typedef enum{
 	MSG_TEMP = 0xF000,
 	MSG_TELEMETRY = 0x0000
 }TYPE_MSG;
 
 typedef struct{
-	u16			preambule;
-	EnergyData	energyData;
-	DateTime 	dateTime;
-	u8			crc;
+	u32 unixTimeStamp;
+	u32 enAct;
+	u32 enReact;
 }PckgEnergy;
+
+typedef struct{
+	u32 unixTimeStamp;
+	s16 amper;
+	u16 volt;
+}PckgVoltAmper;
+
 
 //typedef struct{
 //	u16			preambule;
@@ -191,8 +200,8 @@ typedef struct{
 //}PckgGnss;
 
 typedef struct{
-	s8 temp[BKTE_MAX_CNT_1WIRE];
-	DateTime dateTime;
+	u32 unixTimeStamp;
+	s8	temp[BKTE_MAX_CNT_1WIRE];
 }PckgTemp;
 
 
@@ -207,11 +216,16 @@ void getMaxNumDS1820(BKTE* pBkte);
 void resetTempLine(u8 numLine);
 void setTempLine(u8 numLine);
 void fillPckgEnergy(PckgEnergy* pckg, u16* data);
-void fillTempPckgEnergy(PckgEnergy* pckg, s8* data);
+void fillPckgTemp(PckgTemp* pckg, s8* data);
 void fillTelemetry(PckgEnergy* pckg, TYPE_TELEMETRY typeTel, u32 value);
+
+void fillPckgVoltAmper(PckgVoltAmper* pckg, u16* data);
+
 u32 getFlashData(u32 ADDR);
 void setDateTime(DateTime* dt);
 void setTM(time_t* pTimeStamp, DateTime* dt);
+
+
 u8 getDeviation(EnergyData* pCurData, EnergyData* pLastData);
 u8 crc8(char *pcBlock, int len);
 u8 isCrcOk(char* pData, int len);
@@ -227,6 +241,11 @@ u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 void checkBufForWritingToFlash();
 void updSpiFlash();
 void waitGoodCsq();
+
+void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf);
+u32 getUnixTimeStamp();
+u8 isDataFromFlashOk(char* pData, u8 len);
+
 extern BKTE bkte;
 
 #endif /* INC_UTILS_BKTE_H_ */

@@ -1324,6 +1324,9 @@
                     <name>$PROJ_DIR$\..\Core\Utils\Src\utils_json.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\Core\Utils\Src\utils_pckgs_manager.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\Core\Utils\Src\utils_sd.c</name>
                 </file>
             </group>

@@ -2,16 +2,15 @@
 
 extern osThreadId getTempHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
-extern CircularBuffer circBufPckgEnergy;
-
-extern u8 SZ_PCKGENERGY;
-static PckgEnergy curPckgTemp = {.preambule=BKTE_PREAMBLE_EN};
+extern CircularBuffer circBufAllPckgs;
+static PckgTemp pckgTemp;
 void taskGetTemp(void const * argument){
 
 	u8 tempBytes[2];
 	s8 temps[BKTE_MAX_CNT_1WIRE];
 	
-	vTaskSuspend(getTempHandle);
+	// vTaskSuspend(getTempHandle);
+    vTaskSuspend(getTempHandle);
     HAL_GPIO_WritePin(LED3G_GPIO_Port, LED3G_Pin, GPIO_PIN_RESET);
     s8 tmpTemp;
 
@@ -72,19 +71,20 @@ void taskGetTemp(void const * argument){
             resetTempLine(num1Wire);
         }
 
-        fillTempPckgEnergy(&curPckgTemp, temps);
-        cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+        fillPckgTemp(&pckgTemp, temps);
+        saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
+        // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
         /*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
         cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY);
         xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
-        checkBufForWritingToFlash();
+        // checkBufForWritingToFlash();
 
         osDelay(1000);
     }
 }
 
 void saveErrorToTel(){
-    fillTelemetry(&curPckgTemp, TEL_NO_DS2482, 0);
-    cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY);
+    /*fillTelemetry(&curPckgTemp, TEL_NO_DS2482, 0);
+    cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY);*/
     osDelay(2000);
 }

@@ -18,7 +18,6 @@ extern osMutexId mutexWriteToEnergyBufHandle;
 static RTC_TimeTypeDef tmpTime;
 static RTC_DateTypeDef tmpDate;
 extern u8 SZ_PCKGENERGY;
-extern CircularBuffer circBufPckgEnergy;
 //extern FIL fAddr;
 /*static u8 lenLog[] = {SD_LEN_LOG_ENERGY, SD_LEN_LOG_TEMP, SD_LEN_LOG_RSSI};
 static char* fNamesLog[NUM_READ_FILES] = {FILE_LOG_ENERGY, FILE_LOG_TEMP, FILE_LOG_RSSI};
@@ -90,28 +89,6 @@ u32 getServerTime(){
 	return t;
 }
 
-u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg){
-	static u16 head = 0;
-	u8 crc;
-	while(head < szBuf){
-		if(pBuf[head] == BKTE_PREAMBLE_EN2 && pBuf[(head + 1) % szBuf] == BKTE_PREAMBLE_EN1){
-			crc = crc8(pBuf + 2 + head, 20);
-			if(crc == pBuf[head + szPckg - 2]){
-				D(printf("ok crc GNSSPCKG\r\n"));
-				memcpy(pPckgGnss, pBuf + head, szPckg);
-				memset(pBuf + head, '\0', szPckg);
-				head += szPckg;
-				return 1;
-			} else {
-				D(printf("bad crc GNSSPCKG\r\n"));
-			}
-		}
-		head++;
-	}
-	head = 0;
-	return 0;
-}
-
 /*void getMaxNumDS1820(BKTE* pBkte){
 	u8 numReInit = 0;
 	for(u8 i = 0; i < BKTE_MAX_CNT_1WIRE; i++){
@@ -132,92 +109,60 @@ void resetTempLine(u8 numLine){
 	HAL_GPIO_WritePin(oneWirePorts[numLine], oneWirePins[numLine], GPIO_PIN_RESET);
 }*/
 
-void fillPckgEnergy(PckgEnergy* pckg, u16* data){
-
-	pckg->energyData.current = data[BKTE_NUM_CURRENT + 1] << 8 | data[BKTE_NUM_CURRENT];
-	pckg->energyData.volt = data[BKTE_NUM_VOLT + 1] << 8 | data[BKTE_NUM_VOLT];
-
-	pckg->energyData.enAct = data[BKTE_NUM_ACT_ENERGY + 3] << 24 | data[BKTE_NUM_ACT_ENERGY + 2] << 16 |
-			data[BKTE_NUM_ACT_ENERGY + 1] << 8 | data[BKTE_NUM_ACT_ENERGY];
-	pckg->energyData.enReact = data[BKTE_NUM_REACT_ENERGY + 3] << 24 | data[BKTE_NUM_REACT_ENERGY + 2] << 16 |
-			data[BKTE_NUM_REACT_ENERGY + 1] << 8 | data[BKTE_NUM_REACT_ENERGY];
-	setDateTime(&pckg->dateTime);
-	pckg->crc = crc8((char*)pckg + 2, 20);
-
+void fillPckgVoltAmper(PckgVoltAmper* pckg, u16* data){
+	pckg->unixTimeStamp = getUnixTimeStamp();
+	pckg->amper = data[BKTE_NUM_CURRENT + 1] << 8 | data[BKTE_NUM_CURRENT];
+	pckg->volt = data[BKTE_NUM_VOLT + 1] << 8 | data[BKTE_NUM_VOLT];
 }
 
-void fillTempPckgEnergy(PckgEnergy* pckg, s8* data){
-	static u32 lastTime = 0;
-	u32 curTime = HAL_GetTick();
-	pckg->energyData.current = ((curTime - lastTime) / 1000) % 32767;
-	lastTime = curTime;
+void fillPckgEnergy(PckgEnergy* pckg, u16* data){
+	pckg->unixTimeStamp = getUnixTimeStamp();
 
-	pckg->energyData.volt = 0;
+	pckg->enAct = data[BKTE_NUM_ACT_ENERGY + 3] << 24 | data[BKTE_NUM_ACT_ENERGY + 2] << 16 |
+	data[BKTE_NUM_ACT_ENERGY + 1] << 8 | data[BKTE_NUM_ACT_ENERGY];
+	
+	pckg->enReact = data[BKTE_NUM_REACT_ENERGY + 3] << 24 | data[BKTE_NUM_REACT_ENERGY + 2] << 16 |
+	data[BKTE_NUM_REACT_ENERGY + 1] << 8 | data[BKTE_NUM_REACT_ENERGY];
+}
 
-	pckg->energyData.enAct = MSG_TEMP;
-	pckg->energyData.enReact = ((data[0] & 0xFF) << 24)  | ((data[1] & 0xFF) << 16)  | ((data[2] & 0xFF) << 8)  | data[3] & 0xFF ;
-
-	setDateTime(&pckg->dateTime);
-	pckg->crc = crc8((char*)pckg + 2, 20);
-
+void fillPckgTemp(PckgTemp* pckg, s8* data){
+	pckg->unixTimeStamp = getUnixTimeStamp();
+	memcpy(pckg->temp, data, 4);
 }
 
 void fillTelemetry(PckgEnergy* pckg, TYPE_TELEMETRY typeTel, u32 value){
-	pckg->energyData.enAct = MSG_TELEMETRY;
+	/*pckg->energyData.enAct = MSG_TELEMETRY;
 	pckg->energyData.enReact = value;
-    pckg->energyData.current = typeTel;
-	setDateTime(&pckg->dateTime);
-	pckg->crc = crc8((char*)pckg + 2, 20);
+    pckg->energyData.current = typeTel;*/
+	D(printf("OK: fillTelemetry\r\n"));
 }
 
+u32 getUnixTimeStamp(){
+	time_t t;
+	static struct tm curTime;
 
-
-void setDateTime(DateTime* dt){
-//	RTC_TimeTypeDef tmpTime;
-//	RTC_DateTypeDef tmpDate;
 	xSemaphoreTake(mutexRTCHandle, portMAX_DELAY);
 	HAL_RTC_GetTime(&hrtc, &tmpTime, RTC_FORMAT_BIN);
 	HAL_RTC_GetDate(&hrtc, &tmpDate, RTC_FORMAT_BIN);
-	dt->day = tmpDate.Date;
-	dt->month = tmpDate.Month;
-	dt->year = tmpDate.Year;
-	dt->sec = tmpTime.Seconds;
-	dt->min = tmpTime.Minutes;
-	dt->hour = tmpTime.Hours;
+	curTime.tm_year = tmpDate.Year + 100;
+	curTime.tm_mday = tmpDate.Date;
+	curTime.tm_mon  = tmpDate.Month;
+
+	curTime.tm_hour = tmpTime.Hours;
+	curTime.tm_min  = tmpTime.Minutes;
+	curTime.tm_sec  = tmpTime.Seconds;
 	xSemaphoreGive(mutexRTCHandle);
-}
-
-
-
-void setTM(time_t* pTimeStamp, DateTime* dt){
-	static struct tm curTime;
-	curTime.tm_year = dt->year + 100;  // In fact: 2000 + 18 - 1900
-	curTime.tm_mday = dt->day;
-	curTime.tm_mon  = dt->month;
-
-	curTime.tm_hour = dt->hour;
-	curTime.tm_min  = dt->min;
-	curTime.tm_sec  = dt->sec;
-
 	curTime.tm_isdst = 0;
 
-	*pTimeStamp = mktime(&curTime);
+	t = mktime(&curTime);
+	return (u32)t;
 }
-
-time_t getTimeStamp(){
-	DateTime tmpDateTime;
-	time_t t;
-	setDateTime(&tmpDateTime);
-	setTM(&t, &tmpDateTime);
-	return t;
-}
-
 
 u32 getFlashData(u32 ADDR){
 	return (*(__IO u32*) ADDR);
 }
 
-u8 getDeviation(EnergyData* pCurData, EnergyData* pLastData){
+/*u8 getDeviation(EnergyData* pCurData, EnergyData* pLastData){
 	float low = (1 - BKTE_PERCENT_DEVIATION_ENERGY_DATA);
 	float high = (1 + BKTE_PERCENT_DEVIATION_ENERGY_DATA);
 	if(pLastData->current * low > pCurData->current || pLastData->current * high < pCurData->current ||
@@ -228,7 +173,7 @@ u8 getDeviation(EnergyData* pCurData, EnergyData* pLastData){
 		return 1;
 	}
 	return 0;
-}
+}*/
 
 u8 isCrcOk(char* pData, int len){
 	char tmp[] = {'\0', '\0', '\0'};
@@ -304,18 +249,19 @@ void toggleRedLeds(){
 	  HAL_GPIO_TogglePin(LED4R_GPIO_Port, LED4R_Pin);
 }*/
 
-void checkBufForWritingToFlash(){
+void checkBufForWritingToFlash(){  //!need to delete
 	
-	xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+	D(printf("checkBufForWritingToFlash()\r\n"));
+	/*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 	if((circBufPckgEnergy.numPckgInBuf + 1) * SZ_PCKGENERGY + 1 > spiFlash64.pgSz){
 		updSpiFlash();
 	}
-	xSemaphoreGive(mutexWriteToEnergyBufHandle);
+	xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 }
 
-void updSpiFlash(){
-		u8 isFullSpiFlash = 0;
-		PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
+void updSpiFlash(){ //!need to delete
+		/*u8 isFullSpiFlash = 0;
+		PckgEnergy curPckgEnergy;
 		isFullSpiFlash =  spiFlashWrPg(circBufPckgEnergy.buf, circBufPckgEnergy.numPckgInBuf * SZ_PCKGENERGY, 0, spiFlash64.headNumPg);
 		cBufReset(&circBufPckgEnergy);
 		if(isFullSpiFlash){
@@ -330,6 +276,8 @@ void updSpiFlash(){
 			fillTelemetry(&curPckgEnergy, TEL_SERV_FLASH_CIRC_BUF_HALF_HEAD, 0);
 			cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
 		}
+		*/
+	D(printf("updSpiFlash()\r\n"));
 }
 
 
@@ -347,4 +295,35 @@ void waitGoodCsq(){
 		}
 	}
 	bkte.erFlags.simCSQINF = 0;
+}
+
+void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf){
+	u16 bufEnd[2] = {0, BKTE_PREAMBLE};
+	xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+	if(cbuf->writeAvailable < sz + 1 + 4){
+		bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
+		cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
+		spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
+		cBufReset(cbuf);
+	} else {
+		cBufWriteToBuf(cbuf, &cmdData, 1);
+		cBufWriteToBuf(cbuf, data, sz);
+	}
+	xSemaphoreGive(mutexWriteToEnergyBufHandle);
+}
+
+
+
+u8 isDataFromFlashOk(char* pData, u8 len){
+    u16 crc;
+    for(u8 i = len - 1; i; --i){
+        if(pData[i] == BKTE_PREAMBLE_LSB && pData[i - 1] == BKTE_PREAMBLE_MSB){
+            crc = pData[i - 3] | pData[i - 2] << 8;
+            if(calcCrc16(pData, i - 3) == crc){
+				len = (i + 1) - 4;
+                return len;
+            }
+        }
+    }
+    return 0;
 }
