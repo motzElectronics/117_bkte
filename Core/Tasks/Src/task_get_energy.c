@@ -4,6 +4,7 @@ extern osThreadId webExchangeHandle;
 extern osThreadId getTempHandle;
 extern osThreadId keepAliveHandle;
 extern osThreadId loraHandle;
+extern osThreadId createWebPckgHandle;
 
 extern osMutexId mutexWriteToEnergyBufHandle;
 
@@ -34,11 +35,11 @@ void taskGetEnergy(void const * argument){
 	sdWriteLog(SD_MSG_START_BKTE, SD_LEN_START_BKTE, NULL, 0, &sdSectorLogs);
 	sdUpdLog(&sdSectorLogs);*/
 	simInit();
-	if(!getServerTime()){
-		/*sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_MYFUN, NULL, 0, &sdSectorLogs);
-		sdUpdLog(&sdSectorLogs);*/
-		D(printf("ERROR: BAD TIME\r\n"));
-	}
+	// if(!getServerTime()){
+	// 	/*sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_MYFUN, NULL, 0, &sdSectorLogs);
+	// 	sdUpdLog(&sdSectorLogs);*/
+	// 	D(printf("ERROR: BAD TIME\r\n"));
+	// }
 
 	
 	/*fillTelemetry(&curPckgEnergy, TEL_ON_DEV, 0);
@@ -56,7 +57,7 @@ void taskGetEnergy(void const * argument){
         if(retLen == BKTE_SZ_UART_MSG){
             numIteration = (numIteration + 1) % BKTE_ENERGY_FULL_LOOP;
             fillPckgVoltAmper(&pckgVoltAmper, testBufUart1);
-			D(printf("OK: volt: %04x, amper: %04x\r\n", pckgVoltAmper.volt, pckgVoltAmper.amper));
+			// D(printf("OK: volt: %04x, amper: %04x\r\n", pckgVoltAmper.volt, pckgVoltAmper.amper));
             // if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
 				
 			saveData((u8*)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
@@ -69,7 +70,7 @@ void taskGetEnergy(void const * argument){
 			if(!energyTime){
 				fillPckgEnergy(&pckgEnergy, testBufUart1);
 				saveData((u8*)&pckgEnergy, SZ_CMD_ENERGY, CMD_DATA_ENERGY, &circBufAllPckgs);
-				D(printf("OK: enAct: %08x, enReact: %08x", pckgEnergy.enAct, pckgEnergy.enReact));
+				// D(printf("OK: enAct: %08x, enReact: %08x", pckgEnergy.enAct, pckgEnergy.enReact));
 			}			
 
         }
@@ -82,5 +83,6 @@ void unLockTasks(){
 	vTaskResume(getTempHandle);
 	vTaskResume(keepAliveHandle);
 	vTaskResume(loraHandle);
+	vTaskResume(createWebPckgHandle);
 }
 

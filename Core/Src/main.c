@@ -251,6 +251,8 @@ void urlsInit(){
 	urls.getTime = URL_TIME;
 	urls.getPartFirmware = URL_GET_NEW_FIRMWARE;
   urls.addMeasure = URL_MEASURE;
+  urls.tcpAddr = URL_TCP_ADDR;
+  urls.tcpPort = URL_TCP_PORT;
 }
 
 /* USER CODE END 4 */

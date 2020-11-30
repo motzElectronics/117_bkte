@@ -133,6 +133,8 @@ void Error_Handler(void);
 #define URL_TIME							(char*)"http://188.242.176.25:8080/api/time"
 #define URL_GET_NEW_FIRMWARE				(char*)"http://188.242.176.25:8080/api/getFile"
 #define URL_MEASURE							(char*)"http://188.242.176.25:8080/api/add/measures"
+#define URL_TCP_ADDR            (char*)"188.242.176.25"
+#define URL_TCP_PORT            8086
 
 #define BKTE_SZ_UART_MSG		132
 #define BKTE_SZ_TEMP_MSG		4
@@ -142,6 +144,8 @@ void Error_Handler(void);
 #define SZ_CMD_TEMP			  8
 
 #define SZ_PAGE 255
+#define AMOUNT_MAX_PAGES  5
+#define SZ_PAGES          1275 // SZ_PAGE * AMOUNT_MAX_PAGES
 
 #define BKTE_PREAMBLE			0xABCD
 #define BKTE_PREAMBLE_LSB		0xAB
@@ -182,6 +186,8 @@ typedef struct{
 	char* getTime;
 	char* getSzSoft;
 	char* getPartFirmware;
+  char* tcpAddr;
+  u32   tcpPort;
 }HttpUrl;
 
 typedef struct{

@@ -1285,6 +1285,9 @@
             <group>
                 <name>Tasks</name>
                 <file>
+                    <name>$PROJ_DIR$\..\Core\Tasks\Src\task_create_webpckg.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\Core\Tasks\Src\task_get_energy.c</name>
                 </file>
                 <file>
