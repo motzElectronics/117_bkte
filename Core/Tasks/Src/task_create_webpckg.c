@@ -31,7 +31,6 @@ void taskCreateWebPckg(void const * argument){
 	u16 szAllPages = 0;
 	u8	amntPages;
 	u8 len;
-	u8 test = 0;
 	
 	offAllLeds();
 	vTaskSuspend(createWebPckgHandle);
@@ -47,7 +46,7 @@ void taskCreateWebPckg(void const * argument){
 	for(;;){
 		delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
-		while(delayPages > 0 && isNotFullPckg()){
+		while(delayPages > 1 && isNotFullPckg()){
 			curPckg = getFreePckg();
 			clearAllPages();
 			amntPages = delayPages > AMOUNT_MAX_PAGES ? AMOUNT_MAX_PAGES : delayPages;
@@ -76,11 +75,6 @@ void taskCreateWebPckg(void const * argument){
 			initWebPckg(curPckg, szAllPages);
 			addPagesToWebPckg(curPckg);
 			xQueueSendToBack(queueWebPckgHandle, &curPckg, portMAX_DELAY);
-			test++;
-			if(test == 3){
-				D(printf("UNLOCK vTaskResume(webExchangeHandle)\r\n"));
-				vTaskResume(webExchangeHandle);
-			}
 			delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 				spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
 

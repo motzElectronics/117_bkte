@@ -9,9 +9,11 @@
 #include "../Drivers/Inc/simcom.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
 
-#define SEND_OK             0
-#define SEND_ER             1
-#define SEND_ER_LOST_PCKG   2
+#define SEND_OK                 0
+#define INIT_TCP_ER             1
+#define OPEN_TCP_ER             2
+#define SEND_TCP_ER             3
+#define SEND_TCP_ER_LOST_PCKG   4
 
 
 

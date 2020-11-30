@@ -166,6 +166,14 @@ typedef enum{
 }TYPE_TELEMETRY;
 
 typedef enum{
+
+}GROUP_TELEMETRY;
+
+typedef enum{
+
+}CODE_TELEMETRY;
+
+typedef enum{
 	CMD_DATA_VOLTAMPER = 1,
 	CMD_DATA_ENERGY,
 	CMD_DATA_TEMP
@@ -187,6 +195,13 @@ typedef struct{
 	s16 amper;
 	u16 volt;
 }PckgVoltAmper;
+
+typedef struct{
+	u32 unixTimeStamp;
+	u32 data;
+	u8 group;
+	u8 code;
+}PckgTelemetry;
 
 
 //typedef struct{
