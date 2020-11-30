@@ -2,7 +2,6 @@
 #define CIRCULAR_BUFFER_H_
 
 #include "main.h"
-#include "../Utils/Inc/utils_bkte.h"
 #include "cmsis_os.h"
 
 #define SZ_CIRCULAR_BUF		1000
@@ -13,6 +12,19 @@
 
 #define CIRC_HEADER1		0xF2
 #define CIRC_HEADER2		0x01
+
+
+
+
+typedef enum{
+	CIRC_TYPE_SIM_UART = 0,
+	CIRC_TYPE_ENERGY_UART,
+	CIRC_TYPE_PCKG_ENERGY,
+	CIRC_TYPE_PCKG_VOLTAMPER,
+	CIRC_TYPE_PCKG_TEMP,
+	CIRC_TYPE_PCKG_ALL,
+	CIRC_TYPE_PCKG_RSSI
+}CircTypeBuf;
 
 typedef struct{
 	u8* buf;
@@ -25,20 +37,12 @@ typedef struct{
 	u16 max; //of the buffer
 	u8 numPckgInBuf;
 	u16 curLenMsg;
+	CircTypeBuf	type;
 }CircularBuffer;
-
-
-typedef enum{
-	CIRC_TYPE_SIM_UART = 0,
-	CIRC_TYPE_ENERGY_UART,
-	CIRC_TYPE_PCKG_ENERGY,
-	CIRC_TYPE_PCKG_TEMP,
-	CIRC_TYPE_PCKG_RSSI
-}CircTypeBuf;
 
 typedef CircularBuffer* CBufHandle;
 
-void cBufInit(CBufHandle cbuf, u8* buf);
+void cBufInit(CBufHandle cbuf, u8* buf, u16 szBuf, CircTypeBuf type);
 
 /// Free a circular buffer structure
 /// Requires: cbuf is valid and created by circular_buf_init
@@ -83,7 +87,7 @@ void cBufWriteToBuf(CBufHandle cbuf, u8* data, u8 sz);
 
 void cBufSafeWrite(CBufHandle cbuf, u8* data, u8 sz, osMutexId mutex, TickType_t ticks);
 
-u16 cBufRead(CBufHandle cbuf, u8* dist, CircTypeBuf typeBuf, u8 sz);
+u16 cBufRead(CBufHandle cbuf, u8* dist, u8 sz);
 void copyGetDatafromBuf(CBufHandle cbuf, u8* dist, u16 sz, CircTypeBuf type);
 u8 getLenMsgSimUart(CBufHandle cbuf);
 u8 getLenMsgEnergyUart(CBufHandle cbuf);

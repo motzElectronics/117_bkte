@@ -42,7 +42,7 @@ char tmpJsonGnss[100];
 
 }*/
 
-u32 addEnPckgToJson(PckgEnergy* pckg){
+/*u32 addEnPckgToJson(PckgEnergy* pckg){
 	static u16 cnt = 0;
 	cnt++;
 	memset(tmpJsonGnss, '\0', 100);
@@ -75,17 +75,17 @@ u16 closeGnssJson(){
 	numPckg = pckgJsonEn.numPckg;
 	pckgJsonEn.numPckg = 0;
 	return numPckg;
-}
+}*/
 
 void pckgUpdFirmwareToJson(PckgUpdFirmware* source, char* dist, u16 szDist){
-	static u16 cnt = 0;
+	/*static u16 cnt = 0;
 	cnt++;
 	memset(dist, '\0', szDist);
 	sprintf(dist, "{\"h\":\"02%08x%08x%08x%04x%02x%04x\", \"d\":[\"%04x%02x23%08x%08x%08x\"]}",
 				(uint)bkte.idMCU[0], (uint)bkte.idMCU[1], (uint)bkte.idMCU[2],
 				(uint)bkte.idTrain, (uint)bkte.idTrainCar, (uint)bkte.idReceiver,
 				(uint)cnt, (uint)bkte.idDev,  (int)timestamp,
-				(uint)source->fromByte, (uint)source->toByte);
+				(uint)source->fromByte, (uint)source->toByte);*/
+	D(printf("pckgUpdFirmwareToJson()\r\n"));
 }
-
 

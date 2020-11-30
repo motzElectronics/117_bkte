@@ -8,8 +8,9 @@ static u8 bufSectorLogWarning[SZ_SECTOR];
 SdSector sdSectorLogError;
 SdSector sdSectorLogs;
 
-void sdInit(){
-    if(fatInit() != FAT_ERROR_NOT_MOUNT){
+u8 sdInit(){
+    u8 ret = FAT_OK;
+    if((ret = fatInit()) != FAT_ERROR_NOT_MOUNT){
         D(printf("OK: f_mount\r\n"));
         sdSectorLogError.szSector = SZ_SECTOR;
         sdSectorLogError.pBufSec = bufSectorLogError;
@@ -25,11 +26,12 @@ void sdInit(){
         HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_RESET);
         D(printf("ERROR: f_mount\r\n"));
     }
+    return ret;
 }
 
 void sdWriteLog(char* strMsg, u16 szMsg, char* strParams, u16 szParams, SdSector* pSec){
     if(bkte.isFatMount && SDFatFS.free_clst > 10){
-        u32 time = getTimeStamp();
+        u32 time = getUnixTimeStamp();
         u32 sz = szMsg + LEN_TIME + szParams + LEN_SYMB_ENDL;
         char strTimestamp[LEN_TIME];
         sprintf(strTimestamp, "%08x ", time);

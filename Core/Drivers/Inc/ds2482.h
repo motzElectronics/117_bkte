@@ -13,6 +13,9 @@
 #define DS2482_I2C_ADDR 0x18	// 7-bit I2C address of the DS2482. Change this to whatever I2C address your device is set to.
 #define DS2482_I2C_TIMEOUT	5500
 
+#define DS2482_OK		1
+#define DS2482_ERROR	0	
+
 // Defines for commands the DS2482 understands
 typedef enum ds2482_cmds
 {
@@ -53,17 +56,17 @@ typedef union
 
 
 // Function prototypes
-bool ds2482Reset(void);
-bool ds2482SetReadPointer(Ds2482_regs regAddr);
+u8 ds2482Reset(void);
+u8 ds2482SetReadPointer(Ds2482_regs regAddr);
 /*bool ds2482WriteConfig(bool OneWireSpeed, bool StrongPullup, bool ActivePullup);*/
-bool ds2482WriteByte(uint8_t dataByte);
-bool ds2482ReadByte(uint8_t *dataByte);
-bool ds2482OneWireReset(void);
+u8 ds2482WriteByte(uint8_t dataByte);
+u8 ds2482ReadByte(uint8_t *dataByte);
+u8 ds2482OneWireReset(void);
 s8 ds2482ConvTemp(u8 LSB, u8 MSB);
 void ds2482Init();
 
-void ds2482Tx(u8 addr, u8* data, u16 sz);
-void ds2482Rx(u8 addr, u8* data, u16 sz);
+u8 ds2482Tx(u8 addr, u8* data, u16 sz);
+u8 ds2482Rx(u8 addr, u8* data, u16 sz);
 
 
 #endif /* INC_DS2482_H_ */

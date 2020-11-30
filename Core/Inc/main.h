@@ -117,7 +117,7 @@ void Error_Handler(void);
 #include "stdlib.h"
 #include "string.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if DEBUG
   #define D(x)  x
@@ -133,6 +133,23 @@ void Error_Handler(void);
 #define URL_TIME							(char*)"http://188.242.176.25:8080/api/time"
 #define URL_GET_NEW_FIRMWARE				(char*)"http://188.242.176.25:8080/api/getFile"
 #define URL_MEASURE							(char*)"http://188.242.176.25:8080/api/add/measures"
+#define URL_TCP_ADDR            (char*)"188.242.176.25"
+#define URL_TCP_PORT            8086
+
+#define BKTE_SZ_UART_MSG		132
+#define BKTE_SZ_TEMP_MSG		4
+
+#define SZ_CMD_ENERGY		  12
+#define SZ_CMD_VOLTAMPER	8
+#define SZ_CMD_TEMP			  8
+
+#define SZ_PAGE 255
+#define AMOUNT_MAX_PAGES  5
+#define SZ_PAGES          1275 // SZ_PAGE * AMOUNT_MAX_PAGES
+
+#define BKTE_PREAMBLE			0xABCD
+#define BKTE_PREAMBLE_LSB		0xAB
+#define BKTE_PREAMBLE_MSB		0xCD
 
 extern char logError[LOG_SZ_ERROR]; 
 typedef uint8_t			u8;
@@ -169,6 +186,8 @@ typedef struct{
 	char* getTime;
 	char* getSzSoft;
 	char* getPartFirmware;
+  char* tcpAddr;
+  u32   tcpPort;
 }HttpUrl;
 
 typedef struct{

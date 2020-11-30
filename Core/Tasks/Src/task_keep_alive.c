@@ -7,12 +7,12 @@ extern osThreadId loraHandle;
 extern u8 isRxNewFirmware;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
-extern CircularBuffer circBufPckgEnergy;
-extern u8 SZ_PCKGENERGY;
+// extern CircularBuffer circBufPckgEnergy;
+// extern u8 SZ_PCKGENERGY;
 
 extern HttpUrl urls;
 
-static PckgEnergy curPckgEnergy = {.preambule=BKTE_PREAMBLE_EN};
+static PckgEnergy curPckgEnergy;
 
 void taskKeepAlive(void const * argument){
     u16 timeout = 1;
@@ -50,7 +50,7 @@ void pwrOffBkte(){
     vTaskSuspend(loraHandle);
 
     osDelay(2000);
-    cBufReset(&circBufPckgEnergy);
+    // cBufReset(&circBufPckgEnergy);
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
@@ -62,9 +62,9 @@ void pwrOffBkte(){
 
     updSpiFlash();
 
-    cBufReset(&circBufPckgEnergy);
+    /*cBufReset(&circBufPckgEnergy);
     memcpy(circBufPckgEnergy.buf, &spiFlash64.headNumPg, 4);
-    spiFlashWrPg(circBufPckgEnergy.buf, 4, 0, BKTE_SAVE_NUM_PAGE);
+    spiFlashWrPg(circBufPckgEnergy.buf, 4, 0, BKTE_SAVE_NUM_PAGE);*/
 
     sprintf(strVolts, "%03d", bkte.pwrInfo.adcVoltBat);
     sdWriteLog(SD_MSG_OFF_BKTE, SD_LEN_OFF_BKTE, strVolts, 3, &sdSectorLogs);
@@ -78,22 +78,20 @@ void pwrOffBkte(){
 
 void updRTC(){
     u8 csq = 0;
-    time_t prevRtcTime;
+    u32 prevRtcTime;
     u32 time = 0;
     xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-    while((csq = simCheckCSQ()) < 12 && csq > 99){
-        osDelay(2000);
-    }
-    prevRtcTime = getTimeStamp();
+    waitGoodCsq();
+    prevRtcTime = getUnixTimeStamp();
     time = getServerTime();
 
     if(time - prevRtcTime > BKTE_BIG_DIF_RTC_SERVTIME){
         fillTelemetry(&curPckgEnergy, TEL_BIG_DIFFER_RTC_SERVERTIME, time - prevRtcTime);
-        cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+        //cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
     }
 
     fillTelemetry(&curPckgEnergy, TEL_CHANGE_TIME, time);
-    cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 
     simHttpInit(urls.addMeasure);
     xSemaphoreGive(mutexWebHandle);
@@ -101,11 +99,11 @@ void updRTC(){
 
 void generateMsgKeepAlive(){
     fillTelemetry(&curPckgEnergy, TEL_KEEP_ALIVE, 0);
-    cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
     sdWriteLog(SD_MSG_KEEP_ALIVE, SD_LEN_KEEP_ALIVE, NULL, 0, &sdSectorLogs);
 }
 
 void generateMsgDevOff(){
     fillTelemetry(&curPckgEnergy, TEL_OFF_DEV, bkte.pwrInfo.adcVoltBat);
-    cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 }

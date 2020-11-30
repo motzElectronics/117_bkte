@@ -15,9 +15,10 @@
 //CircularBuffer dmaBuffer;
 
 
-void cBufInit(CBufHandle cbuf, u8* buf){
+void cBufInit(CircularBuffer* cbuf, u8* buf, u16 szBuf, CircTypeBuf type){
 	cbuf->buf = buf;
-	cbuf->max = SZ_CIRCULAR_BUF;
+	cbuf->max = szBuf;
+	cbuf->type = type;
 	cBufReset(cbuf);
 	D(printf("cBufInit()\r\n"));
 }
@@ -91,9 +92,9 @@ void cBufSafeWrite(CBufHandle cbuf, u8* data, u8 sz, osMutexId mutex, TickType_t
 //}
 
 
-u16 cBufRead(CBufHandle cbuf, u8* dist, CircTypeBuf typeBuf, u8 sz){
+u16 cBufRead(CBufHandle cbuf, u8* dist, u8 sz){
 	u16 lenMsg;
-	switch(typeBuf){
+	switch(cbuf->type){
 	case CIRC_TYPE_SIM_UART:
 		if((lenMsg = getLenMsgSimUart(cbuf))){
 			copyGetDatafromBuf(cbuf, dist, lenMsg, CIRC_TYPE_SIM_UART);
@@ -111,6 +112,8 @@ u16 cBufRead(CBufHandle cbuf, u8* dist, CircTypeBuf typeBuf, u8 sz){
 	case CIRC_TYPE_PCKG_ENERGY:
 	case CIRC_TYPE_PCKG_RSSI:
 	case CIRC_TYPE_PCKG_TEMP:
+	case CIRC_TYPE_PCKG_VOLTAMPER:
+	case CIRC_TYPE_PCKG_ALL:
 		lenMsg = sz;
 //		printf("CIRC_TYPE_PCKG_TEMP, CIRC_TYPE_PCKG_RSSI, CIRC_TYPE_PCKG_ENERGY, copyGetDatafromBuf\r\n");
 		copyGetDatafromBuf(cbuf, dist, lenMsg, CIRC_TYPE_PCKG_ENERGY);
@@ -139,7 +142,7 @@ void copyGetDatafromBuf(CBufHandle cbuf, u8* dist, u16 sz, CircTypeBuf type){
 		cbuf->readAvailable -= CIRC_LEN_ENDS;
 	}
 	else if(type == CIRC_TYPE_ENERGY_UART || type == CIRC_TYPE_PCKG_ENERGY ||
-			type == CIRC_TYPE_PCKG_TEMP)
+			type == CIRC_TYPE_PCKG_TEMP || type == CIRC_TYPE_PCKG_ALL)
 		cbuf->tail = (cbuf->tail + sz) % cbuf->max;
 	cbuf->writeAvailable += sz;
 	cbuf->readAvailable -= sz;

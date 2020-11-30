@@ -47,6 +47,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 #include "usart.h"
+#include "../Utils/Inc/utils_pckgs_manager.h"
 
 /* USER CODE END Variables */
 osThreadId getEnergyHandle;
@@ -56,6 +57,8 @@ osThreadId webExchangeHandle;
 osThreadId getTempHandle;
 osThreadId manageIWDGHandle;
 osThreadId loraHandle;
+osThreadId createWebPckgHandle;
+osMessageQId queueWebPckgHandle;
 osMutexId mutexWriteToEnergyBufHandle;
 osMutexId mutexWebHandle;
 osMutexId mutexRTCHandle;
@@ -74,6 +77,7 @@ void taskWebExchange(void const * argument);
 void taskGetTemp(void const * argument);
 void taskManageIWDG(void const * argument);
 void taskLora(void const * argument);
+void taskCreateWebPckg(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -136,6 +140,11 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* definition and creation of queueWebPckg */
+  osMessageQDef(queueWebPckg, 3, WebPckg*);
+  queueWebPckgHandle = osMessageCreate(osMessageQ(queueWebPckg), NULL);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -168,6 +177,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of lora */
   osThreadDef(lora, taskLora, osPriorityNormal, 0, 256);
   loraHandle = osThreadCreate(osThread(lora), NULL);
+
+  /* definition and creation of createWebPckg */
+  osThreadDef(createWebPckg, taskCreateWebPckg, osPriorityNormal, 0, 256);
+  createWebPckgHandle = osThreadCreate(osThread(createWebPckg), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -300,6 +313,24 @@ __weak void taskLora(void const * argument)
     osDelay(1);
   }
   /* USER CODE END taskLora */
+}
+
+/* USER CODE BEGIN Header_taskCreateWebPckg */
+/**
+* @brief Function implementing the createWebPckg thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_taskCreateWebPckg */
+__weak void taskCreateWebPckg(void const * argument)
+{
+  /* USER CODE BEGIN taskCreateWebPckg */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END taskCreateWebPckg */
 }
 
 /* Private application code --------------------------------------------------*/

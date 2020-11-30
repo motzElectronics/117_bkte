@@ -23,6 +23,7 @@ C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\fatfs.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\bsp_driver_sd.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\fatfs_platform.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\sd_diskio.pbi
+C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\task_create_webpckg.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\task_get_energy.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\task_get_new_bin.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\task_get_temp.pbi
@@ -35,6 +36,7 @@ C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\utils_bkte.
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\utils_crc.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\utils_flash.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\utils_json.pbi
+C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\utils_pckgs_manager.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\utils_sd.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\system_stm32f4xx.pbi
 C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\bkte_2_0_iar1\Obj\stm32f4xx_hal.pbi

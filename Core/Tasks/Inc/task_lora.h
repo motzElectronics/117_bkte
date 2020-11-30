@@ -44,6 +44,9 @@ void clearLoraAlgTrans(LoraAlgTransition* pckg);
 
 void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg);
 void initLoraStat(LoraStatPckg* pckg);
+void parceServicesData(LoraAlgTransition* pRx);
+void updServices(LoraAlgTransition* pTx);
+void cpyRxInf(LoraAlgTransition* pRx, LoraAlgTransition* pTx);
 
 
 #endif

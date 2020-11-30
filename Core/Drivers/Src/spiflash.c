@@ -54,22 +54,30 @@ u32 spiFlashReadID(void){
 }
 
 u8 spiFlashTxRxCmd(u8* data, u16 sz){
+	static u8 ret = 0;
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_TransmitReceive_DMA(spiMemInfo.pHSpi, data, data, sz); // spi2
-	return waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
-
+	ret = waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	bkte.erFlags.flashNOIRQ = ~ret;
+	return ret;
 }
 
 u8 spiFlashTxData(u8* data, u16 sz){
+	static u8 ret = 0;
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_Transmit_DMA(spiMemInfo.pHSpi, data, sz); // spi2
-	return waitTx("wait txSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	ret = waitTx("wait txSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	bkte.erFlags.flashNOIRQ = ~ret;
+	return ret;
 }
 
 u8 spiFlashRxData(u8* data, u16 sz){
+	static u8 ret = 0;
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_Receive_DMA(spiMemInfo.pHSpi, data, sz); // spi2
-	return waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	ret = waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	bkte.erFlags.flashNOIRQ = ~ret;
+	return ret;
 }
 
 void spiFlashES(u32 numSec)

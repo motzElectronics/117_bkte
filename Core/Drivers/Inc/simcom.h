@@ -89,12 +89,20 @@
 
 #define SIM_CIPSHUT							(char*)"CIPSHUT"
 #define SIM_CIPMUX							(char*)"CIPMUX"
+#define SIM_CIPMODE							(char*)"CIPMODE"
 #define SIM_CGATT							(char*)"CGATT"
 #define SIM_CSTT							(char*)"CSTT"
 #define SIM_CIICR							(char*)"CIICR"
 #define SIM_CIFSR							(char*)"CIFSR"
 #define SIM_CIPSTART						(char*)"CIPSTART"
 #define SIM_CIPSTATUS						(char*)"CIPSTATUS"
+#define SIM_CIPSEND							(char*)"CIPSEND"
+
+#define SIM_CIPSTAT_INIT					(char*)"STATE: IP INITIAL"
+#define SIM_CIPSTAT_START					(char*)"STATE: IP START"
+#define SIM_CIPSTAT_GPRSACT					(char*)"STATE: IP GPRSACT"
+#define SIM_CIPSTAT_STATUS					(char*)"STATE: IP STATUS"
+#define SIM_CIPSTAT_CON_OK					(char*)"STATE: CONNECT OK"
 
 
 
@@ -234,7 +242,12 @@ void simOn();
 void simHardwareReset();
 
 u8 simTCPTest();
+u8 simTCPOpen();
+u8 simTCPSend(u8* data, u16 sz);
+u8 simTCPCheckStatus(const char* stat, u16 timeout, u16 delay);
+u8 simCmd(char* cmdCode, char* params, u8 retriesCnt, char* SUCCESS_RET);
+char* simTxATCmd(char* command, u16 sz);
 
-#define SIM_GPS_INIT() httpWriteCommand(SIM_SAPBR, "1,1", 1, SIM_OK_TEXT)
+#define SIM_GPS_INIT() simCmd(SIM_SAPBR, "1,1", 1, SIM_OK_TEXT)
 
 #endif /* INC_SIM800_H_ */

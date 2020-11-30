@@ -7,13 +7,19 @@
 #include "../Utils/Inc/circularBuffer.h"
 #include "../Drivers/Inc/spiflash.h"
 #include "../Drivers/Inc/simcom.h"
-#include "../Utils/Inc/utils_json.h"
+#include "../Utils/Inc/utils_pckgs_manager.h"
 
-#define PCKG_WAS_lOST   1
-#define PCKG_WAS_SENT   0
+#define SEND_OK             0
+#define SEND_ER             1
+#define SEND_ER_LOST_PCKG   2
 
-u8 sendDataToServer();
-void saveCsq(u8 csq);
+
+
+u8 openSendTcp(u8* data, u16 sz);
+u8 fastSendTcp(u8 statSend);
+u8 procReturnStatus(u8 ret);
+
+
 
 
 
