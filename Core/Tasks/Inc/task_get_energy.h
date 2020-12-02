@@ -8,5 +8,6 @@
 #include "../Utils/Inc/utils_sd.h"
 
 void unLockTasks();
+void generateInitTelemetry();
 
 #endif

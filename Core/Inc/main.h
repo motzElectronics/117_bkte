@@ -142,6 +142,7 @@ void Error_Handler(void);
 #define SZ_CMD_ENERGY		  12
 #define SZ_CMD_VOLTAMPER	8
 #define SZ_CMD_TEMP			  8
+#define SZ_CMD_TELEMETRY  10
 
 #define SZ_PAGE 255
 #define AMOUNT_MAX_PAGES  5

@@ -17,29 +17,6 @@
 #define SD_ER_SAPBR             (char*)"1 "
 #define SD_LEN_SAPBR            2
 
-#define SD_ER_HTTPINIT     (char*)"10 "
-#define SD_LEN_HTTP            3
-
-#define SD_ER_HTTPPARA      (char*)"11 "
-
-#define SD_ER_HTTPDATA          (char*)"12 "
-#define SD_ER_HTTPDATA_UART     (char*)"13 "
-
-#define SD_ER_HTTPACTION        (char*)"14 "
-
-#define SD_ER_HTTPCODE          (char*)"15 "
-
-#define SD_ER_HTTPREAD          (char*)"16 "
-
-#define SD_ER_CSQINF            (char*)"17 "
-
-
-#define SD_ER_MSG_HTTPINIT_MYFUN   (char*)"100 "
-#define SD_LEN_MYFUN                4
-
-#define SD_ER_MSG_HTTPPOST_MYFUN   (char*)"101 "
-
-#define SD_ER_MSG_HTTPGET_MYFUN     (char*)"102 "
 
 #define SD_ER_MSG_GET_SZ_NEW_BIN_MYFUN    (char*)"103 "
 

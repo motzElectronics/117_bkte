@@ -33,14 +33,7 @@ void bkteInit(){
 		bkte.idMCU[i] = getFlashData(BKTE_ADDR_ID_MCU + (i * 4));
 	D(printf("%08x%08x%08x\r\n",
                (uint)bkte.idMCU[0], (uint)bkte.idMCU[1], (uint)bkte.idMCU[2]));
-	bkte.idTrain = BKTE_ID_TRAIN;
-	bkte.idTrainCar = BKTE_ID_TRAINCAR;
-	bkte.idReceiver = 1;
-	bkte.idDev = BKTE_ID_DEV_BKTE;
-	bkte.idFirmware = BKTE_ID_FIRMWARE;
-	bkte.idBoot = BKTE_ID_BOOT;
-	bkte.isFatMount = 0;
-
+	bkte.hwStat.regHardWareStat = 0;
 	bkte.erFlags.errReg = 0;
 }
 
@@ -224,7 +217,7 @@ void offAllLeds(){
 	HAL_GPIO_WritePin(LED1R_GPIO_Port, LED1R_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED2G_GPIO_Port, LED2G_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED2R_GPIO_Port, LED2R_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(LED3G_GPIO_Port, LED3G_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LED3G_GPIO_Port, LED3G_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED4G_GPIO_Port, LED4G_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_SET);
 }
@@ -326,4 +319,18 @@ u8 isDataFromFlashOk(char* pData, u8 len){
         }
     }
     return 0;
+}
+
+void copyTelemetry(u8* buf, PckgTelemetry* pckgTel){
+	memcpy(buf, &pckgTel->unixTimeStamp, 4);
+	memcpy(buf + 4, &pckgTel->group, 1);
+	memcpy(buf + 5, &pckgTel->code, 1);
+	memcpy(buf + 6, &pckgTel->data, 4);
+}
+
+void saveTelemetry(PckgTelemetry* pckg, CircularBuffer* cbuf){
+	u8 buf[10];
+	pckg->unixTimeStamp = getUnixTimeStamp();
+	copyTelemetry(buf, pckg);
+	saveData(buf, SZ_CMD_TELEMETRY, CMD_DATA_TELEMETRY, cbuf);
 }

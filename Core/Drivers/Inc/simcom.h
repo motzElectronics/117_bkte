@@ -247,6 +247,7 @@ u8 simTCPSend(u8* data, u16 sz);
 u8 simTCPCheckStatus(const char* stat, u16 timeout, u16 delay);
 u8 simCmd(char* cmdCode, char* params, u8 retriesCnt, char* SUCCESS_RET);
 char* simTxATCmd(char* command, u16 sz);
+long long simGetPhoneNum();
 
 #define SIM_GPS_INIT() simCmd(SIM_SAPBR, "1,1", 1, SIM_OK_TEXT)
 

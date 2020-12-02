@@ -17,7 +17,8 @@ extern PckgJsonEn pckgJsonEn;
 static Page pgEnergy = {.type = CMD_DATA_ENERGY, .szType = SZ_CMD_ENERGY};
 static Page pgTemp = {.type = CMD_DATA_TEMP, .szType = SZ_CMD_TEMP};
 static Page pgVoltAmper = {.type = CMD_DATA_VOLTAMPER, .szType = SZ_CMD_VOLTAMPER};
-static Page* allPages[] = {&pgVoltAmper, &pgEnergy, &pgTemp}; 
+static Page pgTelemetry = {.type = CMD_DATA_TELEMETRY, .szType = SZ_CMD_TELEMETRY};
+static Page* allPages[] = {&pgVoltAmper, &pgEnergy, &pgTemp, &pgTelemetry}; 
 static WebPckg* curPckg;
 
 void taskCreateWebPckg(void const * argument){
@@ -46,7 +47,7 @@ void taskCreateWebPckg(void const * argument){
 	for(;;){
 		delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
-		while(delayPages > 1 && isNotFullPckg()){
+		while(delayPages > 0 && isNotFullPckg()){
 			curPckg = getFreePckg();
 			clearAllPages();
 			amntPages = delayPages > AMOUNT_MAX_PAGES ? AMOUNT_MAX_PAGES : delayPages;
@@ -85,7 +86,7 @@ void taskCreateWebPckg(void const * argument){
 }
 
 void clearAllPages(){
-	for(u8 i = 0; i < 3; i++){
+	for(u8 i = 0; i < 4; i++){
 		clearPage(allPages[i]);
 	}
 }
@@ -107,6 +108,10 @@ void parceData(u8* tmpBufPage, u8 len){
 				addToPage(&pgTemp, &tmpBufPage[i + 1], SZ_CMD_TEMP);
 				i += (SZ_CMD_TEMP + 1);
 				break;
+			case CMD_DATA_TELEMETRY:
+				addToPage(&pgTelemetry, &tmpBufPage[i + 1], SZ_CMD_TELEMETRY);
+				i += (SZ_CMD_TELEMETRY + 1);
+				break;
 			default:
 				D(printf("ER: CMD_DATA_X is wrong\r\n"));
 				return;
@@ -125,7 +130,7 @@ void clearPage(Page* pg){
 
 u16 getSzAllPages(){
 	u16 sz = 0;
-	for(u8 i = 0; i < 3; i++){
+	for(u8 i = 0; i < 4; i++){
 		if(allPages[i]->iter){
 			sz += (allPages[i]->iter + 1 + 1); // sz + sizeof(type) + szeof(cnt)
 		}
@@ -139,11 +144,12 @@ void addToPage(Page* pg, u8* src, u8 sz){
 }
 
 void addPagesToWebPckg(WebPckg* pckg){
-	for(u8 i = 0; i < 3; i++){
+	for(u8 i = 0; i < 4; i++){
 		if(allPages[i]->iter){
 			addInfoToWebPckg(pckg, allPages[i]->buf, allPages[i]->iter, allPages[i]->iter / allPages[i]-> szType, allPages[i]->type);
 		}
 	}
 	closeWebPckg(pckg);
+	showWebPckg(pckg);
 
 }

@@ -19,6 +19,9 @@ void spiFlashInit(u8* buf){
 
 	id = spiFlashReadID();
 	tmp = id & 0x0000FFFF;
+	if(tmp){ //! change to 2017
+		bkte.hwStat.isSPIFlash = 1;
+	}
 	D(printf("spiFlashId, series: %d %x\r\n", (int)id, (int)tmp));
 
 	spiFlash64.blCnt = 128;

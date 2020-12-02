@@ -523,3 +523,13 @@ u8 simTCPSend(u8* data, u16 sz){
 
 }
 
+long long simGetPhoneNum(){
+	char* retMsg;
+        char* token;
+	retMsg = simTxATCmd("AT+CNUM\r\n", strlen("AT+CNUM\r\n"));
+        if(retMsg[0] != '\0'){
+          return atoll(retMsg + 15);
+        } else
+          return 0; 
+}
+

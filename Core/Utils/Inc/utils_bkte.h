@@ -27,6 +27,8 @@
 #define BKTE_IS_LORA_MASTER		1
 
 #define BKTE_ID_FIRMWARE		7
+#define BKTE_ID_BOOT			2
+#define BKTE_ID_PCB				3
 #define BKTE_ID_TRAIN			1706
 //!------------CONFIGURE PARAMS----------------
 #define BKTE_AMOUNTS		(BKTE_ID_TRAINCAR_MAX + 1)
@@ -49,8 +51,6 @@
 #define BKTE_ID_DEV_BSG			0x12
 
 
-
-#define BKTE_ID_BOOT			1
 
 #define SZ_PART_NEW_SOFTWARE	1360
 
@@ -119,16 +119,20 @@ typedef union{
 	u16 pwrReg;
 }PWRInfo;
 
+typedef union{
+	struct{
+		u8 isFatMount:	1;
+		u8 isDS2482:	1;
+		u8 isSPIFlash:	1;
+		u8 isLoraOk:	1;
+	};
+	u8 regHardWareStat;
+}HardWareStatus;
+
 typedef struct{
 	u8	isOwActive[BKTE_MAX_CNT_1WIRE];
-	u8	isFatMount;
 	u32	idMCU[3];
-	u16	idTrain;
-	u8	idTrainCar;
-	u16	idReceiver;
-	u8	idDev;
-	u8	idFirmware;
-	u8	idBoot;
+	HardWareStatus hwStat;
 	PWRInfo pwrInfo;
 	ErrorFlags erFlags;
 //	FInfo	fInfo[NUM_READ_FILES];
@@ -166,17 +170,32 @@ typedef enum{
 }TYPE_TELEMETRY;
 
 typedef enum{
-
-}GROUP_TELEMETRY;
+	TEL_GR_GENINF = 1,
+	TEL_GR_HARDWARE_STATUS
+}TELEMETRY_GROUP;
 
 typedef enum{
+	TEL_CD_GENINF_NUM_FIRMWARE = 1,
+	TEL_CD_GENINF_NUM_BOOT,
+	TEL_CD_GENINF_PHONE_NUM1,
+	TEL_CD_GENINF_PHONE_NUM2,
+	TEL_CD_GENINF_SIMCARD_MONEY,
+	TEL_CD_GENINF_NUM_PCB
+}TELEMETRY_CODE_GEN_INF;
 
-}CODE_TELEMETRY;
+typedef enum{
+	TEL_CD_HW_BKTE = 1,
+	TEL_CD_HW_SD,
+	TEL_CD_HW_DS2482,
+	TEL_CD_HW_SPI_FLASH,
+	TEL_CD_HW_LORA
+}TELEMETRY_CODE_STATES;
 
 typedef enum{
 	CMD_DATA_VOLTAMPER = 1,
 	CMD_DATA_ENERGY,
-	CMD_DATA_TEMP
+	CMD_DATA_TEMP,
+	CMD_DATA_TELEMETRY
 }CMD_DATA;
 
 typedef enum{
@@ -250,8 +269,6 @@ void toggleGreenLeds();
 void toggleRedLeds();
 u32 getServerTime();
 
-time_t getTimeStamp();
-
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 void checkBufForWritingToFlash();
 void updSpiFlash();
@@ -260,6 +277,8 @@ void waitGoodCsq();
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf);
 u32 getUnixTimeStamp();
 u8 isDataFromFlashOk(char* pData, u8 len);
+void copyTelemetry(u8* buf, PckgTelemetry* pckgTel);
+void saveTelemetry(PckgTelemetry* pckg, CircularBuffer* cbuf);
 
 extern BKTE bkte;
 

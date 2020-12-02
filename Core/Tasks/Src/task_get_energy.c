@@ -17,6 +17,7 @@ static EnergyData lastData = {.current = 0, .enAct = 0, .enReact = 0, .volt = 0}
 
 static PckgVoltAmper pckgVoltAmper;
 static PckgEnergy pckgEnergy;
+
 // u8 test = 0;
 
 void taskGetEnergy(void const * argument){
@@ -28,11 +29,12 @@ void taskGetEnergy(void const * argument){
 	spiFlashInit(circBufAllPckgs.buf);
 	cBufReset(&circBufAllPckgs);
 
-	/*if(sdInit() != FAT_OK){
-		fillTelemetry(&circBufAllPckgs, TEL_NO_FATFS, 0);
-		cBufWriteToBuf(&circBufAllPckgs, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
+	if(sdInit() != FAT_OK){
+		/*fillTelemetry(&circBufAllPckgs, TEL_NO_FATFS, 0);
+		cBufWriteToBuf(&circBufAllPckgs, (u8*)&curPckgEnergy, SZ_PCKGENERGY);*/
+		D(printf("ER: sdInit()\r\n"));
 	}
-	sdWriteLog(SD_MSG_START_BKTE, SD_LEN_START_BKTE, NULL, 0, &sdSectorLogs);
+	/*sdWriteLog(SD_MSG_START_BKTE, SD_LEN_START_BKTE, NULL, 0, &sdSectorLogs);
 	sdUpdLog(&sdSectorLogs);*/
 	simInit();
 	// if(!getServerTime()){
@@ -47,7 +49,7 @@ void taskGetEnergy(void const * argument){
 
 	fillTelemetry(&curPckgEnergy, TEL_ID_FIRMWARE, bkte.idFirmware);
 	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);*/
-
+	generateInitTelemetry();
 	unLockTasks();
 	rxUart1_IT();
 
@@ -84,5 +86,58 @@ void unLockTasks(){
 	vTaskResume(keepAliveHandle);
 	vTaskResume(loraHandle);
 	vTaskResume(createWebPckgHandle);
+}
+
+void generateInitTelemetry(){
+	PckgTelemetry pckgTel;
+	long long phoneNum;
+	u32 tmp;
+	pckgTel.group = TEL_GR_GENINF;
+	pckgTel.code = TEL_CD_GENINF_NUM_FIRMWARE;
+	pckgTel.data = BKTE_ID_FIRMWARE;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_GENINF_NUM_BOOT;
+	pckgTel.data = BKTE_ID_BOOT;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_GENINF_NUM_PCB;
+	pckgTel.data = BKTE_ID_PCB;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	phoneNum = simGetPhoneNum();
+	if(phoneNum > 0){
+		tmp = phoneNum % 100000;
+		pckgTel.code = TEL_CD_GENINF_PHONE_NUM1;
+		pckgTel.data = tmp;
+		saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+		tmp = phoneNum / 100000;
+		pckgTel.code = TEL_CD_GENINF_PHONE_NUM2;
+		pckgTel.data = tmp;
+		saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	}
+
+	pckgTel.group = TEL_GR_HARDWARE_STATUS;
+	pckgTel.code = TEL_CD_HW_BKTE;
+	pckgTel.data = 1;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_HW_SD;
+	pckgTel.data = bkte.hwStat.isFatMount;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_HW_DS2482;
+	pckgTel.data = bkte.hwStat.isDS2482;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_HW_SPI_FLASH;
+	pckgTel.data = bkte.hwStat.isSPIFlash;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_HW_LORA;
+	pckgTel.data = bkte.hwStat.isLoraOk;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
 }
 

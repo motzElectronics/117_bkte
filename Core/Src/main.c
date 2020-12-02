@@ -133,7 +133,7 @@ int main(void)
   };
   cBufInit(&rxUart1CircBuf, uart1Buf, sizeof(uart1Buf), CIRC_TYPE_ENERGY_UART);
 	cBufInit(&circBufAllPckgs, bufPckgs, SZ_PAGE, CIRC_TYPE_PCKG_ALL);
-  ds2482Init();
+
   bkteInit();
   urlsInit();
   uartInitInfo();

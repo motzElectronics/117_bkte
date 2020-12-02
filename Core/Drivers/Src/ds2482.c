@@ -80,9 +80,19 @@ s8 ds2482ConvTemp(u8 LSB, u8 MSB){
 }
 
 void ds2482Init(){
+	u8 tmp = 0;
 	i2cInfo.pHi2c1 = &hi2c1;
 	for(u8 i = 0; i < BKTE_MAX_CNT_1WIRE; i++)
 		resetTempLine(i);
+	if( !ds2482SetReadPointer(STATUS_REG) ){
+		bkte.hwStat.isDS2482 = 0;
+		return;
+	}
+	// Wait for the data to be read
+	if(ds2482Rx(DS2482_I2C_ADDR << 1, &tmp, 1)){
+		bkte.hwStat.isDS2482 = 1;
+	}
+	return;
 }
 
 u8 ds2482Tx(u8 addr, u8* data, u16 sz){

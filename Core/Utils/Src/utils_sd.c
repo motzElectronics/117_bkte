@@ -21,7 +21,7 @@ u8 sdInit(){
         sdSectorLogs.pBufSec = bufSectorLogWarning;
         sdSectorLogs.fileName = fileNameWarning;
         cleanSector(&sdSectorLogs);
-        bkte.isFatMount = 1;
+        bkte.hwStat.isFatMount = 1;
     }else{
         HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_RESET);
         D(printf("ERROR: f_mount\r\n"));
@@ -30,7 +30,7 @@ u8 sdInit(){
 }
 
 void sdWriteLog(char* strMsg, u16 szMsg, char* strParams, u16 szParams, SdSector* pSec){
-    if(bkte.isFatMount && SDFatFS.free_clst > 10){
+    if(bkte.hwStat.isFatMount && SDFatFS.free_clst > 10){
         u32 time = getUnixTimeStamp();
         u32 sz = szMsg + LEN_TIME + szParams + LEN_SYMB_ENDL;
         char strTimestamp[LEN_TIME];
@@ -57,7 +57,7 @@ void sdUpdLog(SdSector* pSec){
 
 void sdWriteSector(SdSector* pSdSector){
     u32 bWrite;
-    if(bkte.isFatMount && SDFatFS.free_clst > 10){
+    if(bkte.hwStat.isFatMount && SDFatFS.free_clst > 10){
         if(f_open(&fil, pSdSector->fileName, FA_WRITE | FA_OPEN_APPEND) == FR_OK){
 
             if(f_write(&fil, pSdSector->pBufSec, pSdSector->szSector - pSdSector->freeSz, (UINT*)&bWrite) != FR_OK){

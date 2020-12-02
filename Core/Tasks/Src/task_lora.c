@@ -26,20 +26,18 @@ u32 stTime = 0;
 static u8 retStatus;
 
 void taskLora(void const * argument){
-	vTaskSuspend(loraHandle);
 	config.CarrierFreq = 0;
 	node.hspi = &hspi1;
 	node.config = &config;
-
-
-	vTaskSuspend(loraHandle);
+	
 	initLoraStat(&loraStatPckg);
 	HAL_GPIO_WritePin(RF_PWR_GPIO_Port, RF_PWR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED1R_GPIO_Port, LED1R_Pin, GPIO_PIN_SET);
 	xSemaphoreTake(semLoraRxPckgHandle, portMAX_DELAY);
 	sx1272_lora_init(&node);
-
+	vTaskSuspend(loraHandle);
+	vTaskSuspend(loraHandle);
 	/*u8 test = 0;
 	while(1){
 		memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);

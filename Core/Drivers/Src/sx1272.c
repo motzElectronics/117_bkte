@@ -58,6 +58,7 @@ void spiRx(u8 cmd, u8 *pData, u8 sz){
 }
 
 void sx1272_lora_init(SX1272 *node) {
+	u8 tmp;
 	sx1272 = node;
 
 	/* Reset pulse for programming mode */
@@ -79,6 +80,10 @@ void sx1272_lora_init(SX1272 *node) {
 
 	/* Set max pay load length */
 	sx1272_set_max_payload(MAX_PACKET_LENGTH);
+	tmp = sx1272_get_max_payloadlen();
+	if(tmp == MAX_PACKET_LENGTH){
+		bkte.hwStat.isLoraOk = 1;
+	}
 	// sx1272_set_payload_length(PAYLOAD_LENGTH + HEADER_LENGTH + CRC_LENGTH);
 
 	/* Set base frequency */
@@ -399,6 +404,13 @@ uint8_t sx1272_get_irq_flags() {
 
 uint8_t sx1272_get_op_mode() {
 	u8 data[2] = {REG_LR_OP_MODE | READ, DUMMY_BYTE};
+	spiTxRx(data, 2);
+
+	return data[1];
+}
+
+uint8_t sx1272_get_max_payloadlen() {
+	u8 data[2] = {REG_LR_RX_MAX_PAYLOADLENGTH | READ, DUMMY_BYTE};
 	spiTxRx(data, 2);
 
 	return data[1];

@@ -10,6 +10,7 @@ void taskGetTemp(void const * argument){
 	s8 temps[BKTE_MAX_CNT_1WIRE];
 	
 	// vTaskSuspend(getTempHandle);
+    ds2482Init();
     vTaskSuspend(getTempHandle);
     HAL_GPIO_WritePin(LED3G_GPIO_Port, LED3G_Pin, GPIO_PIN_RESET);
     s8 tmpTemp;
