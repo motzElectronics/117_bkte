@@ -30,7 +30,7 @@ void simInit(){
 		if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
 		D(printf("simInit AT: %s\r\n", token));
 		if((strcmp(token, SIM_OK_TEXT)) != 0){
-			sdWriteLog(SD_ER_MSG_AT, SD_LEN_MSG_AT, NULL, 0, &sdSectorLogError);
+			sdWriteLog(SD_ER_MSG_AT, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 			bkte.erFlags.simAT = 1;
 			D(printf("ERROR: simInit() AT: %s\r\n", token));
 			simBadAnsw = (simBadAnsw + 1) % 10;
@@ -50,13 +50,13 @@ void simInit(){
 				fail++;
 				bkte.erFlags.simSAPBR = 1;
 				if(fail > 10){
-					sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, "1", 1, &sdSectorLogError);
+					sdWriteLog(SD_ER_SAPBR, SD_LEN_ER_MSG, "1", 1, &sdSectorLogError);
 					sdUpdLog(&sdSectorLogError);
 					sdUpdLog(&sdSectorLogs);
 					fail = 0;  
 					HAL_NVIC_SystemReset();
 				}
-				sdWriteLog(SD_ER_SAPBR, SD_LEN_SAPBR, NULL, 0, &sdSectorLogError);      
+				sdWriteLog(SD_ER_SAPBR, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);      
 				D(printf("ERROR: NOT CONNECT GPS\r\n"));
 			} else {
 				isInit = 1;
@@ -439,35 +439,44 @@ u8 simTCPCheckStatus(const char* stat, u16 timeout, u16 delay){
 u8 simTCPinit(){
 	char* token;
 	if(simCmd(SIM_CIPSHUT, NULL, 3, SIM_OK_CIPSHUT) != SIM_SUCCESS){
+		sdWriteLog(SD_ER_SAPBR, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 
 	if(simCmd(SIM_CGATT, "1", 3, SIM_OK_TEXT) != SIM_SUCCESS){
+		sdWriteLog(SD_ER_CGATT, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	
 	if(simTCPCheckStatus(SIM_CIPSTAT_INIT, 200, 50) != SIM_SUCCESS){
+		sdWriteLog(SD_ER_CIPSTAT_INIT, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 
 	if(simCmd(SIM_CSTT, "\"internet\",\"gdata\",\"gdata\"", 3, SIM_OK_TEXT) == SIM_FAIL){ // maybe can delete gdata. test it.
+		sdWriteLog(SD_ER_CSTT, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	if(simTCPCheckStatus(SIM_CIPSTAT_START, 200, 50) != SIM_SUCCESS){
+		sdWriteLog(SD_ER_CIPSTAT_START, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 
 	if(simCmd(SIM_CIICR, NULL, 3, SIM_OK_TEXT) == SIM_FAIL){
+		sdWriteLog(SD_ER_CIICR, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	if(simTCPCheckStatus(SIM_CIPSTAT_GPRSACT, 200, 50) != SIM_SUCCESS){
+		sdWriteLog(SD_ER_CIPSTAT_GPRSACT, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 
 	if(simCmd(SIM_CIFSR, NULL, 3, NULL) == SIM_FAIL){
+		sdWriteLog(SD_ER_CIFSR, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	if(simTCPCheckStatus(SIM_CIPSTAT_STATUS, 200, 50) != SIM_SUCCESS){
+		sdWriteLog(SD_ER_CIPSTAT_STATUS, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	return SIM_SUCCESS;
@@ -480,6 +489,7 @@ u8 simTCPOpen(){
 	memset(params, '\0', 40);
 	sprintf(params,"\"%s\",\"%s\",%d", (char*)"TCP", urls.tcpAddr, urls.tcpPort);
 	if(simCmd(SIM_CIPSTART, params, 3, SIM_OK_TEXT) == SIM_FAIL){
+		sdWriteLog(SD_ER_CIPSTART_OK, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	osDelay(1500);
@@ -487,9 +497,11 @@ u8 simTCPOpen(){
 	if(token == NULL || token[0] == '\0') 
 			token = SIM_NO_RESPONSE_TEXT;
 	if(strcmp((const char*)token, (const char*)"CONNECT OK") != 0){
+		sdWriteLog(SD_ER_CIPSTART_CON_OK, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	if(simTCPCheckStatus(SIM_CIPSTAT_CON_OK, 7000, 200) != SIM_SUCCESS){
+		sdWriteLog(SD_ER_CIPSTAT_CON_OK, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	return SIM_SUCCESS;
@@ -502,15 +514,16 @@ u8 simTCPSend(u8* data, u16 sz){
 	memset(params, '\0', 8);
 	sprintf(params,"%d", sz);
 	if(simCmd(SIM_CIPSEND, params, 3, "> ") == SIM_FAIL){
+		sdWriteLog(SD_ER_CIPSEND, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
-
 	retMsg = simDownloadData(data, sz);
 	token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 	if(token == NULL || token[0] == '\0') 
 			token = SIM_NO_RESPONSE_TEXT;
 	if(strcmp((const char*)token, (const char*)"SEND OK") != 0){
 		D(printf("ER: simDownloadData()\r\n"));
+		sdWriteLog(SD_ER_DOWNLOAD_DATA_AND_SEND_OK, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	} else{
 		D(printf("OK: simTCPSend()\r\n"));
@@ -533,3 +546,42 @@ long long simGetPhoneNum(){
           return 0; 
 }
 
+u8 procReturnStatus(u8 ret){
+	static u8 notSend = 0;
+	if(ret == INIT_TCP_ER || ret == OPEN_TCP_ER){
+		notSend = 0;
+		return ret;
+	}
+	if(ret == SEND_TCP_ER && notSend < 3){
+		notSend++;	
+	}else if(ret == SEND_TCP_ER && notSend == 3){
+		notSend++;
+		simReset();
+	} else if(ret == SEND_TCP_ER && notSend == 4){
+		notSend = 0;
+		simReset();
+		ret = SEND_TCP_ER_LOST_PCKG;
+	} else if(ret == SEND_OK){
+		notSend = 0;
+	}
+	return ret;
+}
+
+u8 openSendTcp(u8* data, u16 sz){
+	u8 ret = SEND_OK;
+
+	waitGoodCsq();
+	if(simTCPinit() != SIM_SUCCESS){
+		D(printf("ER: simTCPinit\r\n"));
+		ret = INIT_TCP_ER;
+	}
+	if(ret == SEND_OK && simTCPOpen() != SIM_SUCCESS){
+		D(printf("ER: simTCPOpen\r\n"));
+		ret = OPEN_TCP_ER;
+	}
+	if(ret == SEND_OK && simTCPSend(data, sz) != SIM_SUCCESS){
+		D(printf("ER: simTCPSend\r\n"));
+		ret = SEND_TCP_ER;
+	}
+	return procReturnStatus(ret);
+}

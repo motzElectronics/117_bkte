@@ -1,5 +1,6 @@
 #include "../Tasks/Inc/task_keep_alive.h"
 
+
 extern osThreadId keepAliveHandle;
 extern osThreadId getTempHandle;
 extern osThreadId getEnergyHandle;
@@ -20,6 +21,9 @@ void taskKeepAlive(void const * argument){
 
     for(;;)
     {
+        if(!(timeout % 60) && !isRxNewFirmware){
+            getNumFirmware();
+        }
         if(!(timeout % 600) && !isRxNewFirmware){
             generateMsgKeepAlive();
         }
@@ -77,24 +81,9 @@ void pwrOffBkte(){
 }
 
 void updRTC(){
-    u8 csq = 0;
-    u32 prevRtcTime;
-    u32 time = 0;
-    xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-    waitGoodCsq();
-    prevRtcTime = getUnixTimeStamp();
-    time = getServerTime();
 
-    if(time - prevRtcTime > BKTE_BIG_DIF_RTC_SERVTIME){
-        fillTelemetry(&curPckgEnergy, TEL_BIG_DIFFER_RTC_SERVERTIME, time - prevRtcTime);
-        //cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
-    }
-
-    fillTelemetry(&curPckgEnergy, TEL_CHANGE_TIME, time);
-    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
-
-    simHttpInit(urls.addMeasure);
-    xSemaphoreGive(mutexWebHandle);
+    getServerTime();
+    // fillTelemetry(&curPckgEnergy, TEL_CHANGE_TIME, time);
 }
 
 void generateMsgKeepAlive(){

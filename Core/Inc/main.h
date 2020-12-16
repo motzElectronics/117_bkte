@@ -143,6 +143,7 @@ void Error_Handler(void);
 #define SZ_CMD_VOLTAMPER	8
 #define SZ_CMD_TEMP			  8
 #define SZ_CMD_TELEMETRY  10
+#define SZ_CMD_TELEMETRY_PHONE_NUM  14
 
 #define SZ_PAGE 255
 #define AMOUNT_MAX_PAGES  5

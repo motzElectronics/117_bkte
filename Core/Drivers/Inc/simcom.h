@@ -175,6 +175,13 @@
 
 #define HTTP_CODE_OK						200
 
+#define SEND_OK                 0
+#define INIT_TCP_ER             1
+#define OPEN_TCP_ER             2
+#define SEND_TCP_ER             3
+#define SEND_TCP_ER_LOST_PCKG   4
+
+
 
 /*typedef enum
 {
@@ -248,6 +255,8 @@ u8 simTCPCheckStatus(const char* stat, u16 timeout, u16 delay);
 u8 simCmd(char* cmdCode, char* params, u8 retriesCnt, char* SUCCESS_RET);
 char* simTxATCmd(char* command, u16 sz);
 long long simGetPhoneNum();
+
+u8 openSendTcp(u8* data, u16 sz);
 
 #define SIM_GPS_INIT() simCmd(SIM_SAPBR, "1,1", 1, SIM_OK_TEXT)
 

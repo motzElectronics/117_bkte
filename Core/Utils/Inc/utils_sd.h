@@ -11,16 +11,32 @@
 #define STR_ENDL        (char*)"\r\n"
 
 //!-------ERROR MSG-------
-#define SD_ER_MSG_AT           (char*)"0 "
-#define SD_LEN_MSG_AT           2
+#define SD_LEN_ER_MSG              3
 
-#define SD_ER_SAPBR             (char*)"1 "
-#define SD_LEN_SAPBR            2
+#define SD_ER_MSG_AT           (char*)"00 "
+
+#define SD_ER_SAPBR             (char*)"01 "
+#define SD_ER_CSQINF            (char*)"02 "
+
+#define SD_ER_CIPSHUT                   (char*)"10 "
+#define SD_ER_CGATT                     (char*)"11 "
+#define SD_ER_CIPSTAT_INIT              (char*)"12 "
+#define SD_ER_CSTT                      (char*)"13 "
+#define SD_ER_CIPSTAT_START             (char*)"14 "
+#define SD_ER_CIICR                     (char*)"15 "
+#define SD_ER_CIPSTAT_GPRSACT           (char*)"16 "
+#define SD_ER_CIFSR                     (char*)"17 "
+#define SD_ER_CIPSTAT_STATUS            (char*)"18 "
+#define SD_ER_CIPSTART_OK               (char*)"19 "
+#define SD_ER_CIPSTART_CON_OK           (char*)"1A "
+#define SD_ER_CIPSTAT_CON_OK            (char*)"1B "
+#define SD_ER_CIPSEND                   (char*)"1C "
+#define SD_ER_DOWNLOAD_DATA_AND_SEND_OK (char*)"1D "    
 
 
-#define SD_ER_MSG_GET_SZ_NEW_BIN_MYFUN    (char*)"103 "
+#define SD_ER_MSG_GET_SZ_NEW_BIN_MYFUN    (char*)"20 "
 
-#define SD_ER_BAD_SERVERTIME        (char*)"104 "
+#define SD_ER_BAD_SERVERTIME        (char*)"21 "
 
 //!-------MSG-------------
 #define SD_MSG_START_BKTE       (char*)"1 "

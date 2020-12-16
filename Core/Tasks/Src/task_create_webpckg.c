@@ -21,6 +21,8 @@ static Page pgTelemetry = {.type = CMD_DATA_TELEMETRY, .szType = SZ_CMD_TELEMETR
 static Page* allPages[] = {&pgVoltAmper, &pgEnergy, &pgTemp, &pgTelemetry}; 
 static WebPckg* curPckg;
 
+void generateRequests();
+
 void taskCreateWebPckg(void const * argument){
 // vTaskSuspend(webExchangeHandle);    
 
@@ -47,8 +49,7 @@ void taskCreateWebPckg(void const * argument){
 	for(;;){
 		delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
-		while(delayPages > 0 && isNotFullPckg()){
-			curPckg = getFreePckg();
+		while(delayPages > 0 && (curPckg = getFreePckg()) != NULL){
 			clearAllPages();
 			amntPages = delayPages > AMOUNT_MAX_PAGES ? AMOUNT_MAX_PAGES : delayPages;
 			for(u8 i = 0; i < amntPages; i++){
@@ -73,13 +74,14 @@ void taskCreateWebPckg(void const * argument){
 				}*/
 			}
 			szAllPages = getSzAllPages();
-			initWebPckg(curPckg, szAllPages);
+			initWebPckg(curPckg, szAllPages, 0);
 			addPagesToWebPckg(curPckg);
 			xQueueSendToBack(queueWebPckgHandle, &curPckg, portMAX_DELAY);
 			delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 				spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
 
 		}
+		
 		D(printf("no pckg in spiflash\r\n"));
 		osDelay(3000);
 	}
@@ -151,5 +153,63 @@ void addPagesToWebPckg(WebPckg* pckg){
 	}
 	closeWebPckg(pckg);
 	showWebPckg(pckg);
+
+}
+
+void generateRequests(){
+	static u32 lastTmGetServerTime = 0;
+	static u32 lastTmGetNumSoftWare = 0;
+	u8 req[10];
+	u32 curTime = HAL_GetTick();
+	u32 test;
+	/*if((curPckg = getFreePckg()) != NULL && curTime - lastTmGetNumSoftWare > 1){ //! > 1 need to change to real time delay
+		req[0] = CMD_REQUEST_NUM_FIRMWARE;
+		req[1] = 1;
+		initWebPckg(curPckg, SZ_REQUEST_GET_NUM_FIRMWARE, 1);
+		addInfo(curPckg, req, 2);
+		closeWebPckg(curPckg);
+		showWebPckg(curPckg);
+		xQueueSendToBack(queueWebPckgHandle, &curPckg, portMAX_DELAY);
+		lastTmGetNumSoftWare = curTime;
+	}*/
+	clearWebPckg(curPckg);
+	
+	if((curPckg = getFreePckg()) != NULL && curTime - lastTmGetServerTime > 1){ //! > 1 need to change to real time dealy
+		req[0] = CMD_REQUEST_SERVER_TIME;
+		req[1] = 1;
+		initWebPckg(curPckg, SZ_REQUEST_GET_SERVER_TIME, 1);
+		addInfo(curPckg, req, 2);
+		closeWebPckg(curPckg);
+		xQueueSendToBack(queueWebPckgHandle, &curPckg, portMAX_DELAY);
+		// lastTmGetServerTime = curTime;
+	}
+	/*clearWebPckg(curPckg);
+
+	if((curPckg = getFreePckg()) != NULL && curTime - lastTmGetServerTime > 1){ //! > 1 need to change to real time dealy
+		req[0] = CMD_REQUEST_SZ_FIRMWARE;
+		req[1] = 1;
+		initWebPckg(curPckg, SZ_REQUEST_GET_SZ_FIRMWARE, 1);
+		addInfo(curPckg, req, 2);
+		closeWebPckg(curPckg);
+		showWebPckg(curPckg);
+		// lastTmGetServerTime = curTime;
+	}
+	clearWebPckg(curPckg);
+
+	req[0] = CMD_REQUEST_SZ_FIRMWARE;
+	req[1] = 1;
+	test = 0;
+	memcpy(req + 2, &test, 4);
+	test = 200;
+	memcpy(req + 6, &test, 4);
+	initWebPckg(curPckg, SZ_REQUEST_GET_SZ_FIRMWARE, 1);
+	addInfo(curPckg, req, 10);
+	closeWebPckg(curPckg);
+	showWebPckg(curPckg);
+	lastTmGetServerTime = curTime;
+
+	clearWebPckg(curPckg);*/
+
+	
 
 }

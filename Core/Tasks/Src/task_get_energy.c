@@ -28,27 +28,10 @@ void taskGetEnergy(void const * argument){
 	
 	spiFlashInit(circBufAllPckgs.buf);
 	cBufReset(&circBufAllPckgs);
-
-	if(sdInit() != FAT_OK){
-		/*fillTelemetry(&circBufAllPckgs, TEL_NO_FATFS, 0);
-		cBufWriteToBuf(&circBufAllPckgs, (u8*)&curPckgEnergy, SZ_PCKGENERGY);*/
-		D(printf("ER: sdInit()\r\n"));
-	}
-	/*sdWriteLog(SD_MSG_START_BKTE, SD_LEN_START_BKTE, NULL, 0, &sdSectorLogs);
-	sdUpdLog(&sdSectorLogs);*/
+	sdInit();
 	simInit();
-	// if(!getServerTime()){
-	// 	/*sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_MYFUN, NULL, 0, &sdSectorLogs);
-	// 	sdUpdLog(&sdSectorLogs);*/
-	// 	D(printf("ERROR: BAD TIME\r\n"));
-	// }
+	getServerTime();
 
-	
-	/*fillTelemetry(&curPckgEnergy, TEL_ON_DEV, 0);
-	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
-
-	fillTelemetry(&curPckgEnergy, TEL_ID_FIRMWARE, bkte.idFirmware);
-	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);*/
 	generateInitTelemetry();
 	unLockTasks();
 	rxUart1_IT();
@@ -59,7 +42,6 @@ void taskGetEnergy(void const * argument){
         if(retLen == BKTE_SZ_UART_MSG){
             numIteration = (numIteration + 1) % BKTE_ENERGY_FULL_LOOP;
             fillPckgVoltAmper(&pckgVoltAmper, testBufUart1);
-			// D(printf("OK: volt: %04x, amper: %04x\r\n", pckgVoltAmper.volt, pckgVoltAmper.amper));
             // if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
 				
 			saveData((u8*)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
@@ -107,16 +89,10 @@ void generateInitTelemetry(){
 
 	phoneNum = simGetPhoneNum();
 	if(phoneNum > 0){
-		tmp = phoneNum % 100000;
+		tmp = phoneNum % 1000000000;
 		pckgTel.code = TEL_CD_GENINF_PHONE_NUM1;
 		pckgTel.data = tmp;
 		saveTelemetry(&pckgTel, &circBufAllPckgs);
-
-		tmp = phoneNum / 100000;
-		pckgTel.code = TEL_CD_GENINF_PHONE_NUM2;
-		pckgTel.data = tmp;
-		saveTelemetry(&pckgTel, &circBufAllPckgs);
-
 	}
 
 	pckgTel.group = TEL_GR_HARDWARE_STATUS;

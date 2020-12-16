@@ -199,6 +199,13 @@ typedef enum{
 }CMD_DATA;
 
 typedef enum{
+	CMD_REQUEST_SERVER_TIME = 0x11,
+	CMD_REQUEST_NUM_FIRMWARE,
+	CMD_REQUEST_SZ_FIRMWARE,
+	CMD_REQUEST_PART_FIRMWARE
+}CMD_REQUEST;
+
+typedef enum{
 	MSG_TEMP = 0xF000,
 	MSG_TELEMETRY = 0x0000
 }TYPE_MSG;
@@ -267,7 +274,7 @@ void offAllLeds();
 void offAllRedLeds();
 void toggleGreenLeds();
 void toggleRedLeds();
-u32 getServerTime();
+void getServerTime();
 
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 void checkBufForWritingToFlash();
@@ -279,6 +286,8 @@ u32 getUnixTimeStamp();
 u8 isDataFromFlashOk(char* pData, u8 len);
 void copyTelemetry(u8* buf, PckgTelemetry* pckgTel);
 void saveTelemetry(PckgTelemetry* pckg, CircularBuffer* cbuf);
+
+void getNumFirmware();
 
 extern BKTE bkte;
 

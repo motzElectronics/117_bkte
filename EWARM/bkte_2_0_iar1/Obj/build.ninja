@@ -44,6 +44,7 @@ build fatfs.pbi : index fatfs.xcl
 build bsp_driver_sd.pbi : index bsp_driver_sd.xcl
 build fatfs_platform.pbi : index fatfs_platform.xcl
 build sd_diskio.pbi : index sd_diskio.xcl
+build task_create_webpckg.pbi : index task_create_webpckg.xcl
 build task_get_energy.pbi : index task_get_energy.xcl
 build task_get_new_bin.pbi : index task_get_new_bin.xcl
 build task_get_temp.pbi : index task_get_temp.xcl
@@ -102,13 +103,13 @@ build tasks.pbi : index tasks.xcl
 build timers.pbi : index timers.xcl
 build bkte_2_0_iar1_part0.pbi : link ds2482.pbi simcom.pbi spiflash.pbi sx1272.pbi adc.pbi crc.pbi dma.pbi freertos.pbi gpio.pbi
 build bkte_2_0_iar1_part1.pbi : link i2c.pbi iwdg.pbi main.pbi rtc.pbi sdio.pbi spi.pbi stm32f4xx_hal_msp.pbi stm32f4xx_hal_timebase_tim.pbi stm32f4xx_it.pbi
-build bkte_2_0_iar1_part2.pbi : link tim.pbi usart.pbi fatfs.pbi bsp_driver_sd.pbi fatfs_platform.pbi sd_diskio.pbi task_get_energy.pbi task_get_new_bin.pbi task_get_temp.pbi
-build bkte_2_0_iar1_part3.pbi : link task_iwdg.pbi task_keep_alive.pbi task_lora.pbi task_web_excahnge.pbi circularBuffer.pbi utils_bkte.pbi utils_crc.pbi utils_flash.pbi utils_json.pbi
-build bkte_2_0_iar1_part4.pbi : link utils_pckgs_manager.pbi utils_sd.pbi system_stm32f4xx.pbi stm32f4xx_hal.pbi stm32f4xx_hal_adc.pbi stm32f4xx_hal_adc_ex.pbi stm32f4xx_hal_cortex.pbi stm32f4xx_hal_crc.pbi stm32f4xx_hal_dma.pbi
-build bkte_2_0_iar1_part5.pbi : link stm32f4xx_hal_dma_ex.pbi stm32f4xx_hal_exti.pbi stm32f4xx_hal_flash.pbi stm32f4xx_hal_flash_ex.pbi stm32f4xx_hal_flash_ramfunc.pbi stm32f4xx_hal_gpio.pbi stm32f4xx_hal_i2c.pbi stm32f4xx_hal_i2c_ex.pbi stm32f4xx_hal_iwdg.pbi
-build bkte_2_0_iar1_part6.pbi : link stm32f4xx_hal_pwr.pbi stm32f4xx_hal_pwr_ex.pbi stm32f4xx_hal_rcc.pbi stm32f4xx_hal_rcc_ex.pbi stm32f4xx_hal_rtc.pbi stm32f4xx_hal_rtc_ex.pbi stm32f4xx_hal_sd.pbi stm32f4xx_hal_spi.pbi stm32f4xx_hal_tim.pbi
-build bkte_2_0_iar1_part7.pbi : link stm32f4xx_hal_tim_ex.pbi stm32f4xx_hal_uart.pbi stm32f4xx_ll_sdmmc.pbi diskio.pbi ff.pbi ff_gen_drv.pbi syscall.pbi cmsis_os.pbi croutine.pbi
-build bkte_2_0_iar1_part8.pbi : link event_groups.pbi heap_4.pbi list.pbi port.pbi queue.pbi stream_buffer.pbi tasks.pbi timers.pbi
+build bkte_2_0_iar1_part2.pbi : link tim.pbi usart.pbi fatfs.pbi bsp_driver_sd.pbi fatfs_platform.pbi sd_diskio.pbi task_create_webpckg.pbi task_get_energy.pbi task_get_new_bin.pbi
+build bkte_2_0_iar1_part3.pbi : link task_get_temp.pbi task_iwdg.pbi task_keep_alive.pbi task_lora.pbi task_web_excahnge.pbi circularBuffer.pbi utils_bkte.pbi utils_crc.pbi utils_flash.pbi
+build bkte_2_0_iar1_part4.pbi : link utils_json.pbi utils_pckgs_manager.pbi utils_sd.pbi system_stm32f4xx.pbi stm32f4xx_hal.pbi stm32f4xx_hal_adc.pbi stm32f4xx_hal_adc_ex.pbi stm32f4xx_hal_cortex.pbi stm32f4xx_hal_crc.pbi
+build bkte_2_0_iar1_part5.pbi : link stm32f4xx_hal_dma.pbi stm32f4xx_hal_dma_ex.pbi stm32f4xx_hal_exti.pbi stm32f4xx_hal_flash.pbi stm32f4xx_hal_flash_ex.pbi stm32f4xx_hal_flash_ramfunc.pbi stm32f4xx_hal_gpio.pbi stm32f4xx_hal_i2c.pbi stm32f4xx_hal_i2c_ex.pbi
+build bkte_2_0_iar1_part6.pbi : link stm32f4xx_hal_iwdg.pbi stm32f4xx_hal_pwr.pbi stm32f4xx_hal_pwr_ex.pbi stm32f4xx_hal_rcc.pbi stm32f4xx_hal_rcc_ex.pbi stm32f4xx_hal_rtc.pbi stm32f4xx_hal_rtc_ex.pbi stm32f4xx_hal_sd.pbi stm32f4xx_hal_spi.pbi
+build bkte_2_0_iar1_part7.pbi : link stm32f4xx_hal_tim.pbi stm32f4xx_hal_tim_ex.pbi stm32f4xx_hal_uart.pbi stm32f4xx_ll_sdmmc.pbi diskio.pbi ff.pbi ff_gen_drv.pbi syscall.pbi cmsis_os.pbi
+build bkte_2_0_iar1_part8.pbi : link croutine.pbi event_groups.pbi heap_4.pbi list.pbi port.pbi queue.pbi stream_buffer.pbi tasks.pbi timers.pbi
 build bkte_2_0_iar1.pbd : link bkte_2_0_iar1_part0.pbi bkte_2_0_iar1_part1.pbi bkte_2_0_iar1_part2.pbi bkte_2_0_iar1_part3.pbi bkte_2_0_iar1_part4.pbi bkte_2_0_iar1_part5.pbi bkte_2_0_iar1_part6.pbi bkte_2_0_iar1_part7.pbi bkte_2_0_iar1_part8.pbi
 build bkte_2_0_iar1.pbw : browsedata bkte_2_0_iar1.pbd
 

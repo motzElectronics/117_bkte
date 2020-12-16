@@ -7,6 +7,7 @@
 
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Utils/Inc/utils_sd.h"
+#include "../Utils/Inc/utils_pckgs_manager.h"
 GPIO_TypeDef* oneWirePorts[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_GPIO_Port, ONEWIRE_2_EN_GPIO_Port, ONEWIRE_3_EN_GPIO_Port, ONEWIRE_4_EN_GPIO_Port};
 u16 oneWirePins[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_Pin, ONEWIRE_2_EN_Pin, ONEWIRE_3_EN_Pin, ONEWIRE_4_EN_Pin};
 //extern osMessageQId queue1WireHandle;
@@ -14,6 +15,8 @@ extern UART_HandleTypeDef huart3;
 extern RTC_HandleTypeDef hrtc;
 extern osMutexId mutexRTCHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
+extern osMutexId mutexWebHandle;
+extern osThreadId getNewBinHandle;
 //extern osMutexId mutexRTCHandle;
 static RTC_TimeTypeDef tmpTime;
 static RTC_DateTypeDef tmpDate;
@@ -39,47 +42,45 @@ void bkteInit(){
 
 
 
-u32 getServerTime(){
+void getServerTime(){
+	u8 bufTime[4];
+	if(generateWebPckgReq(CMD_REQUEST_SERVER_TIME, NULL, 0, SZ_REQUEST_GET_SERVER_TIME, bufTime, 4) == ERROR){
+		sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
+		D(printf("ERROR: bad server time\r\n"));
+	} else{
+		time_t t = bufTime[0] << 24 | bufTime[1] << 16 | bufTime[2] << 8 | bufTime[3];
+		struct tm* pTm;
+		pTm = gmtime(&t);
+		if(pTm != NULL){
+			tmpTime.Hours = pTm->tm_hour;
+			tmpTime.Minutes = pTm->tm_min;
+			tmpTime.Seconds = pTm->tm_sec;
 
-	u8 tmpSimBadResponse = 0;
-	char timestamp[LEN_TIMESTAMP + 1];
-	memset(timestamp, '\0', sizeof(timestamp));
-	D(printf("getServerTime()\r\n"));
-	while(simGetDateTime(timestamp) != SIM_SUCCESS){
-		memset(timestamp, '\0', sizeof(timestamp));
-		sdWriteLog(SD_ER_MSG_HTTPINIT_MYFUN, SD_LEN_MYFUN, NULL, 0, &sdSectorLogError);
-		D(printf("ERROR: bad time\r\n"));
-//		HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_RESET);
-		tmpSimBadResponse = (tmpSimBadResponse + 1) % 10;
-		if(tmpSimBadResponse % 4 == 0){
-			simReset();
-			return 0;
-		} else if(!tmpSimBadResponse){
-			HAL_NVIC_SystemReset();
-		}
-		osDelay(1000);
-//		rxUartSIM_IT();
-	}
-	HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_RESET);
-	timestamp[LEN_TIMESTAMP] = '\0';
-	time_t t = strtoull(timestamp, NULL, 0);
-    struct tm* pTm;
-	pTm = gmtime(&t);
-	if(pTm != NULL){
-		tmpTime.Hours = pTm->tm_hour;
-		tmpTime.Minutes = pTm->tm_min;
-		tmpTime.Seconds = pTm->tm_sec;
+			tmpDate.Date = pTm->tm_mday;
+			tmpDate.Month = pTm->tm_mon;
+			tmpDate.Year = pTm->tm_year - 100;
 
-		tmpDate.Date = pTm->tm_mday;
-		tmpDate.Month = pTm->tm_mon;
-		tmpDate.Year = pTm->tm_year - 100;
-
-		if(tmpDate.Year < 30 && tmpDate.Year > 19){  //sometimes timestamp is wrong and has value like 2066 year
-			HAL_RTC_SetTime(&hrtc, &tmpTime, RTC_FORMAT_BIN);
-			HAL_RTC_SetDate(&hrtc, &tmpDate, RTC_FORMAT_BIN);
+			if(tmpDate.Year < 30 && tmpDate.Year > 19){  //sometimes timestamp is wrong and has value like 2066 year
+				HAL_RTC_SetTime(&hrtc, &tmpTime, RTC_FORMAT_BIN);
+				HAL_RTC_SetDate(&hrtc, &tmpDate, RTC_FORMAT_BIN);
+			}
 		}
 	}
-	return t;
+}
+
+void getNumFirmware(){
+	u8 bufFirmware[4];
+	if(generateWebPckgReq(CMD_REQUEST_NUM_FIRMWARE, NULL, 0, SZ_REQUEST_GET_NUM_FIRMWARE, bufFirmware, 4) == ERROR){
+		sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
+		D(printf("ERROR: bad server time\r\n"));
+	} else{
+		u32 numFirmware = bufFirmware[0] << 24 | bufFirmware[1] << 16 | bufFirmware[2] << 8 | bufFirmware[3];
+		if(numFirmware != BKTE_ID_FIRMWARE && numFirmware > 0){
+			D(printf("New FIRMWARE v.:%d\r\n", (int)numFirmware));
+			vTaskResume(getNewBinHandle);
+		}
+
+	}
 }
 
 /*void getMaxNumDS1820(BKTE* pBkte){
@@ -283,7 +284,7 @@ void waitGoodCsq(){
 		cntNOCsq++;
 		if(cntNOCsq == 1800){
 			bkte.erFlags.simCSQINF = 1;
-			sdWriteLog(SD_ER_CSQINF, SD_LEN_HTTP, NULL, 0, &sdSectorLogError);
+			sdWriteLog(SD_ER_CSQINF, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 			cntNOCsq = 0;
 		}
 	}

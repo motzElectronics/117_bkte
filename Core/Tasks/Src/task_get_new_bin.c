@@ -30,7 +30,7 @@ void taskGetNewBin(void const * argument){
 	vTaskSuspend(loraHandle);
 	isRxNewFirmware = 1;
 	while(simGetSzSoft(&szSoft) == SIM_FAIL){
-		sdWriteLog(SD_ER_MSG_GET_SZ_NEW_BIN_MYFUN, SD_LEN_MYFUN, NULL, 0, &sdSectorLogError);
+		sdWriteLog(SD_ER_MSG_GET_SZ_NEW_BIN_MYFUN, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		D(printf("ERROR: simGetSzSoft"));
 		osDelay(1000);
 	}
