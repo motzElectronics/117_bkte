@@ -153,6 +153,8 @@ void Error_Handler(void);
 #define BKTE_PREAMBLE_LSB		0xAB
 #define BKTE_PREAMBLE_MSB		0xCD
 
+#define SZ_WEB_PCKG     1400
+
 extern char logError[LOG_SZ_ERROR]; 
 typedef uint8_t			u8;
 typedef uint16_t		u16;
@@ -184,23 +186,22 @@ typedef struct{
 }DateTime;
 
 typedef struct{
-	char* addMeasure;
-	char* getTime;
-	char* getSzSoft;
-	char* getPartFirmware;
-  char* tcpAddr;
-  u32   tcpPort;
-}HttpUrl;
-
-typedef struct{
 	u64		header;
 	u8		numFirmware;
 	char	verFirmware;
   u8    numTrainCar;
 }FIRMWARE_INFO;
 
-extern HttpUrl urls;
+typedef struct{
+	/*char* addMeasure;
+	char* getTime;
+	char* getSzSoft;
+	char* getPartFirmware;*/
+  char* tcpAddr;
+  u32   tcpPort;
+}Urls;
 
+extern Urls urls;
 u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
 u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
 u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);

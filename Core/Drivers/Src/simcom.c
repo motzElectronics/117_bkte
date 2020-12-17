@@ -548,22 +548,20 @@ long long simGetPhoneNum(){
 
 u8 procReturnStatus(u8 ret){
 	static u8 notSend = 0;
-	if(ret == INIT_TCP_ER || ret == OPEN_TCP_ER){
-		notSend = 0;
-		return ret;
-	}
-	if(ret == SEND_TCP_ER && notSend < 3){
-		notSend++;	
-	}else if(ret == SEND_TCP_ER && notSend == 3){
+	if(ret != SEND_OK){
 		notSend++;
-		simReset();
-	} else if(ret == SEND_TCP_ER && notSend == 4){
+	} else {
 		notSend = 0;
+	}
+
+	if(notSend == 4){
+		simReset();
+	} else if(notSend == 5){
 		simReset();
 		ret = SEND_TCP_ER_LOST_PCKG;
-	} else if(ret == SEND_OK){
 		notSend = 0;
 	}
+
 	return ret;
 }
 

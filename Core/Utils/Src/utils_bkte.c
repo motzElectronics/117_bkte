@@ -41,13 +41,13 @@ void bkteInit(){
 }
 
 
-
 void getServerTime(){
 	u8 bufTime[4];
 	if(generateWebPckgReq(CMD_REQUEST_SERVER_TIME, NULL, 0, SZ_REQUEST_GET_SERVER_TIME, bufTime, 4) == ERROR){
 		sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
 		D(printf("ERROR: bad server time\r\n"));
 	} else{
+		osDelay(500);
 		time_t t = bufTime[0] << 24 | bufTime[1] << 16 | bufTime[2] << 8 | bufTime[3];
 		struct tm* pTm;
 		pTm = gmtime(&t);
@@ -71,8 +71,8 @@ void getServerTime(){
 void getNumFirmware(){
 	u8 bufFirmware[4];
 	if(generateWebPckgReq(CMD_REQUEST_NUM_FIRMWARE, NULL, 0, SZ_REQUEST_GET_NUM_FIRMWARE, bufFirmware, 4) == ERROR){
-		sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
-		D(printf("ERROR: bad server time\r\n"));
+		sdWriteLog(SD_ER_NUM_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
+		D(printf("ERROR: server time\r\n"));
 	} else{
 		u32 numFirmware = bufFirmware[0] << 24 | bufFirmware[1] << 16 | bufFirmware[2] << 8 | bufFirmware[3];
 		if(numFirmware != BKTE_ID_FIRMWARE && numFirmware > 0){
@@ -82,6 +82,32 @@ void getNumFirmware(){
 
 	}
 }
+
+u32 getSzFirmware(){
+	u8 bufSzFirmware[4];
+	if(generateWebPckgReq(CMD_REQUEST_SZ_FIRMWARE, NULL, 0, SZ_REQUEST_GET_SZ_FIRMWARE, bufSzFirmware, 4) == ERROR){
+		sdWriteLog(SD_ER_SZ_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
+		D(printf("ERROR: sz firmware\r\n"));
+		return 0;
+	} else{
+		u32 numFirmware = bufSzFirmware[0] << 24 | bufSzFirmware[1] << 16 | bufSzFirmware[2] << 8 | bufSzFirmware[3];
+		D(printf("OK: sz firmware %d\r\n", numFirmware));
+		return numFirmware;
+	}
+}
+
+ErrorStatus getPartFirmware(u8* reqData, u8 sz, u8* answ, u16 szAnsw){
+	memset(answ, '\0', szAnsw);
+	if(generateWebPckgReq(CMD_REQUEST_PART_FIRMWARE, reqData, sz, SZ_REQUEST_GET_PART_FIRMWARE, answ, szAnsw) == ERROR){
+		sdWriteLog(SD_ER_PART_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
+		D(printf("ERROR: part Firmware\r\n"));
+		return ERROR;
+	} else{
+		D(printf("OK: part firmware"));
+		return SUCCESS;
+	}
+}
+
 
 /*void getMaxNumDS1820(BKTE* pBkte){
 	u8 numReInit = 0;
@@ -172,12 +198,9 @@ u32 getFlashData(u32 ADDR){
 u8 isCrcOk(char* pData, int len){
 	char tmp[] = {'\0', '\0', '\0'};
 	memcpy(tmp, pData + 8, 2);
-	u8 crcCalc = crc8(pData + 20, len);
-	u8 crcRecv = strtoul(tmp, NULL, 16);
-	if(crcCalc == crcRecv){
-		return 1;
-	} else
-		return 0;
+	u8 crcCalc = crc8(pData, len);
+	u8 crcRecv = pData[len];
+	return crcCalc == crcRecv;
 }
 
 u8 crc8(char *pcBlock, int len){

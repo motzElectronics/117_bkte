@@ -37,6 +37,9 @@
 #define SD_ER_MSG_GET_SZ_NEW_BIN_MYFUN    (char*)"20 "
 
 #define SD_ER_BAD_SERVERTIME        (char*)"21 "
+#define SD_ER_NUM_FIRMWARE          (char*)"22 "
+#define SD_ER_SZ_FIRMWARE           (char*)"23 "
+#define SD_ER_PART_FIRMWARE         (char*)"24 "
 
 //!-------MSG-------------
 #define SD_MSG_START_BKTE       (char*)"1 "

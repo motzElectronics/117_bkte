@@ -52,7 +52,7 @@
 
 
 
-#define SZ_PART_NEW_SOFTWARE	1360
+#define SZ_PART_NEW_SOFTWARE	1200
 
 #define BKTE_VER_BETA_FIRMWARE		(char)'B'
 #define BKTE_VER_STABLE_FIRMWARE	(char)'S'
@@ -288,6 +288,8 @@ void copyTelemetry(u8* buf, PckgTelemetry* pckgTel);
 void saveTelemetry(PckgTelemetry* pckg, CircularBuffer* cbuf);
 
 void getNumFirmware();
+u32 getSzFirmware();
+ErrorStatus getPartFirmware(u8* reqData, u8 sz, u8* answ, u16 szAnsw);
 
 extern BKTE bkte;
 

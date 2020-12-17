@@ -11,7 +11,6 @@ extern osMessageQId queueWebPckgHandle;
 extern CircularBuffer circBufPckgEnergy;
 extern u8 SZ_PCKGENERGY;
 static char tmpBufPage[256];
-extern HttpUrl urls;
 
 extern PckgJsonEn pckgJsonEn;
 static Page pgEnergy = {.type = CMD_DATA_ENERGY, .szType = SZ_CMD_ENERGY};

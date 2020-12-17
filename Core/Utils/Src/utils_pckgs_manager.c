@@ -21,6 +21,7 @@ void clearWebPckg(WebPckg* pPckg){
 void initWebPckg(WebPckg* pPckg, u16 len, u8 isReq){
     static u32 num = 0;
     num++;
+    clearWebPckg(pPckg);
     pPckg->isRequest = isReq;
     addInfo(pPckg, (u8*)&webPream, 2);
     addInfo(pPckg, (u8*)&num, 4);
@@ -66,6 +67,19 @@ WebPckg* getFreePckg(){
     return NULL;
 }
 
+void waitAnswServer(u8 req){
+    switch(req){
+        case CMD_REQUEST_SERVER_TIME:
+        case CMD_REQUEST_NUM_FIRMWARE:
+            osDelay(500);
+            break;
+        case CMD_REQUEST_SZ_FIRMWARE:
+        case CMD_REQUEST_PART_FIRMWARE:
+            osDelay(2000);
+            break;
+    }
+}
+
 ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u8 szAnsw){
     u8 ret = SUCCESS;
     u8 statSend;
@@ -80,11 +94,15 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
     }
     addInfo(curPckg, req, szReq);
     closeWebPckg(curPckg);
-
+    showWebPckg(curPckg);
     xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
 	while((statSend = openSendTcp(curPckg->buf, curPckg->shift)) != SEND_OK && statSend != SEND_TCP_ER_LOST_PCKG);
     if(statSend != SEND_OK) ret = ERROR;
-    else memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
+    else{
+        waitAnswServer(CMD_REQ);
+        memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
+    }
 	xSemaphoreGive(mutexWebHandle);
+    clearWebPckg(curPckg);
     return ret;
 }

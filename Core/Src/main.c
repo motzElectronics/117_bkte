@@ -68,7 +68,7 @@ u8 uart1Buf[SZ_CIRCULAR_BUF];
 
 BKTE bkte;
 static char arrUrlFileSz[70];
-HttpUrl urls;
+Urls urls;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -246,11 +246,11 @@ u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout){
 }
 
 void urlsInit(){
-  sprintf(arrUrlFileSz, "%s%08x%08x%08x", URL_FILE_SZ, bkte.idMCU[0], bkte.idMCU[1], bkte.idMCU[2]);
+  /*sprintf(arrUrlFileSz, "%s%08x%08x%08x", URL_FILE_SZ, bkte.idMCU[0], bkte.idMCU[1], bkte.idMCU[2]);
 	urls.getSzSoft = arrUrlFileSz;
 	urls.getTime = URL_TIME;
 	urls.getPartFirmware = URL_GET_NEW_FIRMWARE;
-  urls.addMeasure = URL_MEASURE;
+  urls.addMeasure = URL_MEASURE;*/
   urls.tcpAddr = URL_TCP_ADDR;
   urls.tcpPort = URL_TCP_PORT;
 }

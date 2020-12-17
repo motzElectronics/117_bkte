@@ -11,8 +11,6 @@ extern osMutexId mutexWebHandle;
 // extern CircularBuffer circBufPckgEnergy;
 // extern u8 SZ_PCKGENERGY;
 
-extern HttpUrl urls;
-
 static PckgEnergy curPckgEnergy;
 
 void taskKeepAlive(void const * argument){
@@ -21,7 +19,7 @@ void taskKeepAlive(void const * argument){
 
     for(;;)
     {
-        if(!(timeout % 60) && !isRxNewFirmware){
+        if(!(timeout % 20) && !isRxNewFirmware){
             getNumFirmware();
         }
         if(!(timeout % 600) && !isRxNewFirmware){

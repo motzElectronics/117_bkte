@@ -2,7 +2,6 @@
 #define INC_UTILS_PCKG_MANAGER_H_
 #include "main.h"
 
-#define SZ_WEB_PCKG     1300
 #define CNT_WEBPCKGS    3
 
 #define SZ_REQUEST_GET_SERVER_TIME    2

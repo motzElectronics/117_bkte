@@ -6,5 +6,6 @@
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Utils/Inc/utils_flash.h"
 #include "../Utils/Inc/utils_json.h"
-
+void updBootInfo();
+void lockAllTasks();
 #endif
