@@ -72,7 +72,6 @@ void simInit(){
 char* simGetStatusAnsw(){
 	waitIdle("wait simGetStatusAnsw()", &(uInfoSim.irqFlags), 200, 20000);
 	if(uInfoSim.irqFlags.isIrqIdle){
-		uInfoSim.irqFlags.isIrqIdle = 0;
 		return (char*)uInfoSim.pRxBuf;
 	} else{
 		return SIM_NO_RESPONSE_TEXT;
@@ -548,7 +547,7 @@ long long simGetPhoneNum(){
 
 u8 procReturnStatus(u8 ret){
 	static u8 notSend = 0;
-	if(ret != SEND_OK){
+	if(ret != TCP_OK){
 		notSend++;
 	} else {
 		notSend = 0;
@@ -565,19 +564,42 @@ u8 procReturnStatus(u8 ret){
 	return ret;
 }
 
-u8 openSendTcp(u8* data, u16 sz){
-	u8 ret = SEND_OK;
-
+u8 openTcp(){
+	u8 ret = TCP_OK;
 	waitGoodCsq();
 	if(simTCPinit() != SIM_SUCCESS){
 		D(printf("ER: simTCPinit\r\n"));
 		ret = INIT_TCP_ER;
 	}
-	if(ret == SEND_OK && simTCPOpen() != SIM_SUCCESS){
+	if(ret == TCP_OK && simTCPOpen() != SIM_SUCCESS){
 		D(printf("ER: simTCPOpen\r\n"));
 		ret = OPEN_TCP_ER;
 	}
-	if(ret == SEND_OK && simTCPSend(data, sz) != SIM_SUCCESS){
+	return procReturnStatus(ret);
+
+}
+
+// u8 sendTcp(u8* data, u16 sz){
+// 	u8 ret = TCP_OK;
+// 	if(simTCPSend(data, sz) != SIM_SUCCESS){
+// 		D(printf("ER: simTCPSend\r\n"));
+// 		ret = SEND_TCP_ER;
+// 	}
+// 	return ret;
+// }
+
+u8 openSendTcp(u8* data, u16 sz){
+	u8 ret = TCP_OK;
+	waitGoodCsq();
+	if(simTCPinit() != SIM_SUCCESS){
+		D(printf("ER: simTCPinit\r\n"));
+		ret = INIT_TCP_ER;
+	}
+	if(ret == TCP_OK && simTCPOpen() != SIM_SUCCESS){
+		D(printf("ER: simTCPOpen\r\n"));
+		ret = OPEN_TCP_ER;
+	}
+	if(ret == TCP_OK && simTCPSend(data, sz) != SIM_SUCCESS){
 		D(printf("ER: simTCPSend\r\n"));
 		ret = SEND_TCP_ER;
 	}

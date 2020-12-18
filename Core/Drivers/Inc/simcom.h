@@ -175,7 +175,7 @@
 
 #define HTTP_CODE_OK						200
 
-#define SEND_OK                 0
+#define TCP_OK	                0
 #define INIT_TCP_ER             1
 #define OPEN_TCP_ER             2
 #define SEND_TCP_ER             3
@@ -257,6 +257,7 @@ char* simTxATCmd(char* command, u16 sz);
 long long simGetPhoneNum();
 
 u8 openSendTcp(u8* data, u16 sz);
+u8 openTcp();
 
 #define SIM_GPS_INIT() simCmd(SIM_SAPBR, "1,1", 1, SIM_OK_TEXT)
 

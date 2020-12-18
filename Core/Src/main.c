@@ -245,6 +245,17 @@ u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout){
   return pFlags->isIrqIdle;
 }
 
+u8 waitIdleCnt(char* waitStr, IrqFlags* pFlags, u8 cnt, u16 pause, u16 timeout){
+	u16 tout = 0;
+	while((pFlags->isIrqIdle) < cnt && tout < timeout){
+		osDelay(pause);
+		tout += pause;
+		if(strlen(waitStr) > 1)
+			D(printf("%s timeout: %d\r\n", waitStr, tout));
+	}
+  return pFlags->isIrqIdle;
+}
+
 void urlsInit(){
   /*sprintf(arrUrlFileSz, "%s%08x%08x%08x", URL_FILE_SZ, bkte.idMCU[0], bkte.idMCU[1], bkte.idMCU[2]);
 	urls.getSzSoft = arrUrlFileSz;

@@ -171,7 +171,7 @@ typedef union{
 	struct{
 		u8 isIrqTx:		1;
 		u8 isIrqRx: 	1;
-		u8 isIrqIdle:	1;
+		u8 isIrqIdle:	3;
 	};
 	u8 regIrq;
 }IrqFlags;
@@ -205,7 +205,7 @@ extern Urls urls;
 u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
 u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
 u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
-
+u8 waitIdleCnt(char* waitStr, IrqFlags* pFlags, u8 cnt, u16 pause, u16 timeout);
 void urlsInit();
 /* USER CODE END Private defines */
 

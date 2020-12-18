@@ -74,13 +74,34 @@ void waitAnswServer(u8 req){
             osDelay(500);
             break;
         case CMD_REQUEST_SZ_FIRMWARE:
-        case CMD_REQUEST_PART_FIRMWARE:
             osDelay(2000);
+            break;
+        case CMD_REQUEST_PART_FIRMWARE:
+            osDelay(1000);
             break;
     }
 }
 
-ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u8 szAnsw){
+WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq){
+    u8 ret = SUCCESS;
+    u8 statSend;
+    u8 req[10];
+    WebPckg* curPckg;
+    req[0] = CMD_REQ;
+    req[1] = 1;
+    curPckg = getFreePckg();
+    initWebPckg(curPckg, szReq, 1);
+    if(sz){
+        memcpy(req + 2, data, sz);
+    }
+    addInfo(curPckg, req, szReq);
+    closeWebPckg(curPckg);
+    showWebPckg(curPckg);
+    return curPckg;
+}
+
+
+ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u16 szAnsw){
     u8 ret = SUCCESS;
     u8 statSend;
     u8 req[10];
@@ -96,8 +117,8 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
     closeWebPckg(curPckg);
     showWebPckg(curPckg);
     xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-	while((statSend = openSendTcp(curPckg->buf, curPckg->shift)) != SEND_OK && statSend != SEND_TCP_ER_LOST_PCKG);
-    if(statSend != SEND_OK) ret = ERROR;
+	while((statSend = openSendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && statSend != SEND_TCP_ER_LOST_PCKG);
+    if(statSend != TCP_OK) ret = ERROR;
     else{
         waitAnswServer(CMD_REQ);
         memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);

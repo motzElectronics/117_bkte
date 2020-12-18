@@ -16,11 +16,9 @@
 #define FLASH_ADDR_FIRMWARE				0x08010000
 #define FLASH_EMPTY_SECTOR				0xFFFFFFFF
 
-#define FLASH_LEN_WORDS_INNER_BUF		250
 #define FLASH_ADDR_BUF_NEW_FIRMWARE		0x80E0000
 
 void flashClearPage(u32 page);
-void flashWrite(char* pData, u32 szHex, u32* distAddr);
-void charToHex(char* pData, u32 szHex);
+void flashWrite(u8* pData, u32 szHex, u32* distAddr);
 
 #endif /* INC_UTILS_FLASH_H_ */

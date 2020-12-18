@@ -83,30 +83,9 @@ void getNumFirmware(){
 	}
 }
 
-u32 getSzFirmware(){
-	u8 bufSzFirmware[4];
-	if(generateWebPckgReq(CMD_REQUEST_SZ_FIRMWARE, NULL, 0, SZ_REQUEST_GET_SZ_FIRMWARE, bufSzFirmware, 4) == ERROR){
-		sdWriteLog(SD_ER_SZ_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
-		D(printf("ERROR: sz firmware\r\n"));
-		return 0;
-	} else{
-		u32 numFirmware = bufSzFirmware[0] << 24 | bufSzFirmware[1] << 16 | bufSzFirmware[2] << 8 | bufSzFirmware[3];
-		D(printf("OK: sz firmware %d\r\n", numFirmware));
-		return numFirmware;
-	}
-}
 
-ErrorStatus getPartFirmware(u8* reqData, u8 sz, u8* answ, u16 szAnsw){
-	memset(answ, '\0', szAnsw);
-	if(generateWebPckgReq(CMD_REQUEST_PART_FIRMWARE, reqData, sz, SZ_REQUEST_GET_PART_FIRMWARE, answ, szAnsw) == ERROR){
-		sdWriteLog(SD_ER_PART_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
-		D(printf("ERROR: part Firmware\r\n"));
-		return ERROR;
-	} else{
-		D(printf("OK: part firmware"));
-		return SUCCESS;
-	}
-}
+
+
 
 
 /*void getMaxNumDS1820(BKTE* pBkte){
@@ -196,10 +175,11 @@ u32 getFlashData(u32 ADDR){
 }*/
 
 u8 isCrcOk(char* pData, int len){
-	char tmp[] = {'\0', '\0', '\0'};
-	memcpy(tmp, pData + 8, 2);
 	u8 crcCalc = crc8(pData, len);
 	u8 crcRecv = pData[len];
+	if(crcCalc != crcRecv){
+		D(printf("ERROR: crc \r\n"));
+	}
 	return crcCalc == crcRecv;
 }
 

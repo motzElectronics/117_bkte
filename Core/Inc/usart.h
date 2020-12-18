@@ -49,7 +49,7 @@ void MX_USART6_UART_Init(void);
 #define UART_SZ_RX_RESPONSE			1500
 #define SZ_RX_UART1			66
 
-#define USART_SZ_BUF_RX_USART6    1524
+#define USART_SZ_BUF_RX_USART6    7100
 #define USART_SZ_BUF_TX_USART6    1024
 
 #define USART_SZ_BUF_TX_USART2    20

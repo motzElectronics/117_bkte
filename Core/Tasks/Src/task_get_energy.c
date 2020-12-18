@@ -5,6 +5,7 @@ extern osThreadId getTempHandle;
 extern osThreadId keepAliveHandle;
 extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
+extern osThreadId getNewBinHandle;
 
 extern osMutexId mutexWriteToEnergyBufHandle;
 
@@ -30,7 +31,10 @@ void taskGetEnergy(void const * argument){
 	cBufReset(&circBufAllPckgs);
 	sdInit();
 	simInit();
-	getServerTime();
+
+	simTxATCmd("AT+CGMR\r\n", strlen("AT+CGMR\r\n"));
+	D(printf("%s\r\n", uInfoSim.pRxBuf + 2));
+	/*getServerTime();*/ //! use it in realise
 
 	generateInitTelemetry();
 	unLockTasks();
@@ -63,6 +67,7 @@ void taskGetEnergy(void const * argument){
 }
 
 void unLockTasks(){
+	vTaskResume(getNewBinHandle);  //! delete after testing upload firmware
 	vTaskResume(webExchangeHandle);
 	vTaskResume(getTempHandle);
 	vTaskResume(keepAliveHandle);
