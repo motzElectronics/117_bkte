@@ -6,6 +6,7 @@
             "defines": [
                 "USE_HAL_DRIVER=",
                 "STM32F407xx=",
+                "USE_FULL_LL_DRIVER=",
                 "__CHAR_BITS__=8",
                 "__CHAR_MAX__=0xff",
                 "__CHAR_MIN__=0",

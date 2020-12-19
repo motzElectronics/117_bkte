@@ -83,8 +83,6 @@ void waitAnswServer(u8 req){
 }
 
 WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq){
-    u8 ret = SUCCESS;
-    u8 statSend;
     u8 req[10];
     WebPckg* curPckg;
     req[0] = CMD_REQ;
@@ -102,7 +100,7 @@ WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq){
 
 
 ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u16 szAnsw){
-    u8 ret = SUCCESS;
+    ErrorStatus ret = SUCCESS;
     u8 statSend;
     u8 req[10];
     WebPckg* curPckg;

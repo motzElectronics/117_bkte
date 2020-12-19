@@ -310,8 +310,8 @@ void sx1272_send(u8 *data, u8 sz){
 
 u8 sx1272_receive(u8* pBuf, u8* pRssi, u16 timeOut){
 	static u8 rxBuf[PAYLOAD_LENGTH + 2];
-	u16 crc, crcPckg;
-    u8 flags = 0, op = 0, prev, cntNewData = 0, ret = LR_STAT_NO_PCKG;
+	u16 crcPckg;
+    u8 flags = 0, op = 0, prev, ret = LR_STAT_NO_PCKG;
 
     /* Saves the current mode */
     op = sx1272_get_op_mode();
@@ -368,7 +368,7 @@ u8 sx1272_receive(u8* pBuf, u8* pRssi, u16 timeOut){
 		sx1272_read_fifo(rxBuf, PAYLOAD_LENGTH + 2);
 
 		memcpy(&crcPckg, rxBuf, 2);
-		if((crc = calcCrc16(rxBuf + 2, PAYLOAD_LENGTH)) != crcPckg){
+		if(calcCrc16(rxBuf + 2, PAYLOAD_LENGTH) != crcPckg){
 			sx1272_clear_irq_flags();
 			HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4R_Pin);
 			D(printf("ERROR: LORA CRC\r\n"));

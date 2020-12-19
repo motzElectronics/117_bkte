@@ -36,7 +36,8 @@ void taskGetNewBin(void const * argument){
 			pckgInfoFirmware.toByte = szPartSoft + curSzSoft;
 			memcpy(bufNumBytesFirmware, &pckgInfoFirmware.fromByte, 4);
 			memcpy(bufNumBytesFirmware + 4, &pckgInfoFirmware.toByte, 4);
-			if(getPartFirmware(bufNumBytesFirmware, 8, partFirmware, szPartSoft + 1) == SUCCESS && isCrcOk(partFirmware, szPartSoft)){
+			memset(partFirmware, 0xFF, SZ_PART_FIRMW + 1);
+			if(getPartFirmware(bufNumBytesFirmware, partFirmware, szPartSoft + 1, 8) == SUCCESS && isCrcOk(partFirmware, szPartSoft)){
 				curSzSoft += szPartSoft;
 				D(printf("OK: DOWNLOAD %d BYTES\r\n", (int)curSzSoft));
 				HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);
@@ -58,6 +59,7 @@ void taskGetNewBin(void const * argument){
 
 
 void updBootInfo(){
+	szSoft = szSoft % 4 == 0 ? szSoft : ((szSoft / 4) + 1) * 4;
 	while(HAL_FLASH_Unlock() != HAL_OK) D(printf("ERROR: HAL_FLASH_Unlock()\r\n"));
 	FLASH_Erase_Sector(FLASH_SECTOR_3, VOLTAGE_RANGE_3);
 	D(printf("FLASH_Erase_Sector\r\n"));
@@ -98,46 +100,23 @@ u32 getSzFirmware(){
 }
 
 
-ErrorStatus getPartFirmware(u8* reqData, u8 sz, u8* answ, u16 szAnsw){
+ErrorStatus getPartFirmware(u8* reqData, u8* answBuf, u16 szAnsw, u8 szReq){
 	WebPckg* curPckg;
 	ErrorStatus ret = SUCCESS;
-	memset(answ, '\0', szAnsw);
-	curPckg = createWebPckgReq(CMD_REQUEST_PART_FIRMWARE, reqData, sz, SZ_REQUEST_GET_PART_FIRMWARE);
+	curPckg = createWebPckgReq(CMD_REQUEST_PART_FIRMWARE, reqData, szReq, SZ_REQUEST_GET_PART_FIRMWARE);
 	xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
 	if(simTCPSend(curPckg->buf, curPckg->shift) != SIM_SUCCESS){
 		sdWriteLog(SD_ER_PART_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
 		D(printf("ERROR: part Firmware\r\n"));
 		ret = ERROR;
 	}else {
-		waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), 6, 100, 5000);
-		memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
-
-		/*if(waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), 2, 100, 9000) != cnt){
-			ret = ERROR;
-		} else {
-			memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
-		}*/
-        
+		waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), szAnsw / SZ_TCP_PCKG + 1, 100, 6000);
+		osDelay(100);
+		memcpy(answBuf, &uInfoSim.pRxBuf[11], szAnsw);
 	}
 	xSemaphoreGive(mutexWebHandle);
     clearWebPckg(curPckg);
+	return ret;
 }
 
-ErrorStatus getServerTime_test(u8* answ, u16 szAnsw){
-	WebPckg* curPckg;
-	ErrorStatus ret = SUCCESS;
-	memset(answ, '\0', szAnsw);
-	curPckg = createWebPckgReq(CMD_REQUEST_SERVER_TIME, NULL, 0, SZ_REQUEST_GET_SERVER_TIME);
-	xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-	if(simTCPSend(curPckg->buf, curPckg->shift) != SIM_SUCCESS){
-		sdWriteLog(SD_ER_PART_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
-		D(printf("ERROR: part Firmware\r\n"));
-		ret = ERROR;
-	}else {
-		osDelay(500);
-		memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
-        
-	}
-	xSemaphoreGive(mutexWebHandle);
-    clearWebPckg(curPckg);
-}
+

@@ -41,7 +41,6 @@ u8 ds2482SetReadPointer(Ds2482_regs regAddr){
 }*/
 
 u8 ds2482WriteByte(uint8_t dataByte){
-	u8 ret = 0;
 	uint8_t writeBytes[2] = {OWWB, dataByte};
 	Ds2482_Status_Reg statusByte;
 	ds2482Tx(DS2482_I2C_ADDR << 1, writeBytes, sizeof(writeBytes));
@@ -56,8 +55,8 @@ u8 ds2482WriteByte(uint8_t dataByte){
 	return DS2482_ERROR;
 }
 
-u8 ds2482ReadByte(uint8_t *dataByte){
-	uint8_t readByteCmd = OWRB;
+u8 ds2482ReadByte(u8* dataByte){
+	u8 readByteCmd = OWRB;
 	// Send the one-wire read byte command
 	ds2482Tx(DS2482_I2C_ADDR << 1, &readByteCmd, 1);
 	// Change the read pointer to the read data register

@@ -30,10 +30,9 @@ void taskWebExchange(void const * argument){
 }
 
 u8 fastSendTcp(u8 statSend){ //while open tcp connection
-	static portBASE_TYPE xStatus;
 	while(statSend == TCP_OK){
 		freeWebPckg(curPckg);
-		if((xStatus = xQueueReceive(queueWebPckgHandle, &curPckg, 100)) == pdPASS){
+		if(xQueueReceive(queueWebPckgHandle, &curPckg, 100) == pdPASS){
 			D(printf("OK: fastSend\r\n"));
 			statSend = simTCPSend(curPckg->buf, curPckg->shift);
 		}

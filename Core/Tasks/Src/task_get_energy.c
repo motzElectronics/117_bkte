@@ -31,9 +31,6 @@ void taskGetEnergy(void const * argument){
 	cBufReset(&circBufAllPckgs);
 	sdInit();
 	simInit();
-
-	simTxATCmd("AT+CGMR\r\n", strlen("AT+CGMR\r\n"));
-	D(printf("%s\r\n", uInfoSim.pRxBuf + 2));
 	/*getServerTime();*/ //! use it in realise
 
 	generateInitTelemetry();

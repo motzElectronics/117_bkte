@@ -1,10 +1,9 @@
 #include "../Tasks/Inc/task_iwdg.h"
-extern IWDG_HandleTypeDef hiwdg;
 
 void taskManageIWDG(void const * argument){
 
   for(;;){
-    HAL_IWDG_Refresh(&hiwdg);
+    LL_IWDG_ReloadCounter(IWDG);
     osDelay(3000);
   }
 

@@ -8,6 +8,7 @@
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Utils/Inc/utils_sd.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
+#include "../Utils/Inc/utils_crc.h"
 GPIO_TypeDef* oneWirePorts[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_GPIO_Port, ONEWIRE_2_EN_GPIO_Port, ONEWIRE_3_EN_GPIO_Port, ONEWIRE_4_EN_GPIO_Port};
 u16 oneWirePins[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_Pin, ONEWIRE_2_EN_Pin, ONEWIRE_3_EN_Pin, ONEWIRE_4_EN_Pin};
 //extern osMessageQId queue1WireHandle;
@@ -180,6 +181,7 @@ u8 isCrcOk(char* pData, int len){
 	if(crcCalc != crcRecv){
 		D(printf("ERROR: crc \r\n"));
 	}
+	pData[len] = 0xFF;
 	return crcCalc == crcRecv;
 }
 

@@ -151,7 +151,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of getEnergy */
-  osThreadDef(getEnergy, taskGetEnergy, osPriorityNormal, 0, 512);
+  osThreadDef(getEnergy, taskGetEnergy, osPriorityNormal, 0, 256);
   getEnergyHandle = osThreadCreate(osThread(getEnergy), NULL);
 
   /* definition and creation of getNewBin */

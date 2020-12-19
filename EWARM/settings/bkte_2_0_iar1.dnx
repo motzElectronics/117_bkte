@@ -20,7 +20,7 @@
         <stlinkResetStrategy>2</stlinkResetStrategy>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>3089991345</Checksum>
+        <Checksum>3296312880</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -118,10 +118,9 @@
     </DisassembleMode>
     <Breakpoints2>
         <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Tasks\Src\task_create_webpckg.c}.0.1" 0 0 1 "" 0 "" 0</Bp0>
-        <Bp1>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Tasks\Src\task_create_webpckg.c}.53.4" 0 0 1 "" 0 "" 0</Bp1>
-        <Bp2>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Tasks\Src\task_get_new_bin.c}.52.4" 0 0 1 "" 0 "" 0</Bp2>
-        <Bp3>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Tasks\Src\task_get_new_bin.c}.46.5" 0 0 1 "" 0 "" 0</Bp3>
-        <Count>4</Count>
+        <Bp1>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Tasks\Src\task_get_new_bin.c}.53.4" 0 0 1 "" 0 "" 0</Bp1>
+        <Bp2>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Tasks\Src\task_get_new_bin.c}.47.5" 0 0 1 "" 0 "" 0</Bp2>
+        <Count>3</Count>
     </Breakpoints2>
     <TermIOLog>
         <LoggingEnabled>_ 0</LoggingEnabled>

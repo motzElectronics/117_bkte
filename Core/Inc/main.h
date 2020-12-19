@@ -30,6 +30,16 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_ll_iwdg.h"
+#include "stm32f4xx_ll_rcc.h"
+#include "stm32f4xx_ll_bus.h"
+#include "stm32f4xx_ll_system.h"
+#include "stm32f4xx_ll_exti.h"
+#include "stm32f4xx_ll_cortex.h"
+#include "stm32f4xx_ll_utils.h"
+#include "stm32f4xx_ll_pwr.h"
+#include "stm32f4xx_ll_dma.h"
+#include "stm32f4xx_ll_gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -129,10 +139,6 @@ void Error_Handler(void);
 #define WAIT_TIMEOUT 	15000
 #define DUMMY_BYTE		0xFF
 
-#define URL_FILE_SZ							(char*)"http://188.242.176.25:8080/api/filesize?uid="
-#define URL_TIME							(char*)"http://188.242.176.25:8080/api/time"
-#define URL_GET_NEW_FIRMWARE				(char*)"http://188.242.176.25:8080/api/getFile"
-#define URL_MEASURE							(char*)"http://188.242.176.25:8080/api/add/measures"
 #define URL_TCP_ADDR            (char*)"188.242.176.25"
 #define URL_TCP_PORT            8086
 
@@ -146,6 +152,7 @@ void Error_Handler(void);
 #define SZ_CMD_TELEMETRY_PHONE_NUM  14
 
 #define SZ_PAGE 255
+#define SZ_BUF_ENERGY_FROM_UART1 500
 #define AMOUNT_MAX_PAGES  5
 #define SZ_PAGES          1275 // SZ_PAGE * AMOUNT_MAX_PAGES
 
@@ -193,10 +200,6 @@ typedef struct{
 }FIRMWARE_INFO;
 
 typedef struct{
-	/*char* addMeasure;
-	char* getTime;
-	char* getSzSoft;
-	char* getPartFirmware;*/
   char* tcpAddr;
   u32   tcpPort;
 }Urls;

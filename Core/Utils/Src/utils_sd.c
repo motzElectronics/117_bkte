@@ -38,12 +38,12 @@ void sdWriteLog(char* strMsg, u16 szMsg, char* strParams, u16 szParams, SdSector
         if(pSec->freeSz < sz){
             sdUpdLog(pSec);
         }
-        strcat(pSec->pBufSec, strTimestamp);
-        strcat(pSec->pBufSec, strMsg);
+        strcat((char*)pSec->pBufSec, strTimestamp);
+        strcat((char*)pSec->pBufSec, strMsg);
         if(szParams > 0){
-            strcat(pSec->pBufSec, strParams);
+            strcat((char*)pSec->pBufSec, strParams);
         }
-        strcat(pSec->pBufSec, STR_ENDL);
+        strcat((char*)pSec->pBufSec, STR_ENDL);
         pSec->freeSz -= sz;
     }
 }
