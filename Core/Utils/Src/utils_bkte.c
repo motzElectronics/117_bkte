@@ -181,7 +181,7 @@ u8 isCrcOk(char* pData, int len){
 	if(crcCalc != crcRecv){
 		D(printf("ERROR: crc \r\n"));
 	}
-	pData[len] = 0xFF;
+	pData[len] = 0xFF; //! clear crc
 	return crcCalc == crcRecv;
 }
 

@@ -5,6 +5,7 @@
 #include "cmsis_os.h"
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Utils/Inc/utils_flash.h"
+#include "crc.h"
 
 #define SZ_PART_FIRMW   7000
 #define SZ_TCP_PCKG     1400

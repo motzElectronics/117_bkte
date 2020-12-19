@@ -1,5 +1,6 @@
 task_get_new_bin.pbi: \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\..\Core\Inc\..\Utils\Inc\utils_pckgs_manager.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\..\Core\Inc\crc.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\..\Core\Inc\..\Utils\Inc\utils_flash.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM\..\Core\Inc\..\Utils\Inc\circularBuffer.h \

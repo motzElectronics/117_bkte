@@ -22,7 +22,11 @@ void taskGetNewBin(void const * argument){
 	u8 cntFailTCPReq = 0;
 	lockAllTasks();
 	isRxNewFirmware = 1;
-	getServerTime();
+
+	u8 test[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x00};
+	u32 res = crc32_byte(test, 8);
+	D(printf("crc: %d\r\n", res));
+
 	while(!(szSoft = getSzFirmware())){
 	}
 	flashClearPage(FLASH_SECTOR_11);
