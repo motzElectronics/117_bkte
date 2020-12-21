@@ -293,8 +293,12 @@ u8 procReturnStatus(u8 ret){
 	static u8 notSend = 0;
 	if(ret != TCP_OK){
 		notSend++;
+		HAL_GPIO_WritePin(LED2R_GPIO_Port, LED2R_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED2G_GPIO_Port, LED2G_Pin, GPIO_PIN_SET);
 	} else {
 		notSend = 0;
+		HAL_GPIO_WritePin(LED2R_GPIO_Port, LED2R_Pin, GPIO_PIN_SET);
+		HAL_GPIO_TogglePin(LED2G_GPIO_Port, LED2G_Pin);
 	}
 
 	if(notSend == 4){
@@ -331,6 +335,7 @@ u8 openSendTcp(u8* data, u16 sz){
 		ret = INIT_TCP_ER;
 	}
 	if(ret == TCP_OK && simTCPOpen() != SIM_SUCCESS){
+
 		D(printf("ER: simTCPOpen\r\n"));
 		ret = OPEN_TCP_ER;
 	}

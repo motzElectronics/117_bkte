@@ -8,6 +8,8 @@ extern osThreadId loraHandle;
 extern u8 isRxNewFirmware;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
+
+extern CircularBuffer circBufAllPckgs;
 // extern CircularBuffer circBufPckgEnergy;
 // extern u8 SZ_PCKGENERGY;
 
@@ -16,10 +18,12 @@ static PckgEnergy curPckgEnergy;
 void taskKeepAlive(void const * argument){
     u16 timeout = 1;
     vTaskSuspend(keepAliveHandle);
+    
 
     for(;;)
     {
-        if(!(timeout % 20) && !isRxNewFirmware){
+        HAL_GPIO_TogglePin(LED1G_GPIO_Port, LED1G_Pin);
+        if(!(timeout % 60) && !isRxNewFirmware){
             getNumFirmware();
         }
         if(!(timeout % 600) && !isRxNewFirmware){
@@ -62,7 +66,7 @@ void pwrOffBkte(){
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
 
-    updSpiFlash();
+    updSpiFlash(&circBufAllPckgs);
 
     /*cBufReset(&circBufPckgEnergy);
     memcpy(circBufPckgEnergy.buf, &spiFlash64.headNumPg, 4);
@@ -85,12 +89,19 @@ void updRTC(){
 }
 
 void generateMsgKeepAlive(){
-    fillTelemetry(&curPckgEnergy, TEL_KEEP_ALIVE, 0);
-    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+    PckgTelemetry pckgTel;
+	pckgTel.group = TEL_GR_HARDWARE_STATUS;
+	pckgTel.code = TEL_CD_HW_BKTE_ALIVE;
+	pckgTel.data = 0;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
     sdWriteLog(SD_MSG_KEEP_ALIVE, SD_LEN_KEEP_ALIVE, NULL, 0, &sdSectorLogs);
 }
 
 void generateMsgDevOff(){
-    fillTelemetry(&curPckgEnergy, TEL_OFF_DEV, bkte.pwrInfo.adcVoltBat);
-    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+    PckgTelemetry pckgTel;
+	pckgTel.group = TEL_GR_HARDWARE_STATUS;
+	pckgTel.code = TEL_CD_HW_BATTERY;
+	pckgTel.data = bkte.pwrInfo.adcVoltBat;
+    saveTelemetry(&pckgTel, &circBufAllPckgs);
 }

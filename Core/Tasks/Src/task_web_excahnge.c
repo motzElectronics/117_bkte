@@ -17,7 +17,8 @@ void taskWebExchange(void const * argument){
 	for(;;){
 		if(statSend == TCP_OK || statSend == SEND_TCP_ER_LOST_PCKG){
 			if(curPckg != NULL){
-				freeWebPckg(curPckg);
+				clearWebPckg(curPckg);
+				curPckg = NULL;
 			}
 			xQueueReceive(queueWebPckgHandle, &curPckg, portMAX_DELAY); 
 		}
@@ -31,10 +32,13 @@ void taskWebExchange(void const * argument){
 
 u8 fastSendTcp(u8 statSend){ //while open tcp connection
 	while(statSend == TCP_OK){
-		freeWebPckg(curPckg);
+		clearWebPckg(curPckg);
+		curPckg = NULL;
 		if(xQueueReceive(queueWebPckgHandle, &curPckg, 100) == pdPASS){
 			D(printf("OK: fastSend\r\n"));
 			statSend = simTCPSend(curPckg->buf, curPckg->shift);
+		} else {
+			break;
 		}
 	}
 	return statSend;

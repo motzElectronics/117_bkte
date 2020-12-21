@@ -9,6 +9,8 @@ extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
 extern osMutexId mutexWebHandle;
 
+extern CircularBuffer circBufAllPckgs;
+
 u8 isRxNewFirmware = 0;
 static u8 bufNumBytesFirmware[8];
 static PckgUpdFirmware pckgInfoFirmware;
@@ -22,10 +24,6 @@ void taskGetNewBin(void const * argument){
 	u8 cntFailTCPReq = 0;
 	lockAllTasks();
 	isRxNewFirmware = 1;
-
-	u8 test[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x00};
-	u32 res = crc32_byte(test, 8);
-	D(printf("crc: %d\r\n", res));
 
 	while(!(szSoft = getSzFirmware())){
 	}
@@ -41,7 +39,7 @@ void taskGetNewBin(void const * argument){
 			memcpy(bufNumBytesFirmware, &pckgInfoFirmware.fromByte, 4);
 			memcpy(bufNumBytesFirmware + 4, &pckgInfoFirmware.toByte, 4);
 			memset(partFirmware, 0xFF, SZ_PART_FIRMW + 1);
-			if(getPartFirmware(bufNumBytesFirmware, partFirmware, szPartSoft + 1, 8) == SUCCESS && isCrcOk(partFirmware, szPartSoft)){
+			if(getPartFirmware(bufNumBytesFirmware, partFirmware, szPartSoft + 4, 8) == SUCCESS && isCrcOk(partFirmware, szPartSoft)){
 				curSzSoft += szPartSoft;
 				D(printf("OK: DOWNLOAD %d BYTES\r\n", (int)curSzSoft));
 				HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);
@@ -112,10 +110,13 @@ ErrorStatus getPartFirmware(u8* reqData, u8* answBuf, u16 szAnsw, u8 szReq){
 	if(simTCPSend(curPckg->buf, curPckg->shift) != SIM_SUCCESS){
 		sdWriteLog(SD_ER_PART_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
 		D(printf("ERROR: part Firmware\r\n"));
+		HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_SET);
 		ret = ERROR;
 	}else {
 		waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), szAnsw / SZ_TCP_PCKG + 1, 100, 6000);
 		osDelay(100);
+		HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);
 		memcpy(answBuf, &uInfoSim.pRxBuf[11], szAnsw);
 	}
 	xSemaphoreGive(mutexWebHandle);

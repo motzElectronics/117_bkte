@@ -86,9 +86,6 @@ void getNumFirmware(){
 
 
 
-
-
-
 /*void getMaxNumDS1820(BKTE* pBkte){
 	u8 numReInit = 0;
 	for(u8 i = 0; i < BKTE_MAX_CNT_1WIRE; i++){
@@ -130,13 +127,6 @@ void fillPckgTemp(PckgTemp* pckg, s8* data){
 	memcpy(pckg->temp, data, 4);
 }
 
-void fillTelemetry(PckgEnergy* pckg, TYPE_TELEMETRY typeTel, u32 value){
-	/*pckg->energyData.enAct = MSG_TELEMETRY;
-	pckg->energyData.enReact = value;
-    pckg->energyData.current = typeTel;*/
-	D(printf("OK: fillTelemetry\r\n"));
-}
-
 u32 getUnixTimeStamp(){
 	time_t t;
 	static struct tm curTime;
@@ -176,12 +166,15 @@ u32 getFlashData(u32 ADDR){
 }*/
 
 u8 isCrcOk(char* pData, int len){
-	u8 crcCalc = crc8(pData, len);
-	u8 crcRecv = pData[len];
+	u32 crcCalc = crc32_byte(pData, len);
+	u32 crcRecv = pData[len] << 24 | pData[len + 1] << 16 | pData[len + 2] << 8 | pData[len + 3];
 	if(crcCalc != crcRecv){
 		D(printf("ERROR: crc \r\n"));
 	}
-	pData[len] = 0xFF; //! clear crc
+	for(u8 i = 0; i < sizeof(u32); i++){
+		pData[len + i] = 0xFF; //! clear crc32
+	}
+
 	return crcCalc == crcRecv;
 }
 
@@ -258,24 +251,16 @@ void checkBufForWritingToFlash(){  //!need to delete
 	xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 }
 
-void updSpiFlash(){ //!need to delete
-		/*u8 isFullSpiFlash = 0;
-		PckgEnergy curPckgEnergy;
-		isFullSpiFlash =  spiFlashWrPg(circBufPckgEnergy.buf, circBufPckgEnergy.numPckgInBuf * SZ_PCKGENERGY, 0, spiFlash64.headNumPg);
-		cBufReset(&circBufPckgEnergy);
-		if(isFullSpiFlash){
-		  	fillTelemetry(&curPckgEnergy, TEL_SERV_FLASH_CIRC_BUF_FULL, 0);
-			cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
-		}	
+void updSpiFlash(CircularBuffer* cbuf){ //!need to delete
+	u16 bufEnd[2] = {0, BKTE_PREAMBLE};
+	xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 
-	  	if(!spiFlash64.headNumPg){
-			fillTelemetry(&curPckgEnergy, TEL_SERV_FLASH_CIRC_BUF_END_HEAD, 0);
-			cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
-	  	} else if(spiFlash64.headNumPg == SPIFLASH_NUM_PG_GNSS / 2){
-			fillTelemetry(&curPckgEnergy, TEL_SERV_FLASH_CIRC_BUF_HALF_HEAD, 0);
-			cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
-		}
-		*/
+	bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
+	cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
+	spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
+	cBufReset(cbuf);
+
+	xSemaphoreGive(mutexWriteToEnergyBufHandle);
 	D(printf("updSpiFlash()\r\n"));
 }
 

@@ -29,14 +29,6 @@ void taskCreateWebPckg(void const * argument){
 	
 	offAllLeds();
 	vTaskSuspend(createWebPckgHandle);
-	// simOn();
-	
-	/*simHttpInit(urls.addMeasure);*///!use in http
-	// vTaskResume(keepAliveHandle);
-//	vTaskSuspend(getNewBinHandle);
-//	vTaskSuspend(webExchangeHandle);
-
-//	HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_SET);
 
 	for(;;){
 		delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
@@ -47,23 +39,10 @@ void taskCreateWebPckg(void const * argument){
 			for(u8 i = 0; i < amntPages; i++){
 				spiFlashRdPg((u8*)tmpBufPage, 256, 0, spiFlash64.tailNumPg);
 
-				/*if(!spiFlash64.tailNumPg){
-					fillTelemetry(&tmpPckgEnergy, TEL_SERV_FLASH_CIRC_BUF_END_TAIL, 0);
-					cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
-				}*/
-
 				if((len = isDataFromFlashOk(tmpBufPage, 256))){
 					D(printf("OK: good crc\r\n"));
 					parceData(tmpBufPage, len);
 				}
-
-				/*while(getGnssPckg((u8*)tmpBufPage, 256, &tmpPckgEnergy, SZ_PCKGENERGY)){
-					tmpTimeStamp = addEnPckgToJson(&tmpPckgEnergy);
-					if(tmpTimeStamp > BKTE_BAD_TIMESTAMP){
-						fillTelemetry(&tmpPckgEnergy, TEL_BAD_RTC_TIME, 0);
-						cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
-					}
-				}*/
 			}
 			szAllPages = getSzAllPages();
 			initWebPckg(curPckg, szAllPages, 0);

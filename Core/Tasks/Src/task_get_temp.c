@@ -68,7 +68,7 @@ void taskGetTemp(void const * argument){
             }
             temps[num1Wire] = tmpTemp;
             D(printf("TEMP %d:%d\r\n", num1Wire, tmpTemp));
-            HAL_GPIO_TogglePin(LED3G_GPIO_Port, LED3G_Pin);
+            // HAL_GPIO_TogglePin(LED3G_GPIO_Port, LED3G_Pin);
             resetTempLine(num1Wire);
         }
 

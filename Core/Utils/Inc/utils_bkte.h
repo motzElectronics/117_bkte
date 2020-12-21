@@ -188,7 +188,9 @@ typedef enum{
 	TEL_CD_HW_SD,
 	TEL_CD_HW_DS2482,
 	TEL_CD_HW_SPI_FLASH,
-	TEL_CD_HW_LORA
+	TEL_CD_HW_LORA,
+	TEL_CD_HW_BATTERY,
+	TEL_CD_HW_BKTE_ALIVE
 }TELEMETRY_CODE_STATES;
 
 typedef enum{
@@ -258,7 +260,6 @@ void resetTempLine(u8 numLine);
 void setTempLine(u8 numLine);
 void fillPckgEnergy(PckgEnergy* pckg, u16* data);
 void fillPckgTemp(PckgTemp* pckg, s8* data);
-void fillTelemetry(PckgEnergy* pckg, TYPE_TELEMETRY typeTel, u32 value);
 
 void fillPckgVoltAmper(PckgVoltAmper* pckg, u16* data);
 
@@ -278,7 +279,7 @@ void getServerTime();
 
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 void checkBufForWritingToFlash();
-void updSpiFlash();
+void updSpiFlash(CircularBuffer* cbuf);
 void waitGoodCsq();
 
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf);

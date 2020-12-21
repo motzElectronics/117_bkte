@@ -31,7 +31,7 @@ void taskGetEnergy(void const * argument){
 	cBufReset(&circBufAllPckgs);
 	sdInit();
 	simInit();
-	/*getServerTime();*/ //! use it in realise
+	getServerTime();
 
 	generateInitTelemetry();
 	unLockTasks();
@@ -64,7 +64,7 @@ void taskGetEnergy(void const * argument){
 }
 
 void unLockTasks(){
-	vTaskResume(getNewBinHandle);  //! delete after testing upload firmware
+	// vTaskResume(getNewBinHandle); //! debug download firmware
 	vTaskResume(webExchangeHandle);
 	vTaskResume(getTempHandle);
 	vTaskResume(keepAliveHandle);
