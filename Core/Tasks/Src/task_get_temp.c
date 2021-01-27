@@ -67,11 +67,11 @@ void taskGetTemp(void const * argument){
                 tmpTemp = BKTE_NO_TEMP;
             }
             temps[num1Wire] = tmpTemp;
-            D(printf("TEMP %d:%d\r\n", num1Wire, tmpTemp));
+            // D(printf("TEMP %d:%d\r\n", num1Wire, tmpTemp));
             // HAL_GPIO_TogglePin(LED3G_GPIO_Port, LED3G_Pin);
             resetTempLine(num1Wire);
         }
-
+        D(printf("OK: LOOP TEMP\r\n"));
         fillPckgTemp(&pckgTemp, temps);
         saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
         // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgTemp, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);

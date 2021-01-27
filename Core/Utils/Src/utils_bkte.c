@@ -73,7 +73,7 @@ void getNumFirmware(){
 	u8 bufFirmware[4];
 	if(generateWebPckgReq(CMD_REQUEST_NUM_FIRMWARE, NULL, 0, SZ_REQUEST_GET_NUM_FIRMWARE, bufFirmware, 4) == ERROR){
 		sdWriteLog(SD_ER_NUM_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
-		D(printf("ERROR: server time\r\n"));
+		D(printf("ERROR: getNumFirmware()\r\n"));
 	} else{
 		u32 numFirmware = bufFirmware[0] << 24 | bufFirmware[1] << 16 | bufFirmware[2] << 8 | bufFirmware[3];
 		if(numFirmware != BKTE_ID_FIRMWARE && numFirmware > 0){
@@ -268,8 +268,8 @@ void updSpiFlash(CircularBuffer* cbuf){ //!need to delete
 void waitGoodCsq(){
 	u8 csq = 0;
 	u16 cntNOCsq = 0;
-	while((csq = simCheckCSQ()) < 15 && csq > 99){
-		osDelay(2000);
+	while((csq = simCheckCSQ()) < 10 || csq > 99){
+		osDelay(3000);
 		// saveCsq(csq);
 		cntNOCsq++;
 		if(cntNOCsq == 1800){
@@ -277,8 +277,10 @@ void waitGoodCsq(){
 			sdWriteLog(SD_ER_CSQINF, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 			cntNOCsq = 0;
 		}
+		D(printf("ER: CSQ %d\r\n", csq));
 	}
 	bkte.erFlags.simCSQINF = 0;
+	D(printf("OK: CSQ %d\r\n", csq));
 }
 
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf){

@@ -69,7 +69,7 @@ void simInit(){
 }
 
 char* simGetStatusAnsw(){
-	waitIdle("wait simGetStatusAnsw()", &(uInfoSim.irqFlags), 200, 20000);
+	waitIdle("", &(uInfoSim.irqFlags), 200, 20000);
 	if(uInfoSim.irqFlags.isIrqIdle){
 		return (char*)uInfoSim.pRxBuf;
 	} else{
@@ -105,7 +105,7 @@ u8 simCmd(char* cmdCode, char* params, u8 retriesCnt, char* SUCCESS_RET){
 			}
 			D(printf("ERROR: %s ret: %s\r\n", simBufCmd, token));
 		} else{
-			D(printf("OK: %s ret: %s\r\n", simBufCmd, token));
+			// D(printf("OK: %s ret: %s\r\n", simBufCmd, token));
 			return SIM_SUCCESS;
 		}
 	}

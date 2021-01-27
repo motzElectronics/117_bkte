@@ -28,6 +28,7 @@ void taskGetNewBin(void const * argument){
 	while(!(szSoft = getSzFirmware())){
 	}
 	flashClearPage(FLASH_SECTOR_11);
+	clearAllWebPckgs();
 	HAL_GPIO_WritePin(LED4G_GPIO_Port, LED4G_Pin, GPIO_PIN_SET);
 	while(openTcp() != TCP_OK);
 	for(;;){

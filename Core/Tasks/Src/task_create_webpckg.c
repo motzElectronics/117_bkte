@@ -52,8 +52,10 @@ void taskCreateWebPckg(void const * argument){
 				spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
 
 		}
-		
-		D(printf("no pckg in spiflash\r\n"));
+
+		if(!delayPages){
+			D(printf("no pckg in spiflash\r\n"));
+		}
 		osDelay(3000);
 	}
 }

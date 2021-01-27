@@ -22,6 +22,7 @@ void initWebPckg(WebPckg* pckg, u16 len, u8 isReq);
 void addInfoToWebPckg(WebPckg* pckg, u8* src, u16 sz, u8 cnt, u8 cmdData);
 void showWebPckg(WebPckg* pckg);
 void closeWebPckg(WebPckg* pckg);
+void clearAllWebPckgs();
 
 u8 isNotFullPckg();
 WebPckg* getFreePckg();
