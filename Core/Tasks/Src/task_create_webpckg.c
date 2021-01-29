@@ -55,6 +55,7 @@ void taskCreateWebPckg(void const * argument){
 
 		if(!delayPages){
 			D(printf("no pckg in spiflash\r\n"));
+			bkte.isSentData = 1;
 		}
 		osDelay(3000);
 	}

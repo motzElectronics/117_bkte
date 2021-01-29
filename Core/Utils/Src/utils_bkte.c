@@ -48,7 +48,6 @@ void getServerTime(){
 		sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
 		D(printf("ERROR: bad server time\r\n"));
 	} else{
-		osDelay(500);
 		time_t t = bufTime[0] << 24 | bufTime[1] << 16 | bufTime[2] << 8 | bufTime[3];
 		struct tm* pTm;
 		pTm = gmtime(&t);
@@ -251,16 +250,17 @@ void checkBufForWritingToFlash(){  //!need to delete
 	xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
 }
 
-void updSpiFlash(CircularBuffer* cbuf){ //!need to delete
+void updSpiFlash(CircularBuffer* cbuf){
 	u16 bufEnd[2] = {0, BKTE_PREAMBLE};
-	xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+	// xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
 
 	bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
 	cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
+	spiFlash64.lock = 0;
 	spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
 	cBufReset(cbuf);
 
-	xSemaphoreGive(mutexWriteToEnergyBufHandle);
+	// xSemaphoreGive(mutexWriteToEnergyBufHandle);
 	D(printf("updSpiFlash()\r\n"));
 }
 

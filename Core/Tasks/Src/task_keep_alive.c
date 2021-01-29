@@ -54,19 +54,29 @@ void pwrOffBkte(){
     vTaskSuspend(getEnergyHandle);
     vTaskSuspend(getTempHandle);
     vTaskSuspend(loraHandle);
-
+    
     osDelay(2000);
+    D(printf("OK: PWR OFF START\r\n"));
     // cBufReset(&circBufPckgEnergy);
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
+    D(printf("OK: PWR OFF WAIT\r\n"));
 
     osDelay(100000);
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
 
+    bkte.isSentData = 0;
     updSpiFlash(&circBufAllPckgs);
+    while((bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 300 && !bkte.isSentData) osDelay(1000);
+    if(!bkte.isSentData){
+        sdWriteLog(SD_MSG_NOT_SENT, SD_LEN_NOT_SENT, NULL, 0, &sdSectorLogs);
+        sdUpdLog(&sdSectorLogs);
+    }
+
+    D(printf("OK: PWR OFF SENT TELEMETRY\r\n"));
 
     /*cBufReset(&circBufPckgEnergy);
     memcpy(circBufPckgEnergy.buf, &spiFlash64.headNumPg, 4);

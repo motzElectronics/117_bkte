@@ -135,6 +135,7 @@ typedef struct{
 	HardWareStatus hwStat;
 	PWRInfo pwrInfo;
 	ErrorFlags erFlags;
+	u8 isSentData;
 //	FInfo	fInfo[NUM_READ_FILES];
 }BKTE;
 

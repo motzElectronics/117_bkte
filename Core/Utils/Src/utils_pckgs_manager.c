@@ -78,13 +78,13 @@ void waitAnswServer(u8 req){
     switch(req){
         case CMD_REQUEST_SERVER_TIME:
         case CMD_REQUEST_NUM_FIRMWARE:
-            osDelay(500);
+            osDelay(2000);
             break;
         case CMD_REQUEST_SZ_FIRMWARE:
             osDelay(2000);
             break;
         case CMD_REQUEST_PART_FIRMWARE:
-            osDelay(1000);
+            osDelay(2000);
             break;
     }
 }
@@ -124,8 +124,14 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
         xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
         while((statSend = openSendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && statSend != SEND_TCP_ER_LOST_PCKG);
         if(statSend != TCP_OK) ret = ERROR;
-        else{
-            waitAnswServer(CMD_REQ);
+        else if(uInfoSim.pRxBuf[11] == '\0'){
+            uInfoSim.irqFlags.isIrqIdle = 0;
+            if(waitIdle("", &(uInfoSim.irqFlags), 200, 10000)){
+                memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
+            } else {
+                ret = ERROR;
+            }
+        } else if(uInfoSim.pRxBuf[11] != '\0'){
             memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
         }
         xSemaphoreGive(mutexWebHandle);

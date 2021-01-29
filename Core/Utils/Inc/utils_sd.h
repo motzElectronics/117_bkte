@@ -60,6 +60,9 @@
 #define SD_MSG_NEW_BIN          (char*)"6 "
 #define SD_LEN_NEW_BIN          2
 
+#define SD_MSG_NOT_SENT         (char*)"7 "
+#define SD_LEN_NOT_SENT         2
+
 
 
 typedef struct{
