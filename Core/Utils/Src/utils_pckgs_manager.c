@@ -124,20 +124,23 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
         xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
         while((statSend = openSendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && statSend != SEND_TCP_ER_LOST_PCKG);
         if(statSend != TCP_OK) ret = ERROR;
-        else if(uInfoSim.pRxBuf[11] == '\0'){
+        else if(uInfoSim.pRxBuf[11] == '\0' && uInfoSim.pRxBuf[12] == '\0' 
+                && uInfoSim.pRxBuf[13] == '\0' && uInfoSim.pRxBuf[14] == '\0'){
             uInfoSim.irqFlags.isIrqIdle = 0;
-            if(waitIdle("", &(uInfoSim.irqFlags), 200, 10000)){
+            if(waitIdle("wait req answ", &(uInfoSim.irqFlags), 200, 10000)){
                 memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
             } else {
+                D(printf("ERROR: NO ANSW REQ\r\n"));
                 ret = ERROR;
             }
-        } else if(uInfoSim.pRxBuf[11] != '\0'){
+        } else{
             memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
         }
         xSemaphoreGive(mutexWebHandle);
         clearWebPckg(curPckg);
     } else {
         ret = ERROR;
+        D(printf("ERROR: NO FREE PCKG\r\n"));
     }
 
     return ret;

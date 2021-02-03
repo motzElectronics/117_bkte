@@ -126,7 +126,7 @@ int main(void)
   MX_TIM6_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  D(printf("OK: start main prog\r\n"));
+  D(printf("OK: start version %d\r\n", BKTE_ID_FIRMWARE));
   FIRMWARE_INFO info = {.header = 0x1122334455667788,
 		  .numFirmware = BKTE_ID_FIRMWARE, .verFirmware = BKTE_VER_BETA_FIRMWARE, .numTrainCar = BKTE_ID_TRAINCAR
   };

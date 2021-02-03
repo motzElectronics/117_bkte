@@ -86,6 +86,7 @@ void lockAllTasks(){
 	vTaskSuspend(keepAliveHandle);
 	vTaskSuspend(loraHandle);
 	vTaskSuspend(createWebPckgHandle);
+	xSemaphoreGive(mutexWebHandle);
 }
 
 

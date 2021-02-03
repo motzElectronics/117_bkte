@@ -22,11 +22,11 @@
 #include "../Utils/Inc/circularBuffer.h"
 
 //!-------------CONFIGURE PARAMS---------------
-#define BKTE_ID_TRAINCAR		0
+#define BKTE_ID_TRAINCAR		1
 #define BKTE_ID_TRAINCAR_MAX	2
 #define BKTE_IS_LORA_MASTER		1
 
-#define BKTE_ID_FIRMWARE		0
+#define BKTE_ID_FIRMWARE		1
 #define BKTE_ID_BOOT			2
 #define BKTE_ID_PCB				3
 #define BKTE_ID_TRAIN			1706

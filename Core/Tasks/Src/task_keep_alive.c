@@ -23,7 +23,7 @@ void taskKeepAlive(void const * argument){
     for(;;)
     {
         HAL_GPIO_TogglePin(LED1G_GPIO_Port, LED1G_Pin);
-        if(!(timeout % 60) && !isRxNewFirmware){
+        if(!(timeout % 30) && !isRxNewFirmware){
             getNumFirmware();
         }
         if(!(timeout % 600) && !isRxNewFirmware){
