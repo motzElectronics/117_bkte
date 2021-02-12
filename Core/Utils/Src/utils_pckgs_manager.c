@@ -74,6 +74,15 @@ WebPckg* getFreePckg(){
     return NULL;
 }
 
+u8 getCntFreePckg(){
+    u8 ret = 0;
+    for(u8 i = 0; i < CNT_WEBPCKGS; i++){
+        if(!webPckgs[i].isFull)
+            ret++;
+    }
+    return ret;
+}
+
 void waitAnswServer(u8 req){
     switch(req){
         case CMD_REQUEST_SERVER_TIME:

@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "utils_bkte.h": "c",
+        "utils_pckgs_manager.h": "c"
+    }
+}

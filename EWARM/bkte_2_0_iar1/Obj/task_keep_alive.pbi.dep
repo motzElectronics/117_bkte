@@ -106,4 +106,5 @@ task_keep_alive.pbi: \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Core/Inc\../Drivers/Inc/spiflash.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Core/Inc\spi.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Core/Inc\../Utils/Inc/circularBuffer.h \
-  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Core/Inc\adc.h
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Core/Inc\adc.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Core/Inc\../Utils/Inc/utils_pckgs_manager.h

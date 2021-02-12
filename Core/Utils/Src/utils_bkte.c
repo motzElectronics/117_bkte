@@ -32,6 +32,11 @@ void bkteInit(){
 	
 	HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_SET);
 	bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
+	if(bkte.pwrInfo.isPwrState){
+		HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);
+		HAL_Delay(5000);
+		NVIC_SystemReset();
+	}
 
 	for(u8 i = 0; i < 3; i++)
 		bkte.idMCU[i] = getFlashData(BKTE_ADDR_ID_MCU + (i * 4));
@@ -268,7 +273,7 @@ void updSpiFlash(CircularBuffer* cbuf){
 void waitGoodCsq(){
 	u8 csq = 0;
 	u16 cntNOCsq = 0;
-	while((csq = simCheckCSQ()) < 10 || csq > 99){
+	while((csq = simCheckCSQ()) < 5 || csq > 99){
 		osDelay(3000);
 		// saveCsq(csq);
 		cntNOCsq++;

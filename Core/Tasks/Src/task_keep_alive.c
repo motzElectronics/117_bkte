@@ -1,4 +1,5 @@
 #include "../Tasks/Inc/task_keep_alive.h"
+#include "../Utils/Inc/utils_pckgs_manager.h"
 
 
 extern osThreadId keepAliveHandle;
@@ -51,6 +52,7 @@ u16 getAdcVoltBat(){
 
 void pwrOffBkte(){
     char strVolts[4];
+    static u32 delayPages = 1;
     vTaskSuspend(getEnergyHandle);
     vTaskSuspend(getTempHandle);
     vTaskSuspend(loraHandle);
@@ -61,22 +63,29 @@ void pwrOffBkte(){
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
-    D(printf("OK: PWR OFF WAIT\r\n"));
+    D(printf("OK: PWR OFF WAIT: %d\r\n", getUnixTimeStamp()));
 
-    osDelay(100000);
+   
+    while(delayPages && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360){
+        osDelay(5000);
+        delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
+			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
+    }
+
+    while(getCntFreePckg() != CNT_WEBPCKGS && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 300) osDelay(5000);
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
 
     bkte.isSentData = 0;
     updSpiFlash(&circBufAllPckgs);
-    while((bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 300 && !bkte.isSentData) osDelay(1000);
+    while((bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360 && !bkte.isSentData) osDelay(1000);
     if(!bkte.isSentData){
         sdWriteLog(SD_MSG_NOT_SENT, SD_LEN_NOT_SENT, NULL, 0, &sdSectorLogs);
         sdUpdLog(&sdSectorLogs);
     }
 
-    D(printf("OK: PWR OFF SENT TELEMETRY\r\n"));
+    D(printf("OK: PWR OFF SENT TELEMETRY: %d\r\n", getUnixTimeStamp()));
 
     /*cBufReset(&circBufPckgEnergy);
     memcpy(circBufPckgEnergy.buf, &spiFlash64.headNumPg, 4);

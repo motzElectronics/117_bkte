@@ -305,6 +305,7 @@ u8 procReturnStatus(u8 ret){
 		simReset();
 	} else if(notSend == 5){
 		simReset();
+		D(printf("DANGEROUS: LOST PCKGS\r\n"));
 		ret = SEND_TCP_ER_LOST_PCKG;
 		notSend = 0;
 	}
