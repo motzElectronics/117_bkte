@@ -190,9 +190,9 @@ u8 parceReq(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx){
 	u8 rcv = getLastTransmitter(pRx->loraGenInfo.flagsReq);
 	if(pRx->loraGenInfo.flagsReq && 
 	(pRx->loraGenInfo.flagsReq < (1 << BKTE_ID_TRAINCAR)) && (pRx->loraGenInfo.flagsAnsw == 0)){
-		memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
-		sprintf((char*)uInfoLCD.pTxBuf, "R%d %d\r\n%s", rcv, testRssi, binaryTest);
-		uartTxLCD((char*)uInfoLCD.pTxBuf, strlen((char*)uInfoLCD.pTxBuf), &uInfoLCD);
+		// memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
+		// sprintf((char*)uInfoLCD.pTxBuf, "R%d %d\r\n%s", rcv, testRssi, binaryTest);
+		// uartTxLCD((char*)uInfoLCD.pTxBuf, strlen((char*)uInfoLCD.pTxBuf), &uInfoLCD);
 		D(printf("OK: LORA: RECV %s\r\n", binaryTest));
 		cpyRxInf(pRx, pTx);
 		if(pTx->loraGenInfo.idTxRx == 0)
@@ -215,9 +215,9 @@ u8 parceAnsw(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx){
 
 	if(pRx->loraGenInfo.flagsAnsw && 
 	(pRx->loraGenInfo.flagsAnsw < (1 << (BKTE_ID_TRAINCAR_MAX - BKTE_ID_TRAINCAR)))){
-		memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
-		sprintf((char*)uInfoLCD.pTxBuf, "A%d\r\n%s", BKTE_ID_TRAINCAR_MAX - rcv, binaryTest);
-		uartTxLCD((char*)uInfoLCD.pTxBuf, strlen((char*)uInfoLCD.pTxBuf), &uInfoLCD);
+		// memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
+		// sprintf((char*)uInfoLCD.pTxBuf, "A%d\r\n%s", BKTE_ID_TRAINCAR_MAX - rcv, binaryTest);
+		// uartTxLCD((char*)uInfoLCD.pTxBuf, strlen((char*)uInfoLCD.pTxBuf), &uInfoLCD);
 		D(printf("OK: LORA: ANSW %s\r\n", binaryTest));
 		cpyRxInf(pRx, pTx);
 		ret = LR_TASK_PARCE_VALID_PCKG;
@@ -227,7 +227,7 @@ u8 parceAnsw(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx){
 
 
 void lcdShow(u8* str){
-	uartTxLCD((char*)str, strlen((char*)str), &uInfoLCD);
+	// uartTxLCD((char*)str, strlen((char*)str), &uInfoLCD);
 }
 
 void updReq(LoraAlgTransition* pTx){

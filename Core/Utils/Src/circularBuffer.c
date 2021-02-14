@@ -109,6 +109,11 @@ u16 cBufRead(CBufHandle cbuf, u8* dist, u8 sz){
 			D(printf("ERROR: CIRC_TYPE_ENERGY_UART lenMsg: %d\r\n", lenMsg));
 		}
 		break;
+	case CIRC_TYPE_WIRELESS:
+		if((lenMsg = getLenMsgWirelessSens(cbuf)))
+			copyGetDatafromBuf(cbuf, dist, lenMsg, CIRC_TYPE_WIRELESS);
+		break;
+		break;
 	case CIRC_TYPE_PCKG_ENERGY:
 	case CIRC_TYPE_PCKG_RSSI:
 	case CIRC_TYPE_PCKG_TEMP:
@@ -142,8 +147,11 @@ void copyGetDatafromBuf(CBufHandle cbuf, u8* dist, u16 sz, CircTypeBuf type){
 		cbuf->readAvailable -= CIRC_LEN_ENDS;
 	}
 	else if(type == CIRC_TYPE_ENERGY_UART || type == CIRC_TYPE_PCKG_ENERGY ||
-			type == CIRC_TYPE_PCKG_TEMP || type == CIRC_TYPE_PCKG_ALL)
+			type == CIRC_TYPE_PCKG_TEMP || type == CIRC_TYPE_PCKG_ALL){
 		cbuf->tail = (cbuf->tail + sz) % cbuf->max;
+	}else if(type == CIRC_TYPE_WIRELESS){
+		cbuf->tail = cbuf->head;
+	}
 	cbuf->writeAvailable += sz;
 	cbuf->readAvailable -= sz;
 	--(cbuf->numPckgInBuf);
@@ -198,5 +206,26 @@ u8 getLenMsgEnergyUart(CBufHandle cbuf){
 	}
 
 	return lenMsg;
+}
+
+u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
+	u16 lenMsg = 2;
+	u16 tail = cbuf->tail;
+	u16 head;
+	while(cbuf->buf[tail] != '\0'){
+		if(cbuf->buf[tail] == 0xAA && cbuf->buf[(tail + 1) % cbuf->max] == 0xBB){
+			head = (tail + 2) % cbuf->max;
+			while(!(cbuf->buf[head] == 0xAA && cbuf->buf[(head + 1) % cbuf->max] == 0xBB)){
+				lenMsg++;
+				head = (head + 1) % cbuf->max;
+				
+			}
+			cbuf->tail = tail;
+			cbuf->head = head;
+			return lenMsg;
+		}
+		tail = (tail + 1) % cbuf->max;
+	}
+	return 0;
 }
 

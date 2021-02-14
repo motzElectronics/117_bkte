@@ -6,6 +6,7 @@ extern osThreadId keepAliveHandle;
 extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
 extern osThreadId getNewBinHandle;
+extern osThreadId wirelessSensHandle;
 
 extern osMutexId mutexWriteToEnergyBufHandle;
 
@@ -70,6 +71,7 @@ void unLockTasks(){
 	vTaskResume(keepAliveHandle);
 	vTaskResume(loraHandle);
 	vTaskResume(createWebPckgHandle);
+	vTaskResume(wirelessSensHandle);
 }
 
 void generateInitTelemetry(){

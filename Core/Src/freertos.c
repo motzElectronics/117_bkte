@@ -58,6 +58,7 @@ osThreadId getTempHandle;
 osThreadId manageIWDGHandle;
 osThreadId loraHandle;
 osThreadId createWebPckgHandle;
+osThreadId wirelessSensHandle;
 osMessageQId queueWebPckgHandle;
 osMutexId mutexWriteToEnergyBufHandle;
 osMutexId mutexWebHandle;
@@ -78,6 +79,7 @@ void taskGetTemp(void const * argument);
 void taskManageIWDG(void const * argument);
 void taskLora(void const * argument);
 void taskCreateWebPckg(void const * argument);
+void taskWirelessSens(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -181,6 +183,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of createWebPckg */
   osThreadDef(createWebPckg, taskCreateWebPckg, osPriorityNormal, 0, 256);
   createWebPckgHandle = osThreadCreate(osThread(createWebPckg), NULL);
+
+  /* definition and creation of wirelessSens */
+  osThreadDef(wirelessSens, taskWirelessSens, osPriorityNormal, 0, 128);
+  wirelessSensHandle = osThreadCreate(osThread(wirelessSens), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -331,6 +337,24 @@ __weak void taskCreateWebPckg(void const * argument)
     osDelay(1);
   }
   /* USER CODE END taskCreateWebPckg */
+}
+
+/* USER CODE BEGIN Header_taskWirelessSens */
+/**
+* @brief Function implementing the wirelessSens thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_taskWirelessSens */
+__weak void taskWirelessSens(void const * argument)
+{
+  /* USER CODE BEGIN taskWirelessSens */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END taskWirelessSens */
 }
 
 /* Private application code --------------------------------------------------*/

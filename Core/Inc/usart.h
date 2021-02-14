@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under Ultimate Liberty license
@@ -54,10 +54,12 @@ void MX_USART6_UART_Init(void);
 #define USART_SZ_BUF_TX_USART6    1024
 
 #define USART_SZ_BUF_TX_USART2    20
+#define USART_SZ_BUF_RX_USART2    100
 
 #define USART_TIMEOUT             15000
 
 #define USART_RE2_WRITE_EN()  HAL_GPIO_WritePin(USART2_RE_GPIO_Port, USART2_RE_Pin, GPIO_PIN_SET)
+#define USART_RE2_READ_EN()  HAL_GPIO_WritePin(USART2_RE_GPIO_Port, USART2_RE_Pin, GPIO_PIN_RESET)
 
 typedef UART_HandleTypeDef*	PHuart;
 typedef struct{
@@ -70,7 +72,7 @@ typedef struct{
 }UartInfo;
 
 extern UartInfo uInfoSim;
-extern UartInfo uInfoLCD;
+extern UartInfo uInfoWirelessSens;
 
 void setBaudRateUart(UART_HandleTypeDef *huart, u32 baudrate);
 //void rxUartSIM_IT();

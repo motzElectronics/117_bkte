@@ -1308,6 +1308,9 @@
                 <file>
                     <name>$PROJ_DIR$\..\Core\Tasks\Src\task_web_excahnge.c</name>
                 </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Core\Tasks\Src\task_wireless_sens.c</name>
+                </file>
             </group>
             <group>
                 <name>Utils</name>

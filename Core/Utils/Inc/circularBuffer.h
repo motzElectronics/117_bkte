@@ -23,7 +23,8 @@ typedef enum{
 	CIRC_TYPE_PCKG_VOLTAMPER,
 	CIRC_TYPE_PCKG_TEMP,
 	CIRC_TYPE_PCKG_ALL,
-	CIRC_TYPE_PCKG_RSSI
+	CIRC_TYPE_PCKG_RSSI,
+	CIRC_TYPE_WIRELESS
 }CircTypeBuf;
 
 typedef struct{
@@ -91,6 +92,8 @@ u16 cBufRead(CBufHandle cbuf, u8* dist, u8 sz);
 void copyGetDatafromBuf(CBufHandle cbuf, u8* dist, u16 sz, CircTypeBuf type);
 u8 getLenMsgSimUart(CBufHandle cbuf);
 u8 getLenMsgEnergyUart(CBufHandle cbuf);
+
+u16 getLenMsgWirelessSens(CircularBuffer* cbuf);
 
 //TODO: int circular_buf_get_range(circular_buf_t cbuf, uint8_t *data, size_t len);
 //TODO: int circular_buf_put_range(circular_buf_t cbuf, uint8_t * data, size_t len);
