@@ -32,6 +32,7 @@ void bkteInit(){
 	
 	HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_SET);
 	bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
+	bkte.pwrInfo.isPwrState = 0;  //! DELETE THIS AFTER TESTS
 	if(bkte.pwrInfo.isPwrState){
 		HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);
 		HAL_Delay(5000);
@@ -291,7 +292,7 @@ void waitGoodCsq(){
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf){
 	u16 bufEnd[2] = {0, BKTE_PREAMBLE};
 	xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
-	if(cbuf->writeAvailable < sz + 1 + 4){
+	if(cbuf->writeAvailable < sz + 2 + 4){
 		bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
 		cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
 		spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);

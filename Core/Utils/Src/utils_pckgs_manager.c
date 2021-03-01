@@ -27,7 +27,8 @@ void clearAllWebPckgs(){
 void initWebPckg(WebPckg* pPckg, u16 len, u8 isReq){
     static u32 num = 0;
     num++;
-    clearWebPckg(pPckg);
+    memset(pPckg->buf, '\0', SZ_WEB_PCKG);
+    pPckg->shift = 0;
     pPckg->isRequest = isReq;
     addInfo(pPckg, (u8*)&webPream, 2);
     addInfo(pPckg, (u8*)&num, 4);
@@ -67,8 +68,10 @@ void freeWebPckg(WebPckg* pckg){
 
 WebPckg* getFreePckg(){
     for(u8 i = 0; i < CNT_WEBPCKGS; i++){
-        if(!webPckgs[i].isFull)
+      if(!webPckgs[i].isFull){
+        webPckgs[i].isFull = 1;
             return &webPckgs[i];
+      }
     }
     D(printf("ER: NO FREEPCKG\r\n"));
     return NULL;

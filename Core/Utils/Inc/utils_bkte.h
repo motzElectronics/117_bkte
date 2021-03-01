@@ -26,7 +26,7 @@
 #define BKTE_ID_TRAINCAR_MAX	2
 #define BKTE_IS_LORA_MASTER		1
 
-#define BKTE_ID_FIRMWARE		9
+#define BKTE_ID_FIRMWARE		1
 #define BKTE_ID_BOOT			2
 #define BKTE_ID_PCB				3
 #define BKTE_ID_TRAIN			1706
@@ -65,6 +65,7 @@
 #define BKTE_MAX_TEMP                   100
 #define BKTE_MIN_TEMP                   -100
 #define BKTE_NO_TEMP                    -127
+#define BKTE_WIRELESS_TEMP				101
 
 #define BKTE_SAVE_NUM_PAGE				2047
 
@@ -191,7 +192,8 @@ typedef enum{
 	TEL_CD_HW_SPI_FLASH,
 	TEL_CD_HW_LORA,
 	TEL_CD_HW_BATTERY,
-	TEL_CD_HW_BKTE_ALIVE
+	TEL_CD_HW_BKTE_ALIVE,
+	TEL_CD_HW_WIRELESS_SENS_RSSI
 }TELEMETRY_CODE_STATES;
 
 typedef enum{

@@ -165,7 +165,7 @@ void MX_FREERTOS_Init(void) {
   keepAliveHandle = osThreadCreate(osThread(keepAlive), NULL);
 
   /* definition and creation of webExchange */
-  osThreadDef(webExchange, taskWebExchange, osPriorityNormal, 0, 256);
+  osThreadDef(webExchange, taskWebExchange, osPriorityNormal, 0, 300);
   webExchangeHandle = osThreadCreate(osThread(webExchange), NULL);
 
   /* definition and creation of getTemp */
@@ -185,7 +185,7 @@ void MX_FREERTOS_Init(void) {
   createWebPckgHandle = osThreadCreate(osThread(createWebPckg), NULL);
 
   /* definition and creation of wirelessSens */
-  osThreadDef(wirelessSens, taskWirelessSens, osPriorityNormal, 0, 128);
+  osThreadDef(wirelessSens, taskWirelessSens, osPriorityNormal, 0, 300);
   wirelessSensHandle = osThreadCreate(osThread(wirelessSens), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */

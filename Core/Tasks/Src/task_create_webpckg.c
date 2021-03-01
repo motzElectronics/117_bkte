@@ -33,7 +33,7 @@ void taskCreateWebPckg(void const * argument){
 	for(;;){
 		delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
-		while(delayPages > 0 && (curPckg = getFreePckg()) != NULL){
+		while(delayPages > 2 && (curPckg = getFreePckg()) != NULL){
 			clearAllPages();
 			amntPages = delayPages > AMOUNT_MAX_PAGES ? AMOUNT_MAX_PAGES : delayPages;
 			for(u8 i = 0; i < amntPages; i++){
@@ -57,7 +57,7 @@ void taskCreateWebPckg(void const * argument){
 			D(printf("no pckg in spiflash\r\n"));
 			bkte.isSentData = 1;
 		}
-		osDelay(3000);
+		osDelay(1000);
 	}
 }
 

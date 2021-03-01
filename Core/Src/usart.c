@@ -435,8 +435,8 @@ void uartInitInfo(){
   uInfoWirelessSens.pRxBuf = usartWirelessSensBufRx;
   uartRxDma(&uInfoWirelessSens);
 
-  USART_RE2_READ_EN();
-  __HAL_UART_ENABLE_IT(uInfoWirelessSens.pHuart, UART_IT_IDLE);
+  USART_RE2_WRITE_EN();
+  // __HAL_UART_ENABLE_IT(uInfoWirelessSens.pHuart, UART_IT_IDLE);
 }
 
 

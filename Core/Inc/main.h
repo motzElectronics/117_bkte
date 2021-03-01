@@ -153,7 +153,7 @@ void Error_Handler(void);
 
 #define SZ_PAGE 255
 #define SZ_BUF_ENERGY_FROM_UART1 500
-#define AMOUNT_MAX_PAGES  5
+#define AMOUNT_MAX_PAGES  3
 #define SZ_PAGES          1275 // SZ_PAGE * AMOUNT_MAX_PAGES
 
 #define BKTE_PREAMBLE			0xABCD

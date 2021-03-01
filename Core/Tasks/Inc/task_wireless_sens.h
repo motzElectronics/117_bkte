@@ -6,6 +6,17 @@
 #include "../Utils/Inc/utils_bkte.h"
 #include "../Utils/Inc/circularBuffer.h"
 #include "../Utils/Inc/circularBuffer.h"
+#include "../Utils/Inc/utils_crc.h"
 
+#define SZ_HEADER_CRC16 6
+#define SZ_BLOCK_SENS   6
+
+typedef enum{
+    BLOCK_WIRELESS_TEMP = 1,
+    BLOCK_WIRELESS_RSSI
+}TYPE_BLOCK_WIRELESS;
+
+
+void parceWirelessSens(u8* data, u16 len);
 
 #endif

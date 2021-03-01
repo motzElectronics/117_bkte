@@ -112,6 +112,9 @@ u16 cBufRead(CBufHandle cbuf, u8* dist, u8 sz){
 	case CIRC_TYPE_WIRELESS:
 		if((lenMsg = getLenMsgWirelessSens(cbuf)))
 			copyGetDatafromBuf(cbuf, dist, lenMsg, CIRC_TYPE_WIRELESS);
+		else{
+                  D(printf("ERROR: CIRC_TYPE_WIRELESS\r\n"));
+                }
 		break;
 		break;
 	case CIRC_TYPE_PCKG_ENERGY:
@@ -208,7 +211,7 @@ u8 getLenMsgEnergyUart(CBufHandle cbuf){
 	return lenMsg;
 }
 
-u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
+/*u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
 	u16 lenMsg = 2;
 	u16 tail = cbuf->tail;
 	u16 head;
@@ -218,7 +221,6 @@ u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
 			while(!(cbuf->buf[head] == 0xAA && cbuf->buf[(head + 1) % cbuf->max] == 0xBB)){
 				lenMsg++;
 				head = (head + 1) % cbuf->max;
-				
 			}
 			cbuf->tail = tail;
 			cbuf->head = head;
@@ -227,5 +229,34 @@ u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
 		tail = (tail + 1) % cbuf->max;
 	}
 	return 0;
+}*/
+
+u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
+	u16 lenMsg = 2;
+	u16 tail = (cbuf->tail + 1) % cbuf->max;
+	u16 head;
+	while(!(cbuf->buf[tail] == 0xAA && cbuf->buf[(tail + 1) % cbuf->max] == 0xBB) && (cbuf->tail != tail)){
+		tail = (tail + 1) % cbuf->max;
+	}
+	if(cbuf->tail == tail){
+		D(printf("ERROR: TAIL == TAIL\r\n"));
+		return 0;
+	}else
+		head = (tail + 2) % cbuf->max;
+	
+	while(!(cbuf->buf[head] == 0xAA && cbuf->buf[(head + 1) % cbuf->max] == 0xBB) && (head != tail)){
+		lenMsg++;
+		head = (head + 1) % cbuf->max;
+	}
+
+	if(tail == head){
+		D(printf("ERROR: TAIL == HEAD\r\n"));
+		return 0;
+	} else {
+		cbuf->tail = tail;
+		cbuf->head = head;
+		return lenMsg;
+	}
 }
+
 

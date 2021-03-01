@@ -14,7 +14,7 @@ extern CircularBuffer circBufAllPckgs;
 // extern CircularBuffer circBufPckgEnergy;
 // extern u8 SZ_PCKGENERGY;
 
-static PckgEnergy curPckgEnergy;
+// static PckgEnergy curPckgEnergy;
 
 void taskKeepAlive(void const * argument){
     u16 timeout = 1;

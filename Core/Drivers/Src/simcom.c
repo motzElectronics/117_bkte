@@ -19,7 +19,7 @@ void simInit(){
 	char* retMsg;
 	char* token;
 	u8 fail = 0; 
-	u8 simBadAnsw;
+	u8 simBadAnsw = 0;
 	u8 isInit = 0;
 	while(!isInit){
 		simHardwareReset();
@@ -255,18 +255,22 @@ u8 simTCPSend(u8* data, u16 sz){
 	static char params[8];
 	char* token;
 	char* retMsg;
+	if(sz == 0){
+		D(printf("ERROR SZ\r\n"));
+	}
 	memset(params, '\0', 8);
 	sprintf(params,"%d", sz);
 	if(simCmd(SIM_CIPSEND, params, 3, "> ") == SIM_FAIL){
 		sdWriteLog(SD_ER_CIPSEND, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
+	D(printf("simDownloadData() sz:%d\r\n", sz));
 	retMsg = simDownloadData(data, sz);
 	token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 	if(token == NULL || token[0] == '\0') 
 			token = SIM_NO_RESPONSE_TEXT;
 	if(strcmp((const char*)token, (const char*)"SEND OK") != 0){
-		D(printf("ER: simDownloadData()\r\n"));
+		D(printf("ER: simDownloadData() %s\r\n", token));
 		sdWriteLog(SD_ER_DOWNLOAD_DATA_AND_SEND_OK, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	} else{
@@ -330,6 +334,9 @@ u8 openTcp(){
 
 u8 openSendTcp(u8* data, u16 sz){
 	u8 ret = TCP_OK;
+	if(sz == 0){
+		D(printf("ERROR SZ\r\n"));
+	}
 	waitGoodCsq();
 	if(simTCPinit() != SIM_SUCCESS){
 		D(printf("ER: simTCPinit\r\n"));
