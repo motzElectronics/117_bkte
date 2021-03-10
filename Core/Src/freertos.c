@@ -65,6 +65,7 @@ osMutexId mutexWebHandle;
 osMutexId mutexRTCHandle;
 osMutexId mutexSDHandle;
 osSemaphoreId semLoraRxPckgHandle;
+osSemaphoreId semCreateWebPckgHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -133,6 +134,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of semLoraRxPckg */
   osSemaphoreDef(semLoraRxPckg);
   semLoraRxPckgHandle = osSemaphoreCreate(osSemaphore(semLoraRxPckg), 1);
+
+  /* definition and creation of semCreateWebPckg */
+  osSemaphoreDef(semCreateWebPckg);
+  semCreateWebPckgHandle = osSemaphoreCreate(osSemaphore(semCreateWebPckg), 1);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */

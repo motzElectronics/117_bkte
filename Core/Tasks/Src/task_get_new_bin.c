@@ -7,6 +7,7 @@ extern osThreadId getNewBinHandle;
 extern osThreadId keepAliveHandle;
 extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
+extern osThreadId wirelessSensHandle;
 extern osMutexId mutexWebHandle;
 
 extern CircularBuffer circBufAllPckgs;
@@ -86,6 +87,7 @@ void lockAllTasks(){
 	vTaskSuspend(keepAliveHandle);
 	vTaskSuspend(loraHandle);
 	vTaskSuspend(createWebPckgHandle);
+        vTaskSuspend(wirelessSensHandle);
 	xSemaphoreGive(mutexWebHandle);
 }
 

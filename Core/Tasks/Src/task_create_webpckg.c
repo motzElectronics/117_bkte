@@ -6,6 +6,7 @@ extern osThreadId createWebPckgHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
 extern osMessageQId queueWebPckgHandle;
+extern osSemaphoreId semCreateWebPckgHandle;
 
 
 extern CircularBuffer circBufPckgEnergy;
@@ -26,6 +27,7 @@ void taskCreateWebPckg(void const * argument){
 	u16 szAllPages = 0;
 	u8	amntPages;
 	u8 len;
+	xSemaphoreTake(semCreateWebPckgHandle, 1);
 	
 	offAllLeds();
 	vTaskSuspend(createWebPckgHandle);
@@ -33,7 +35,7 @@ void taskCreateWebPckg(void const * argument){
 	for(;;){
 		delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
-		while(delayPages > 2 && (curPckg = getFreePckg()) != NULL){
+		while((delayPages > 2 && (curPckg = getFreePckg()) != NULL) || (xSemaphoreTake(semCreateWebPckgHandle, 1) == pdTRUE )){
 			clearAllPages();
 			amntPages = delayPages > AMOUNT_MAX_PAGES ? AMOUNT_MAX_PAGES : delayPages;
 			for(u8 i = 0; i < amntPages; i++){

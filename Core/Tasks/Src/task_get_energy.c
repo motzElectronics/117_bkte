@@ -7,6 +7,7 @@ extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
 extern osThreadId getNewBinHandle;
 extern osThreadId wirelessSensHandle;
+extern osSemaphoreId semCreateWebPckgHandle;
 
 extern osMutexId mutexWriteToEnergyBufHandle;
 
@@ -119,5 +120,9 @@ void generateInitTelemetry(){
 	pckgTel.code = TEL_CD_HW_LORA;
 	pckgTel.data = bkte.hwStat.isLoraOk;
 	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	updSpiFlash(&circBufAllPckgs);
+	xSemaphoreGive(semCreateWebPckgHandle);
+	
 }
 

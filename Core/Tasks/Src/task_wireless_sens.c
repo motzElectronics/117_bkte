@@ -28,7 +28,6 @@ void taskWirelessSens(void const * argument){
                 D(printf("Error: crc16 wireless\r\n"));
             }
 
-
         }
         D(printf("empty wirelessSensHandle\r\n"));
     }

@@ -18,6 +18,7 @@ extern osMutexId mutexRTCHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
 extern osThreadId getNewBinHandle;
+extern osSemaphoreId semCreateWebPckgHandle;
 //extern osMutexId mutexRTCHandle;
 static RTC_TimeTypeDef tmpTime;
 static RTC_DateTypeDef tmpDate;

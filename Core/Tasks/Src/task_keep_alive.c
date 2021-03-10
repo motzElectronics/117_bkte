@@ -9,6 +9,7 @@ extern osThreadId loraHandle;
 extern u8 isRxNewFirmware;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
+extern osSemaphoreId semCreateWebPckgHandle;
 
 extern CircularBuffer circBufAllPckgs;
 // extern CircularBuffer circBufPckgEnergy;
@@ -79,6 +80,7 @@ void pwrOffBkte(){
 
     bkte.isSentData = 0;
     updSpiFlash(&circBufAllPckgs);
+    xSemaphoreGive(semCreateWebPckgHandle);
     while((bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360 && !bkte.isSentData) osDelay(1000);
     if(!bkte.isSentData){
         sdWriteLog(SD_MSG_NOT_SENT, SD_LEN_NOT_SENT, NULL, 0, &sdSectorLogs);
