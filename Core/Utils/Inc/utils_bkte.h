@@ -22,13 +22,16 @@
 #include "../Utils/Inc/circularBuffer.h"
 
 //!-------------CONFIGURE PARAMS---------------
-#define BKTE_ID_TRAINCAR		0
+#define BKTE_ID_TRAINCAR		1
 #define BKTE_ID_TRAINCAR_MAX	2
 #define BKTE_IS_LORA_MASTER		1
 
 #define BKTE_ID_FIRMWARE		7
+#define BKTE_ID_BOOT			2
+#define BKTE_ID_PCB				3
 #define BKTE_ID_TRAIN			1706
 //!------------CONFIGURE PARAMS----------------
+#define BKTE_THRESHOLD_CNT_PAGES	2
 #define BKTE_AMOUNTS		(BKTE_ID_TRAINCAR_MAX + 1)
 #define BKTE_ADDR_ID_MCU	0x1FFF7A10
 #define BKTE_MAX_CNT_1WIRE	4
@@ -50,9 +53,7 @@
 
 
 
-#define BKTE_ID_BOOT			1
-
-#define SZ_PART_NEW_SOFTWARE	1360
+#define SZ_PART_NEW_SOFTWARE	1300
 
 #define BKTE_VER_BETA_FIRMWARE		(char)'B'
 #define BKTE_VER_STABLE_FIRMWARE	(char)'S'
@@ -65,6 +66,7 @@
 #define BKTE_MAX_TEMP                   100
 #define BKTE_MIN_TEMP                   -100
 #define BKTE_NO_TEMP                    -127
+#define BKTE_WIRELESS_TEMP				101
 
 #define BKTE_SAVE_NUM_PAGE				2047
 
@@ -119,18 +121,23 @@ typedef union{
 	u16 pwrReg;
 }PWRInfo;
 
+typedef union{
+	struct{
+		u8 isFatMount:	1;
+		u8 isDS2482:	1;
+		u8 isSPIFlash:	1;
+		u8 isLoraOk:	1;
+	};
+	u8 regHardWareStat;
+}HardWareStatus;
+
 typedef struct{
 	u8	isOwActive[BKTE_MAX_CNT_1WIRE];
-	u8	isFatMount;
 	u32	idMCU[3];
-	u16	idTrain;
-	u8	idTrainCar;
-	u16	idReceiver;
-	u8	idDev;
-	u8	idFirmware;
-	u8	idBoot;
+	HardWareStatus hwStat;
 	PWRInfo pwrInfo;
 	ErrorFlags erFlags;
+	u8 isSentData;
 //	FInfo	fInfo[NUM_READ_FILES];
 }BKTE;
 
@@ -166,10 +173,43 @@ typedef enum{
 }TYPE_TELEMETRY;
 
 typedef enum{
+	TEL_GR_GENINF = 1,
+	TEL_GR_HARDWARE_STATUS
+}TELEMETRY_GROUP;
+
+typedef enum{
+	TEL_CD_GENINF_NUM_FIRMWARE = 1,
+	TEL_CD_GENINF_NUM_BOOT,
+	TEL_CD_GENINF_PHONE_NUM1,
+	TEL_CD_GENINF_PHONE_NUM2,
+	TEL_CD_GENINF_SIMCARD_MONEY,
+	TEL_CD_GENINF_NUM_PCB
+}TELEMETRY_CODE_GEN_INF;
+
+typedef enum{
+	TEL_CD_HW_BKTE = 1,
+	TEL_CD_HW_SD,
+	TEL_CD_HW_DS2482,
+	TEL_CD_HW_SPI_FLASH,
+	TEL_CD_HW_LORA,
+	TEL_CD_HW_BATTERY,
+	TEL_CD_HW_BKTE_ALIVE,
+	TEL_CD_HW_WIRELESS_SENS_RSSI
+}TELEMETRY_CODE_STATES;
+
+typedef enum{
 	CMD_DATA_VOLTAMPER = 1,
 	CMD_DATA_ENERGY,
-	CMD_DATA_TEMP
+	CMD_DATA_TEMP,
+	CMD_DATA_TELEMETRY = 5
 }CMD_DATA;
+
+typedef enum{
+	CMD_REQUEST_SERVER_TIME = 0x11,
+	CMD_REQUEST_NUM_FIRMWARE,
+	CMD_REQUEST_SZ_FIRMWARE,
+	CMD_REQUEST_PART_FIRMWARE
+}CMD_REQUEST;
 
 typedef enum{
 	MSG_TEMP = 0xF000,
@@ -187,6 +227,13 @@ typedef struct{
 	s16 amper;
 	u16 volt;
 }PckgVoltAmper;
+
+typedef struct{
+	u32 unixTimeStamp;
+	u32 data;
+	u8 group;
+	u8 code;
+}PckgTelemetry;
 
 
 //typedef struct{
@@ -217,7 +264,6 @@ void resetTempLine(u8 numLine);
 void setTempLine(u8 numLine);
 void fillPckgEnergy(PckgEnergy* pckg, u16* data);
 void fillPckgTemp(PckgTemp* pckg, s8* data);
-void fillTelemetry(PckgEnergy* pckg, TYPE_TELEMETRY typeTel, u32 value);
 
 void fillPckgVoltAmper(PckgVoltAmper* pckg, u16* data);
 
@@ -233,18 +279,22 @@ void offAllLeds();
 void offAllRedLeds();
 void toggleGreenLeds();
 void toggleRedLeds();
-u32 getServerTime();
-
-time_t getTimeStamp();
+void getServerTime();
 
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 void checkBufForWritingToFlash();
-void updSpiFlash();
+void updSpiFlash(CircularBuffer* cbuf);
 void waitGoodCsq();
 
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf);
 u32 getUnixTimeStamp();
 u8 isDataFromFlashOk(char* pData, u8 len);
+void copyTelemetry(u8* buf, PckgTelemetry* pckgTel);
+void saveTelemetry(PckgTelemetry* pckg, CircularBuffer* cbuf);
+
+void getNumFirmware();
+
+
 
 extern BKTE bkte;
 

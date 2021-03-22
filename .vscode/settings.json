@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "utils_bkte.h": "c",
+        "utils_pckgs_manager.h": "c",
+        "usart.h": "c",
+        "ds2482.h": "c",
+        "task_wireless_sens.h": "c",
+        "circularbuffer.h": "c",
+        "utils_crc.h": "c",
+        "cmsis_os.h": "c"
+    }
+}

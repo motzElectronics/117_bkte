@@ -5,7 +5,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under Ultimate Liberty license
@@ -51,9 +51,8 @@ DWORD get_fattime(void)
 
 /* USER CODE BEGIN Application */
 u8 fatInit(){
-  FRESULT res;
 
-  if((res = f_mount(&SDFatFS, SDPath, 1)) != FR_OK){
+  if(f_mount(&SDFatFS, SDPath, 1) != FR_OK){
     return FAT_ERROR_NOT_MOUNT;
   }
   else{

@@ -58,6 +58,7 @@ void spiRx(u8 cmd, u8 *pData, u8 sz){
 }
 
 void sx1272_lora_init(SX1272 *node) {
+	u8 tmp;
 	sx1272 = node;
 
 	/* Reset pulse for programming mode */
@@ -79,6 +80,10 @@ void sx1272_lora_init(SX1272 *node) {
 
 	/* Set max pay load length */
 	sx1272_set_max_payload(MAX_PACKET_LENGTH);
+	tmp = sx1272_get_max_payloadlen();
+	if(tmp == MAX_PACKET_LENGTH){
+		bkte.hwStat.isLoraOk = 1;
+	}
 	// sx1272_set_payload_length(PAYLOAD_LENGTH + HEADER_LENGTH + CRC_LENGTH);
 
 	/* Set base frequency */
@@ -305,8 +310,8 @@ void sx1272_send(u8 *data, u8 sz){
 
 u8 sx1272_receive(u8* pBuf, u8* pRssi, u16 timeOut){
 	static u8 rxBuf[PAYLOAD_LENGTH + 2];
-	u16 crc, crcPckg;
-    u8 flags = 0, op = 0, prev, cntNewData = 0, ret = LR_STAT_NO_PCKG;
+	u16 crcPckg;
+    u8 flags = 0, op = 0, prev, ret = LR_STAT_NO_PCKG;
 
     /* Saves the current mode */
     op = sx1272_get_op_mode();
@@ -363,7 +368,7 @@ u8 sx1272_receive(u8* pBuf, u8* pRssi, u16 timeOut){
 		sx1272_read_fifo(rxBuf, PAYLOAD_LENGTH + 2);
 
 		memcpy(&crcPckg, rxBuf, 2);
-		if((crc = calcCrc16(rxBuf + 2, PAYLOAD_LENGTH)) != crcPckg){
+		if(calcCrc16(rxBuf + 2, PAYLOAD_LENGTH) != crcPckg){
 			sx1272_clear_irq_flags();
 			HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4R_Pin);
 			D(printf("ERROR: LORA CRC\r\n"));
@@ -399,6 +404,13 @@ uint8_t sx1272_get_irq_flags() {
 
 uint8_t sx1272_get_op_mode() {
 	u8 data[2] = {REG_LR_OP_MODE | READ, DUMMY_BYTE};
+	spiTxRx(data, 2);
+
+	return data[1];
+}
+
+uint8_t sx1272_get_max_payloadlen() {
+	u8 data[2] = {REG_LR_RX_MAX_PAYLOADLENGTH | READ, DUMMY_BYTE};
 	spiTxRx(data, 2);
 
 	return data[1];

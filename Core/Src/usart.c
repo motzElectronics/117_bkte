@@ -1,12 +1,12 @@
 /**
   ******************************************************************************
-  * File Name          : USART.c
-  * Description        : This file provides code for the configuration
-  *                      of the USART instances.
+  * @file    usart.c
+  * @brief   This file provides code for the configuration
+  *          of the USART instances.
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under Ultimate Liberty license
@@ -29,6 +29,7 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart6_rx;
 DMA_HandleTypeDef hdma_usart6_tx;
 
@@ -179,8 +180,30 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    /* USART2 DMA Init */
+    /* USART2_RX Init */
+    hdma_usart2_rx.Instance = DMA1_Stream5;
+    hdma_usart2_rx.Init.Channel = DMA_CHANNEL_4;
+    hdma_usart2_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_usart2_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_usart2_rx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_usart2_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_usart2_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_usart2_rx.Init.Mode = DMA_NORMAL;
+    hdma_usart2_rx.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_usart2_rx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+    hdma_usart2_rx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+    hdma_usart2_rx.Init.MemBurst = DMA_MBURST_SINGLE;
+    hdma_usart2_rx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+    if (HAL_DMA_Init(&hdma_usart2_rx) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    __HAL_LINKDMA(uartHandle,hdmarx,hdma_usart2_rx);
+
     /* USART2 interrupt Init */
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART2_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
 
@@ -319,6 +342,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2|GPIO_PIN_3);
 
+    /* USART2 DMA DeInit */
+    HAL_DMA_DeInit(uartHandle->hdmarx);
+
     /* USART2 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspDeInit 1 */
@@ -376,12 +402,14 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 #include "../Drivers/Inc/simcom.h"
 #include "../Utils/Inc/circularBuffer.h"
 UartInfo uInfoSim;
-UartInfo uInfoLCD;
+UartInfo uInfoWirelessSens;
+
 
 static u8 usartSimBufRx[USART_SZ_BUF_RX_USART6];
 static u8 usartSimBufTx[USART_SZ_BUF_TX_USART6];
 
-static u8 usartLCDBufTx[USART_SZ_BUF_TX_USART2];
+static u8 usartWirelessSensBufTx[USART_SZ_BUF_TX_USART2];
+static u8 usartWirelessSensBufRx[USART_SZ_BUF_RX_USART2];
 
 extern CircularBuffer rxUart1CircBuf;
 u16 rxBufUart1[SZ_RX_UART1];
@@ -399,12 +427,16 @@ void uartInitInfo(){
   uInfoSim.pHuart = &huart6;
   uartRxDma(&uInfoSim);
 
-  uInfoLCD.irqFlags.regIrq = 0;
-  uInfoLCD.pHuart = &huart2;
-  uInfoLCD.pTxBuf = usartLCDBufTx;
-  uInfoLCD.szTxBuf = USART_SZ_BUF_TX_USART2;
+  uInfoWirelessSens.irqFlags.regIrq = 0;
+  uInfoWirelessSens.pHuart = &huart2;
+  uInfoWirelessSens.pTxBuf = usartWirelessSensBufTx;
+  uInfoWirelessSens.szTxBuf = USART_SZ_BUF_TX_USART2;
+  uInfoWirelessSens.szRxBuf = USART_SZ_BUF_RX_USART2;
+  uInfoWirelessSens.pRxBuf = usartWirelessSensBufRx;
+  uartRxDma(&uInfoWirelessSens);
 
   USART_RE2_WRITE_EN();
+  // __HAL_UART_ENABLE_IT(uInfoWirelessSens.pHuart, UART_IT_IDLE);
 }
 
 
@@ -422,9 +454,27 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* uartHandle){
 		if(!isRxNewFirmware){
 			rxUart1_IT();
 		}
-	}
+	} else if(uartHandle->Instance == USART2){
+    uInfoWirelessSens.irqFlags.isIrqRx = 1;
+    USART_RE2_READ_EN();
+		uartRxDma(&uInfoWirelessSens);
+  }
 
 }
+
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
+  if(huart->Instance == USART2){
+    uInfoWirelessSens.irqFlags.isIrqRx = 1;
+
+  }
+}
+
+
+void uartClearInfo(UartInfo* pUinf){
+  pUinf->irqFlags.regIrq = 0;
+  memset(pUinf->pRxBuf, '\0', pUinf->szRxBuf);
+}
+
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 	// D(printf("OK: UART TxCpltCallback\r\n"));
@@ -433,8 +483,10 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 //		printf("IRQ: TXGSM\r\n");
 		__HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
 		uInfoSim.irqFlags.isIrqTx = 1;
-	} else if(huart->Instance == USART2){
-    uInfoLCD.irqFlags.isIrqTx = 1;
+  } else 	if(huart->Instance == USART2){
+//		printf("IRQ: TXGSM\r\n");
+		__HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
+		uInfoWirelessSens.irqFlags.isIrqTx = 1;
   }
 
 }
@@ -452,7 +504,10 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 		D(printf("HAL_UART_ErrorCallback() Energy: %d\r\n", (int)error));
 		rxUart1_IT();
 	} else if(huart->Instance == USART2){
-    D(printf("ERROR: HAL_UART_ErrorCallback() USART2 LCD\r\n"));
+    D(printf("ERROR: HAL_UART_ErrorCallback() USART2\r\n"));
+    uartClearInfo(&uInfoWirelessSens);
+    uartRxDma(&uInfoWirelessSens);
+    USART_RE2_READ_EN();
   }
 
 }
@@ -464,10 +519,7 @@ void rxUart1_IT(){
 	HAL_GPIO_WritePin(UART1_RE_GPIO_Port, UART1_RE_Pin, GPIO_PIN_RESET);
 }
 
-void uartClearInfo(UartInfo* pUinf){
-  pUinf->irqFlags.regIrq = 0;
-  memset(pUinf->pRxBuf, '\0', pUinf->szRxBuf);
-}
+
 
 void uartTx(char* data, u16 sz, UartInfo* pUInf){
   uartClearInfo(pUInf);
@@ -483,12 +535,6 @@ void uartTx(char* data, u16 sz, UartInfo* pUInf){
 
 	waitTx("", &(pUInf->irqFlags), 50, USART_TIMEOUT);
 
-}
-
-void uartTxLCD(char* data, u16 sz, UartInfo* pUInf){
-  pUInf->irqFlags.regIrq = 0;
-  HAL_UART_Transmit_IT(pUInf->pHuart, (u8*)data, sz);
-  waitTx("", &(pUInf->irqFlags), 50, USART_TIMEOUT);
 }
 /* USER CODE END 1 */
 

@@ -41,7 +41,6 @@ u8 ds2482SetReadPointer(Ds2482_regs regAddr){
 }*/
 
 u8 ds2482WriteByte(uint8_t dataByte){
-	u8 ret = 0;
 	uint8_t writeBytes[2] = {OWWB, dataByte};
 	Ds2482_Status_Reg statusByte;
 	ds2482Tx(DS2482_I2C_ADDR << 1, writeBytes, sizeof(writeBytes));
@@ -56,8 +55,8 @@ u8 ds2482WriteByte(uint8_t dataByte){
 	return DS2482_ERROR;
 }
 
-u8 ds2482ReadByte(uint8_t *dataByte){
-	uint8_t readByteCmd = OWRB;
+u8 ds2482ReadByte(u8* dataByte){
+	u8 readByteCmd = OWRB;
 	// Send the one-wire read byte command
 	ds2482Tx(DS2482_I2C_ADDR << 1, &readByteCmd, 1);
 	// Change the read pointer to the read data register
@@ -80,20 +79,30 @@ s8 ds2482ConvTemp(u8 LSB, u8 MSB){
 }
 
 void ds2482Init(){
+	u8 tmp = 0;
 	i2cInfo.pHi2c1 = &hi2c1;
 	for(u8 i = 0; i < BKTE_MAX_CNT_1WIRE; i++)
 		resetTempLine(i);
+	if( !ds2482SetReadPointer(STATUS_REG) ){
+		bkte.hwStat.isDS2482 = 0;
+		return;
+	}
+	// Wait for the data to be read
+	if(ds2482Rx(DS2482_I2C_ADDR << 1, &tmp, 1)){
+		bkte.hwStat.isDS2482 = 1;
+	}
+	return;
 }
 
 u8 ds2482Tx(u8 addr, u8* data, u16 sz){
 	i2cInfo.irqFlags.isIrqTx = 0;
 	HAL_I2C_Master_Transmit_IT(i2cInfo.pHi2c1, addr, data, sz); // spi2
-	return waitTx(" ", &i2cInfo.irqFlags, 100, DS2482_I2C_TIMEOUT);
+	return waitTx(" ", &i2cInfo.irqFlags, 50, DS2482_I2C_TIMEOUT);
 }
 
 u8 ds2482Rx(u8 addr, u8* data, u16 sz){
 	i2cInfo.irqFlags.isIrqRx = 0;
 	HAL_I2C_Master_Receive_IT(i2cInfo.pHi2c1, addr, data, sz); // spi2
-	return waitRx(" ", &i2cInfo.irqFlags, 100, DS2482_I2C_TIMEOUT);
+	return waitRx(" ", &i2cInfo.irqFlags, 50, DS2482_I2C_TIMEOUT);
 }
 

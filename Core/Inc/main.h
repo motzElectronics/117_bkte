@@ -30,6 +30,16 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_ll_iwdg.h"
+#include "stm32f4xx_ll_rcc.h"
+#include "stm32f4xx_ll_bus.h"
+#include "stm32f4xx_ll_system.h"
+#include "stm32f4xx_ll_exti.h"
+#include "stm32f4xx_ll_cortex.h"
+#include "stm32f4xx_ll_utils.h"
+#include "stm32f4xx_ll_pwr.h"
+#include "stm32f4xx_ll_dma.h"
+#include "stm32f4xx_ll_gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -129,10 +139,6 @@ void Error_Handler(void);
 #define WAIT_TIMEOUT 	15000
 #define DUMMY_BYTE		0xFF
 
-#define URL_FILE_SZ							(char*)"http://188.242.176.25:8080/api/filesize?uid="
-#define URL_TIME							(char*)"http://188.242.176.25:8080/api/time"
-#define URL_GET_NEW_FIRMWARE				(char*)"http://188.242.176.25:8080/api/getFile"
-#define URL_MEASURE							(char*)"http://188.242.176.25:8080/api/add/measures"
 #define URL_TCP_ADDR            (char*)"188.242.176.25"
 #define URL_TCP_PORT            8086
 
@@ -142,14 +148,19 @@ void Error_Handler(void);
 #define SZ_CMD_ENERGY		  12
 #define SZ_CMD_VOLTAMPER	8
 #define SZ_CMD_TEMP			  8
+#define SZ_CMD_TELEMETRY  10
+#define SZ_CMD_TELEMETRY_PHONE_NUM  14
 
 #define SZ_PAGE 255
-#define AMOUNT_MAX_PAGES  5
+#define SZ_BUF_ENERGY_FROM_UART1 500
+#define AMOUNT_MAX_PAGES  3
 #define SZ_PAGES          1275 // SZ_PAGE * AMOUNT_MAX_PAGES
 
 #define BKTE_PREAMBLE			0xABCD
 #define BKTE_PREAMBLE_LSB		0xAB
 #define BKTE_PREAMBLE_MSB		0xCD
+
+#define SZ_WEB_PCKG     1400
 
 extern char logError[LOG_SZ_ERROR]; 
 typedef uint8_t			u8;
@@ -167,7 +178,7 @@ typedef union{
 	struct{
 		u8 isIrqTx:		1;
 		u8 isIrqRx: 	1;
-		u8 isIrqIdle:	1;
+		u8 isIrqIdle:	3;
 	};
 	u8 regIrq;
 }IrqFlags;
@@ -182,27 +193,22 @@ typedef struct{
 }DateTime;
 
 typedef struct{
-	char* addMeasure;
-	char* getTime;
-	char* getSzSoft;
-	char* getPartFirmware;
-  char* tcpAddr;
-  u32   tcpPort;
-}HttpUrl;
-
-typedef struct{
 	u64		header;
 	u8		numFirmware;
 	char	verFirmware;
   u8    numTrainCar;
 }FIRMWARE_INFO;
 
-extern HttpUrl urls;
+typedef struct{
+  char* tcpAddr;
+  u32   tcpPort;
+}Urls;
 
+extern Urls urls;
 u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
 u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
 u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
-
+u8 waitIdleCnt(char* waitStr, IrqFlags* pFlags, u8 cnt, u16 pause, u16 timeout);
 void urlsInit();
 /* USER CODE END Private defines */
 

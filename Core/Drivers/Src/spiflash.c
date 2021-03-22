@@ -19,6 +19,9 @@ void spiFlashInit(u8* buf){
 
 	id = spiFlashReadID();
 	tmp = id & 0x0000FFFF;
+	if(tmp){ //! change to 2017
+		bkte.hwStat.isSPIFlash = 1;
+	}
 	D(printf("spiFlashId, series: %d %x\r\n", (int)id, (int)tmp));
 
 	spiFlash64.blCnt = 128;
@@ -57,7 +60,7 @@ u8 spiFlashTxRxCmd(u8* data, u16 sz){
 	static u8 ret = 0;
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_TransmitReceive_DMA(spiMemInfo.pHSpi, data, data, sz); // spi2
-	ret = waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	ret = waitRx("", &spiMemInfo.irqFlags, 50, WAIT_TIMEOUT);
 	bkte.erFlags.flashNOIRQ = ~ret;
 	return ret;
 }
@@ -66,7 +69,7 @@ u8 spiFlashTxData(u8* data, u16 sz){
 	static u8 ret = 0;
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_Transmit_DMA(spiMemInfo.pHSpi, data, sz); // spi2
-	ret = waitTx("wait txSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	ret = waitTx("", &spiMemInfo.irqFlags, 50, WAIT_TIMEOUT);
 	bkte.erFlags.flashNOIRQ = ~ret;
 	return ret;
 }
@@ -75,7 +78,7 @@ u8 spiFlashRxData(u8* data, u16 sz){
 	static u8 ret = 0;
 	spiMemInfo.irqFlags.regIrq = 0;
 	HAL_SPI_Receive_DMA(spiMemInfo.pHSpi, data, sz); // spi2
-	ret = waitRx("wait rxSpi", &spiMemInfo.irqFlags, 100, WAIT_TIMEOUT);
+	ret = waitRx("", &spiMemInfo.irqFlags, 50, WAIT_TIMEOUT);
 	bkte.erFlags.flashNOIRQ = ~ret;
 	return ret;
 }
@@ -153,19 +156,19 @@ u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 
 	addr = (numPage * spiFlash64.pgSz) + offset;
 	u8 data[] = {SPIFLASH_PP, ((addr & 0xFF0000) >> 16), ((addr & 0xFF00) >> 8), (addr & 0xFF)};
-	D(printf("spiFlashWaitReady()\r\n"));
+	// D(printf("spiFlashWaitReady()\r\n"));
 	spiFlashWaitReady();
-	D(printf("spiFlashWrEn()\r\n"));
+	// D(printf("spiFlashWrEn()\r\n"));
 	spiFlashWrEn();
 
 	SPIFLASH_CS_SEL;
-	D(printf("SPIFLASH_PP()\r\n"));
+	// D(printf("SPIFLASH_PP()\r\n"));
 	spiFlashTxRxCmd(data, 4);
-	D(printf("spiFlashTxData()\r\n"));
+	// D(printf("spiFlashTxData()\r\n"));
 	spiFlashTxData(pBuf, sz);
 	SPIFLASH_CS_UNSEL;
 
-	D(printf("spiFlashWaitReady()\r\n"));
+	// D(printf("spiFlashWaitReady()\r\n"));
 	spiFlashWaitReady();
 	osDelay(10);
 	spiFlash64.headNumPg = (spiFlash64.headNumPg + 1) % SPIFLASH_NUM_PG_GNSS;

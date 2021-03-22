@@ -447,4 +447,7 @@ uint16_t compute_crc(uint16_t crc, uint8_t data, uint16_t pol);
 uint16_t radio_packet_crc_compute(uint8_t *buffer, uint8_t size, uint8_t crc_type);
 float calculate_time_on_air();
 void waitLora();
+
+uint8_t sx1272_get_max_payloadlen();
+
 #endif /* SX1272_H_ */

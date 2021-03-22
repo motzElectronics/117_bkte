@@ -9,11 +9,6 @@
 #include "../Drivers/Inc/simcom.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
 
-#define SEND_OK             0
-#define SEND_ER             1
-#define SEND_ER_LOST_PCKG   2
-
-
 
 u8 openSendTcp(u8* data, u16 sz);
 u8 fastSendTcp(u8 statSend);

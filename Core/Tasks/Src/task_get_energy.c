@@ -5,6 +5,9 @@ extern osThreadId getTempHandle;
 extern osThreadId keepAliveHandle;
 extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
+extern osThreadId getNewBinHandle;
+extern osThreadId wirelessSensHandle;
+extern osSemaphoreId semCreateWebPckgHandle;
 
 extern osMutexId mutexWriteToEnergyBufHandle;
 
@@ -17,6 +20,7 @@ static EnergyData lastData = {.current = 0, .enAct = 0, .enReact = 0, .volt = 0}
 
 static PckgVoltAmper pckgVoltAmper;
 static PckgEnergy pckgEnergy;
+
 // u8 test = 0;
 
 void taskGetEnergy(void const * argument){
@@ -27,27 +31,11 @@ void taskGetEnergy(void const * argument){
 	
 	spiFlashInit(circBufAllPckgs.buf);
 	cBufReset(&circBufAllPckgs);
-
-	/*if(sdInit() != FAT_OK){
-		fillTelemetry(&circBufAllPckgs, TEL_NO_FATFS, 0);
-		cBufWriteToBuf(&circBufAllPckgs, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
-	}
-	sdWriteLog(SD_MSG_START_BKTE, SD_LEN_START_BKTE, NULL, 0, &sdSectorLogs);
-	sdUpdLog(&sdSectorLogs);*/
+	sdInit();
 	simInit();
-	// if(!getServerTime()){
-	// 	/*sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_MYFUN, NULL, 0, &sdSectorLogs);
-	// 	sdUpdLog(&sdSectorLogs);*/
-	// 	D(printf("ERROR: BAD TIME\r\n"));
-	// }
+	getServerTime();
 
-	
-	/*fillTelemetry(&curPckgEnergy, TEL_ON_DEV, 0);
-	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);
-
-	fillTelemetry(&curPckgEnergy, TEL_ID_FIRMWARE, bkte.idFirmware);
-	cBufWriteToBuf(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY);*/
-
+	generateInitTelemetry();
 	unLockTasks();
 	rxUart1_IT();
 
@@ -57,7 +45,6 @@ void taskGetEnergy(void const * argument){
         if(retLen == BKTE_SZ_UART_MSG){
             numIteration = (numIteration + 1) % BKTE_ENERGY_FULL_LOOP;
             fillPckgVoltAmper(&pckgVoltAmper, testBufUart1);
-			// D(printf("OK: volt: %04x, amper: %04x\r\n", pckgVoltAmper.volt, pckgVoltAmper.amper));
             // if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
 				
 			saveData((u8*)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
@@ -79,10 +66,63 @@ void taskGetEnergy(void const * argument){
 }
 
 void unLockTasks(){
+	// vTaskResume(getNewBinHandle); //! debug download firmware
 	vTaskResume(webExchangeHandle);
 	vTaskResume(getTempHandle);
-	vTaskResume(keepAliveHandle);
-	vTaskResume(loraHandle);
+	// vTaskResume(loraHandle);
 	vTaskResume(createWebPckgHandle);
+	vTaskResume(wirelessSensHandle);
+	vTaskResume(keepAliveHandle);
+}
+
+void generateInitTelemetry(){
+	PckgTelemetry pckgTel;
+	long long phoneNum;
+	u32 tmp;
+	pckgTel.group = TEL_GR_GENINF;
+	pckgTel.code = TEL_CD_GENINF_NUM_FIRMWARE;
+	pckgTel.data = BKTE_ID_FIRMWARE;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_GENINF_NUM_BOOT;
+	pckgTel.data = BKTE_ID_BOOT;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_GENINF_NUM_PCB;
+	pckgTel.data = BKTE_ID_PCB;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	phoneNum = simGetPhoneNum();
+	if(phoneNum > 0){
+		tmp = phoneNum % 1000000000;
+		pckgTel.code = TEL_CD_GENINF_PHONE_NUM1;
+		pckgTel.data = tmp;
+		saveTelemetry(&pckgTel, &circBufAllPckgs);
+	}
+
+	pckgTel.group = TEL_GR_HARDWARE_STATUS;
+	pckgTel.code = TEL_CD_HW_BKTE;
+	pckgTel.data = 1;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_HW_SD;
+	pckgTel.data = bkte.hwStat.isFatMount;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_HW_DS2482;
+	pckgTel.data = bkte.hwStat.isDS2482;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_HW_SPI_FLASH;
+	pckgTel.data = bkte.hwStat.isSPIFlash;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	pckgTel.code = TEL_CD_HW_LORA;
+	pckgTel.data = bkte.hwStat.isLoraOk;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+	updSpiFlash(&circBufAllPckgs);
+	xSemaphoreGive(semCreateWebPckgHandle);
+	
 }
 

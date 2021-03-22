@@ -7,7 +7,7 @@
 #include "../Utils/Inc/circularBuffer.h"
 #include "../Drivers/Inc/spiflash.h"
 #include "../Drivers/Inc/simcom.h"
-#include "../Utils/Inc/utils_json.h"
+
 #include "../Utils/Inc/utils_pckgs_manager.h"
 
 #define PCKG_WAS_lOST   1

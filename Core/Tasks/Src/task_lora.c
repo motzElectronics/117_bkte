@@ -26,20 +26,18 @@ u32 stTime = 0;
 static u8 retStatus;
 
 void taskLora(void const * argument){
-	vTaskSuspend(loraHandle);
 	config.CarrierFreq = 0;
 	node.hspi = &hspi1;
 	node.config = &config;
-
-
-	vTaskSuspend(loraHandle);
+	
 	initLoraStat(&loraStatPckg);
 	HAL_GPIO_WritePin(RF_PWR_GPIO_Port, RF_PWR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED1R_GPIO_Port, LED1R_Pin, GPIO_PIN_SET);
 	xSemaphoreTake(semLoraRxPckgHandle, portMAX_DELAY);
 	sx1272_lora_init(&node);
-
+	vTaskSuspend(loraHandle);
+	vTaskSuspend(loraHandle);
 	/*u8 test = 0;
 	while(1){
 		memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
@@ -67,7 +65,7 @@ void taskLora(void const * argument){
 				HAL_GPIO_TogglePin(LED1G_GPIO_Port, LED1G_Pin);
 				parceAnsw(bufData, &loraTransitionPckgRx, &loraTransitionPckgTx);
 			} else if(retStatus == LR_STAT_BAD_CRC){
-				fillTelemetry(&tmpPckg, TEL_LORA_BAD_CRC, 0);
+				/*fillTelemetry(&tmpPckg, TEL_LORA_BAD_CRC, 0);*/ //! use new telemetry fun
 				//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 			}
 			lrUpdTim(&lrTim);
@@ -192,9 +190,9 @@ u8 parceReq(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx){
 	u8 rcv = getLastTransmitter(pRx->loraGenInfo.flagsReq);
 	if(pRx->loraGenInfo.flagsReq && 
 	(pRx->loraGenInfo.flagsReq < (1 << BKTE_ID_TRAINCAR)) && (pRx->loraGenInfo.flagsAnsw == 0)){
-		memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
-		sprintf(uInfoLCD.pTxBuf, "R%d %d\r\n%s", rcv, testRssi, binaryTest);
-		uartTxLCD(uInfoLCD.pTxBuf, strlen(uInfoLCD.pTxBuf), &uInfoLCD);
+		// memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
+		// sprintf((char*)uInfoLCD.pTxBuf, "R%d %d\r\n%s", rcv, testRssi, binaryTest);
+		// uartTxLCD((char*)uInfoLCD.pTxBuf, strlen((char*)uInfoLCD.pTxBuf), &uInfoLCD);
 		D(printf("OK: LORA: RECV %s\r\n", binaryTest));
 		cpyRxInf(pRx, pTx);
 		if(pTx->loraGenInfo.idTxRx == 0)
@@ -217,9 +215,9 @@ u8 parceAnsw(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx){
 
 	if(pRx->loraGenInfo.flagsAnsw && 
 	(pRx->loraGenInfo.flagsAnsw < (1 << (BKTE_ID_TRAINCAR_MAX - BKTE_ID_TRAINCAR)))){
-		memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
-		sprintf(uInfoLCD.pTxBuf, "A%d\r\n%s", BKTE_ID_TRAINCAR_MAX - rcv, binaryTest);
-		uartTxLCD(uInfoLCD.pTxBuf, strlen(uInfoLCD.pTxBuf), &uInfoLCD);
+		// memset(uInfoLCD.pTxBuf, '\0', uInfoLCD.szTxBuf);
+		// sprintf((char*)uInfoLCD.pTxBuf, "A%d\r\n%s", BKTE_ID_TRAINCAR_MAX - rcv, binaryTest);
+		// uartTxLCD((char*)uInfoLCD.pTxBuf, strlen((char*)uInfoLCD.pTxBuf), &uInfoLCD);
 		D(printf("OK: LORA: ANSW %s\r\n", binaryTest));
 		cpyRxInf(pRx, pTx);
 		ret = LR_TASK_PARCE_VALID_PCKG;
@@ -229,7 +227,7 @@ u8 parceAnsw(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx){
 
 
 void lcdShow(u8* str){
-	uartTxLCD(str, strlen(str), &uInfoLCD);
+	// uartTxLCD((char*)str, strlen((char*)str), &uInfoLCD);
 }
 
 void updReq(LoraAlgTransition* pTx){
@@ -327,7 +325,7 @@ void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg){
 	D(printf("STAT: gen %d \r\n", perMaster));
 
 	if(!cnt){
-		fillTelemetry(&tmpPckg, TEL_LORA_LINK_MASTER, perMaster);
+		/*fillTelemetry(&tmpPckg, TEL_LORA_LINK_MASTER, perMaster);*/ //! use new telemetry fun
 		//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 	}
 
@@ -344,7 +342,7 @@ void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg){
 		D(printf("STAT: %d rcv: %d ; answ: %d\r\n", i,  perRcv, perAnsw));
 
 		if(!cnt){
-			fillTelemetry(&tmpPckg, TEL_LORA_LINK_EDGE, ((i & 0xFF) << 16) | ((perRcv & 0xFF) << 8) | perAnsw & 0xFF);
+			/*fillTelemetry(&tmpPckg, TEL_LORA_LINK_EDGE, ((i & 0xFF) << 16) | ((perRcv & 0xFF) << 8) | perAnsw & 0xFF);*/ //! use new telemetry fun
 			//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 		}
 	}
@@ -365,7 +363,7 @@ void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg){
 
 
 
-	fillTelemetry(&tmpPckg, TEL_LORA_FLAGS, (((pckg->loraGenInfo.flagsReq & 0xFFFF) << 16) | pckg->loraGenInfo.flagsAnsw & 0xFFFF));
+	/*fillTelemetry(&tmpPckg, TEL_LORA_FLAGS, (((pckg->loraGenInfo.flagsReq & 0xFFFF) << 16) | pckg->loraGenInfo.flagsAnsw & 0xFFFF));*/ //! use new telemetry fun
 	//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 	D(printf("flags telemetry: %d\r\n", (((pckg->loraGenInfo.flagsReq & 0xFFFF) << 16) | pckg->loraGenInfo.flagsAnsw & 0xFFFF)));
 	D(printf("\r\n"));
@@ -374,10 +372,10 @@ void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg){
 
 void parceServicesData(LoraAlgTransition* pRx){
 	for(u8 i = 0; i < BKTE_AMOUNTS; i++){
-		if((pRx->loraCarInfo[i].statusInfo || pRx->loraCarInfo[i].temperature) && i != BKTE_ID_TRAIN){
+		if((pRx->loraCarInfo[i].statusInfo || pRx->loraCarInfo[i].temperature) && i != BKTE_ID_TRAINCAR){
 			loraTransitionPckgTx.loraCarInfo[BKTE_ID_TRAINCAR].statusInfo = bkte.erFlags.errReg & 0xFF;
-			fillTelemetry(&tmpPckg, TEL_PERIPH_STAT, 
-				(i << 16) |(pRx->loraCarInfo[i].temperature << 8) | (pRx->loraCarInfo[i].statusInfo) & 0xFF);
+			/*fillTelemetry(&tmpPckg, TEL_PERIPH_STAT, 
+				(i << 16) |(pRx->loraCarInfo[i].temperature << 8) | (pRx->loraCarInfo[i].statusInfo) & 0xFF);*/ //! use new telemetry fun
 			//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
 			checkBufForWritingToFlash();
 		}

@@ -41,7 +41,6 @@ fatfs.pbi: C:\Users\annsi\workspace\motz\117_x\117_bkte\FATFS\App\fatfs.c \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_hal_i2c.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h \
-  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_hal_iwdg.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_hal_pwr.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_hal_rtc.h \
@@ -52,6 +51,16 @@ fatfs.pbi: C:\Users\annsi\workspace\motz\117_x\117_bkte\FATFS\App\fatfs.c \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_hal_tim.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
   C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_hal_uart.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_iwdg.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_rcc.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_bus.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_system.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_exti.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_cortex.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_utils.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_pwr.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_dma.h \
+  C:\Users\annsi\workspace\motz\117_x\117_bkte\EWARM/../Drivers/STM32F4xx_HAL_Driver/Inc\stm32f4xx_ll_gpio.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdbool.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdio.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdlib.h \

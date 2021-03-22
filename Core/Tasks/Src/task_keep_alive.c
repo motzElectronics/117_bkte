@@ -1,25 +1,34 @@
 #include "../Tasks/Inc/task_keep_alive.h"
+#include "../Utils/Inc/utils_pckgs_manager.h"
+
 
 extern osThreadId keepAliveHandle;
 extern osThreadId getTempHandle;
 extern osThreadId getEnergyHandle;
 extern osThreadId loraHandle;
+extern osThreadId wirelessSensHandle;
 extern u8 isRxNewFirmware;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
+extern osSemaphoreId semCreateWebPckgHandle;
+
+extern CircularBuffer circBufAllPckgs;
 // extern CircularBuffer circBufPckgEnergy;
 // extern u8 SZ_PCKGENERGY;
 
-extern HttpUrl urls;
-
-static PckgEnergy curPckgEnergy;
+// static PckgEnergy curPckgEnergy;
 
 void taskKeepAlive(void const * argument){
     u16 timeout = 1;
     vTaskSuspend(keepAliveHandle);
+    
 
     for(;;)
     {
+        HAL_GPIO_TogglePin(LED1G_GPIO_Port, LED1G_Pin);
+        if(!(timeout % 30) && !isRxNewFirmware){
+            getNumFirmware();
+        }
         if(!(timeout % 600) && !isRxNewFirmware){
             generateMsgKeepAlive();
         }
@@ -29,6 +38,10 @@ void taskKeepAlive(void const * argument){
         if(bkte.pwrInfo.isPwrState){
             pwrOffBkte();
         }
+        if(!(timeout % 30)){
+            bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
+        }
+        
         timeout++;
         osDelay(2000);
     }
@@ -45,22 +58,42 @@ u16 getAdcVoltBat(){
 
 void pwrOffBkte(){
     char strVolts[4];
+    static u32 delayPages = 1;
     vTaskSuspend(getEnergyHandle);
     vTaskSuspend(getTempHandle);
-    vTaskSuspend(loraHandle);
-
+    // vTaskSuspend(loraHandle);
+    vTaskSuspend(wirelessSensHandle);
+    
     osDelay(2000);
+    D(printf("OK: PWR OFF START\r\n"));
     // cBufReset(&circBufPckgEnergy);
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
+    D(printf("OK: PWR OFF WAIT: %d\r\n", getUnixTimeStamp()));
 
-    osDelay(100000);
+   
+    while(delayPages > BKTE_THRESHOLD_CNT_PAGES && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360){
+        osDelay(5000);
+        delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
+			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
+    }
+
+    while(getCntFreePckg() != CNT_WEBPCKGS && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 300) osDelay(5000);
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
+    D(printf("OFF  VOLT: %d\r\n", bkte.pwrInfo.adcVoltBat));
+    bkte.isSentData = 0;
+    updSpiFlash(&circBufAllPckgs);
+    xSemaphoreGive(semCreateWebPckgHandle);
+    while((bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360 && !bkte.isSentData) osDelay(1000);
+    if(!bkte.isSentData){
+        sdWriteLog(SD_MSG_NOT_SENT, SD_LEN_NOT_SENT, NULL, 0, &sdSectorLogs);
+        sdUpdLog(&sdSectorLogs);
+    }
 
-    updSpiFlash();
+    D(printf("OK: PWR OFF SENT TELEMETRY: %d\r\n", getUnixTimeStamp()));
 
     /*cBufReset(&circBufPckgEnergy);
     memcpy(circBufPckgEnergy.buf, &spiFlash64.headNumPg, 4);
@@ -77,33 +110,25 @@ void pwrOffBkte(){
 }
 
 void updRTC(){
-    u8 csq = 0;
-    u32 prevRtcTime;
-    u32 time = 0;
-    xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-    waitGoodCsq();
-    prevRtcTime = getUnixTimeStamp();
-    time = getServerTime();
 
-    if(time - prevRtcTime > BKTE_BIG_DIF_RTC_SERVTIME){
-        fillTelemetry(&curPckgEnergy, TEL_BIG_DIFFER_RTC_SERVERTIME, time - prevRtcTime);
-        //cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
-    }
-
-    fillTelemetry(&curPckgEnergy, TEL_CHANGE_TIME, time);
-    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
-
-    simHttpInit(urls.addMeasure);
-    xSemaphoreGive(mutexWebHandle);
+    getServerTime();
+    // fillTelemetry(&curPckgEnergy, TEL_CHANGE_TIME, time);
 }
 
 void generateMsgKeepAlive(){
-    fillTelemetry(&curPckgEnergy, TEL_KEEP_ALIVE, 0);
-    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+    PckgTelemetry pckgTel;
+	pckgTel.group = TEL_GR_HARDWARE_STATUS;
+	pckgTel.code = TEL_CD_HW_BKTE_ALIVE;
+	pckgTel.data = 0;
+	saveTelemetry(&pckgTel, &circBufAllPckgs);
+
     sdWriteLog(SD_MSG_KEEP_ALIVE, SD_LEN_KEEP_ALIVE, NULL, 0, &sdSectorLogs);
 }
 
 void generateMsgDevOff(){
-    fillTelemetry(&curPckgEnergy, TEL_OFF_DEV, bkte.pwrInfo.adcVoltBat);
-    // cBufSafeWrite(&circBufPckgEnergy, (u8*)&curPckgEnergy, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
+    PckgTelemetry pckgTel;
+	pckgTel.group = TEL_GR_HARDWARE_STATUS;
+	pckgTel.code = TEL_CD_HW_BATTERY;
+	pckgTel.data = bkte.pwrInfo.adcVoltBat;
+    saveTelemetry(&pckgTel, &circBufAllPckgs);
 }
