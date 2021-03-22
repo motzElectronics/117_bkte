@@ -11,7 +11,7 @@
 #include "i2c.h"
 #include "../Utils/Inc/utils_bkte.h"
 #define DS2482_I2C_ADDR 0x18	// 7-bit I2C address of the DS2482. Change this to whatever I2C address your device is set to.
-#define DS2482_I2C_TIMEOUT	5500
+#define DS2482_I2C_TIMEOUT	1000
 
 #define DS2482_OK		1
 #define DS2482_ERROR	0	

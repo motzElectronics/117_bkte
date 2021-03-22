@@ -81,14 +81,16 @@ void updBootInfo(){
 
 void lockAllTasks(){
 	vTaskSuspend(getNewBinHandle);
+	osMutexWait(mutexWebHandle, osWaitForever);
 	vTaskSuspend(webExchangeHandle);
 	vTaskSuspend(getEnergyHandle);
 	vTaskSuspend(getTempHandle);
 	vTaskSuspend(keepAliveHandle);
-	vTaskSuspend(loraHandle);
+	// vTaskSuspend(loraHandle);
 	vTaskSuspend(createWebPckgHandle);
         vTaskSuspend(wirelessSensHandle);
-	xSemaphoreGive(mutexWebHandle);
+		osMutexRelease(mutexWebHandle);
+	
 }
 
 

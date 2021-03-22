@@ -26,11 +26,12 @@
 #define BKTE_ID_TRAINCAR_MAX	2
 #define BKTE_IS_LORA_MASTER		1
 
-#define BKTE_ID_FIRMWARE		1
+#define BKTE_ID_FIRMWARE		7
 #define BKTE_ID_BOOT			2
 #define BKTE_ID_PCB				3
 #define BKTE_ID_TRAIN			1706
 //!------------CONFIGURE PARAMS----------------
+#define BKTE_THRESHOLD_CNT_PAGES	2
 #define BKTE_AMOUNTS		(BKTE_ID_TRAINCAR_MAX + 1)
 #define BKTE_ADDR_ID_MCU	0x1FFF7A10
 #define BKTE_MAX_CNT_1WIRE	4

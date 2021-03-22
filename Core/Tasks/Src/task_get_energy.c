@@ -69,10 +69,10 @@ void unLockTasks(){
 	// vTaskResume(getNewBinHandle); //! debug download firmware
 	vTaskResume(webExchangeHandle);
 	vTaskResume(getTempHandle);
-	vTaskResume(keepAliveHandle);
-	vTaskResume(loraHandle);
+	// vTaskResume(loraHandle);
 	vTaskResume(createWebPckgHandle);
 	vTaskResume(wirelessSensHandle);
+	vTaskResume(keepAliveHandle);
 }
 
 void generateInitTelemetry(){

@@ -6,6 +6,7 @@
         "ds2482.h": "c",
         "task_wireless_sens.h": "c",
         "circularbuffer.h": "c",
-        "utils_crc.h": "c"
+        "utils_crc.h": "c",
+        "cmsis_os.h": "c"
     }
 }

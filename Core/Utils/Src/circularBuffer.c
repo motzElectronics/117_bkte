@@ -235,11 +235,13 @@ u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
 	u16 lenMsg = 2;
 	u16 tail = (cbuf->tail + 1) % cbuf->max;
 	u16 head;
+        static u8 cnt = 0;
 	while(!(cbuf->buf[tail] == 0xAA && cbuf->buf[(tail + 1) % cbuf->max] == 0xBB) && (cbuf->tail != tail)){
 		tail = (tail + 1) % cbuf->max;
 	}
 	if(cbuf->tail == tail){
-		D(printf("ERROR: TAIL == TAIL\r\n"));
+		D(printf("ERROR: TAIL == TAIL %d\r\n", cnt));
+                cnt = 0;
 		return 0;
 	}else
 		head = (tail + 2) % cbuf->max;
@@ -255,6 +257,7 @@ u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
 	} else {
 		cbuf->tail = tail;
 		cbuf->head = head;
+                cnt++;
 		return lenMsg;
 	}
 }

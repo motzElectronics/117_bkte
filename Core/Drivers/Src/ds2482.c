@@ -97,12 +97,12 @@ void ds2482Init(){
 u8 ds2482Tx(u8 addr, u8* data, u16 sz){
 	i2cInfo.irqFlags.isIrqTx = 0;
 	HAL_I2C_Master_Transmit_IT(i2cInfo.pHi2c1, addr, data, sz); // spi2
-	return waitTx(" ", &i2cInfo.irqFlags, 100, DS2482_I2C_TIMEOUT);
+	return waitTx(" ", &i2cInfo.irqFlags, 50, DS2482_I2C_TIMEOUT);
 }
 
 u8 ds2482Rx(u8 addr, u8* data, u16 sz){
 	i2cInfo.irqFlags.isIrqRx = 0;
 	HAL_I2C_Master_Receive_IT(i2cInfo.pHi2c1, addr, data, sz); // spi2
-	return waitRx(" ", &i2cInfo.irqFlags, 100, DS2482_I2C_TIMEOUT);
+	return waitRx(" ", &i2cInfo.irqFlags, 50, DS2482_I2C_TIMEOUT);
 }
 

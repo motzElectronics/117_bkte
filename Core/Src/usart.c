@@ -469,6 +469,13 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
   }
 }
 
+
+void uartClearInfo(UartInfo* pUinf){
+  pUinf->irqFlags.regIrq = 0;
+  memset(pUinf->pRxBuf, '\0', pUinf->szRxBuf);
+}
+
+
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 	// D(printf("OK: UART TxCpltCallback\r\n"));
 //	xQueueSendToBackFromISR(queue1WireHandle, &isRxData, &woke);
@@ -498,8 +505,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 		rxUart1_IT();
 	} else if(huart->Instance == USART2){
     D(printf("ERROR: HAL_UART_ErrorCallback() USART2\r\n"));
-    USART_RE2_READ_EN();
+    uartClearInfo(&uInfoWirelessSens);
     uartRxDma(&uInfoWirelessSens);
+    USART_RE2_READ_EN();
   }
 
 }
@@ -511,10 +519,7 @@ void rxUart1_IT(){
 	HAL_GPIO_WritePin(UART1_RE_GPIO_Port, UART1_RE_Pin, GPIO_PIN_RESET);
 }
 
-void uartClearInfo(UartInfo* pUinf){
-  pUinf->irqFlags.regIrq = 0;
-  memset(pUinf->pRxBuf, '\0', pUinf->szRxBuf);
-}
+
 
 void uartTx(char* data, u16 sz, UartInfo* pUInf){
   uartClearInfo(pUInf);

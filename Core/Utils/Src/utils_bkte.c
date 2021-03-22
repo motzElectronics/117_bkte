@@ -33,7 +33,6 @@ void bkteInit(){
 	
 	HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_SET);
 	bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
-	bkte.pwrInfo.isPwrState = 0;  //! DELETE THIS AFTER TESTS
 	if(bkte.pwrInfo.isPwrState){
 		HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);
 		HAL_Delay(5000);

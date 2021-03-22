@@ -6,6 +6,7 @@ extern osThreadId keepAliveHandle;
 extern osThreadId getTempHandle;
 extern osThreadId getEnergyHandle;
 extern osThreadId loraHandle;
+extern osThreadId wirelessSensHandle;
 extern u8 isRxNewFirmware;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
@@ -37,6 +38,10 @@ void taskKeepAlive(void const * argument){
         if(bkte.pwrInfo.isPwrState){
             pwrOffBkte();
         }
+        if(!(timeout % 30)){
+            bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
+        }
+        
         timeout++;
         osDelay(2000);
     }
@@ -56,7 +61,8 @@ void pwrOffBkte(){
     static u32 delayPages = 1;
     vTaskSuspend(getEnergyHandle);
     vTaskSuspend(getTempHandle);
-    vTaskSuspend(loraHandle);
+    // vTaskSuspend(loraHandle);
+    vTaskSuspend(wirelessSensHandle);
     
     osDelay(2000);
     D(printf("OK: PWR OFF START\r\n"));
@@ -67,7 +73,7 @@ void pwrOffBkte(){
     D(printf("OK: PWR OFF WAIT: %d\r\n", getUnixTimeStamp()));
 
    
-    while(delayPages && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360){
+    while(delayPages > BKTE_THRESHOLD_CNT_PAGES && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360){
         osDelay(5000);
         delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
@@ -77,7 +83,7 @@ void pwrOffBkte(){
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
     generateMsgDevOff();
-
+    D(printf("OFF  VOLT: %d\r\n", bkte.pwrInfo.adcVoltBat));
     bkte.isSentData = 0;
     updSpiFlash(&circBufAllPckgs);
     xSemaphoreGive(semCreateWebPckgHandle);

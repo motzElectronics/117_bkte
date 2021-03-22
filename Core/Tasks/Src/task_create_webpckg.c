@@ -35,16 +35,17 @@ void taskCreateWebPckg(void const * argument){
 	for(;;){
 		delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : 
 			spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
-		while((delayPages > 2 && (curPckg = getFreePckg()) != NULL) || (xSemaphoreTake(semCreateWebPckgHandle, 1) == pdTRUE )){
+		while((delayPages > BKTE_THRESHOLD_CNT_PAGES || (xSemaphoreTake(semCreateWebPckgHandle, 1) == pdTRUE)) && (curPckg = getFreePckg()) != NULL){
 			clearAllPages();
 			amntPages = delayPages > AMOUNT_MAX_PAGES ? AMOUNT_MAX_PAGES : delayPages;
 			for(u8 i = 0; i < amntPages; i++){
 				spiFlashRdPg((u8*)tmpBufPage, 256, 0, spiFlash64.tailNumPg);
 
 				if((len = isDataFromFlashOk(tmpBufPage, 256))){
-					D(printf("OK: good crc\r\n"));
 					parceData(tmpBufPage, len);
-				}
+				} else{
+                                  D(printf("ERROR: bad crc isDataFromFlashOk()\r\n"));
+                                }
 			}
 			szAllPages = getSzAllPages();
 			initWebPckg(curPckg, szAllPages, 0);

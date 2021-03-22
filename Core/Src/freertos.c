@@ -56,7 +56,7 @@ osThreadId keepAliveHandle;
 osThreadId webExchangeHandle;
 osThreadId getTempHandle;
 osThreadId manageIWDGHandle;
-osThreadId loraHandle;
+// osThreadId loraHandle;
 osThreadId createWebPckgHandle;
 osThreadId wirelessSensHandle;
 osMessageQId queueWebPckgHandle;
@@ -162,11 +162,11 @@ void MX_FREERTOS_Init(void) {
   getEnergyHandle = osThreadCreate(osThread(getEnergy), NULL);
 
   /* definition and creation of getNewBin */
-  osThreadDef(getNewBin, taskGetNewBin, osPriorityNormal, 0, 256);
+  osThreadDef(getNewBin, taskGetNewBin, osPriorityNormal, 0, 300);
   getNewBinHandle = osThreadCreate(osThread(getNewBin), NULL);
 
   /* definition and creation of keepAlive */
-  osThreadDef(keepAlive, taskKeepAlive, osPriorityNormal, 0, 256);
+  osThreadDef(keepAlive, taskKeepAlive, osPriorityNormal, 0, 300);
   keepAliveHandle = osThreadCreate(osThread(keepAlive), NULL);
 
   /* definition and creation of webExchange */
@@ -182,8 +182,8 @@ void MX_FREERTOS_Init(void) {
   manageIWDGHandle = osThreadCreate(osThread(manageIWDG), NULL);
 
   /* definition and creation of lora */
-  osThreadDef(lora, taskLora, osPriorityNormal, 0, 256);
-  loraHandle = osThreadCreate(osThread(lora), NULL);
+  /*osThreadDef(lora, taskLora, osPriorityNormal, 0, 256);
+  loraHandle = osThreadCreate(osThread(lora), NULL);*/
 
   /* definition and creation of createWebPckg */
   osThreadDef(createWebPckg, taskCreateWebPckg, osPriorityNormal, 0, 256);

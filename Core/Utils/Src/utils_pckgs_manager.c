@@ -1,7 +1,7 @@
 #include "../Utils/Inc/utils_pckgs_manager.h"
 #include "../Utils/Inc/utils_bkte.h"
 
-WebPckg webPckgs[CNT_WEBPCKGS];
+WebPckg webPckgs[CNT_WEBPCKGS + 1];
 static u16 webPream = BKTE_PREAMBLE;
 static u8 endBytes[] = {0x0D, 0x0A}; // reverse order
 extern osMessageQId queueWebPckgHandle;
@@ -77,6 +77,17 @@ WebPckg* getFreePckg(){
     return NULL;
 }
 
+WebPckg* getFreePckgReq(){
+
+    if(!webPckgs[CNT_WEBPCKGS].isFull){
+        webPckgs[CNT_WEBPCKGS].isFull = 1;
+        return &webPckgs[CNT_WEBPCKGS];
+    }
+
+    D(printf("ER: NO FREEPCKG\r\n"));
+    return NULL;
+}
+
 u8 getCntFreePckg(){
     u8 ret = 0;
     for(u8 i = 0; i < CNT_WEBPCKGS; i++){
@@ -125,7 +136,7 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
     WebPckg* curPckg;
     req[0] = CMD_REQ;
     req[1] = 1;
-    if((curPckg = getFreePckg()) != NULL){
+    if((curPckg = getFreePckgReq()) != NULL){
         initWebPckg(curPckg, szReq, 1);
         if(sz){
             memcpy(req + 2, data, sz);
