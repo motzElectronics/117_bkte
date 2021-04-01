@@ -110,11 +110,11 @@ u16 cBufRead(CBufHandle cbuf, u8* dist, u8 sz){
 		}
 		break;
 	case CIRC_TYPE_WIRELESS:
-		if((lenMsg = getLenMsgWirelessSens(cbuf)))
-			copyGetDatafromBuf(cbuf, dist, lenMsg, CIRC_TYPE_WIRELESS);
-		else{
-                  D(printf("ERROR: CIRC_TYPE_WIRELESS\r\n"));
-                }
+        if((lenMsg = getLenMsgWirelessSens(cbuf))) {
+            copyGetDatafromBuf(cbuf, dist, lenMsg, CIRC_TYPE_WIRELESS);
+        } else {
+            // D(printf("ERROR: CIRC_TYPE_WIRELESS\r\n"));
+        }
 		break;
 		break;
 	case CIRC_TYPE_PCKG_ENERGY:
@@ -232,34 +232,53 @@ u8 getLenMsgEnergyUart(CBufHandle cbuf){
 }*/
 
 u16 getLenMsgWirelessSens(CircularBuffer* cbuf){
-	u16 lenMsg = 2;
-	u16 tail = (cbuf->tail + 1) % cbuf->max;
-	u16 head;
-        static u8 cnt = 0;
-	while(!(cbuf->buf[tail] == 0xAA && cbuf->buf[(tail + 1) % cbuf->max] == 0xBB) && (cbuf->tail != tail)){
-		tail = (tail + 1) % cbuf->max;
-	}
-	if(cbuf->tail == tail){
-		D(printf("ERROR: TAIL == TAIL %d\r\n", cnt));
-                cnt = 0;
-		return 0;
-	}else
-		head = (tail + 2) % cbuf->max;
-	
-	while(!(cbuf->buf[head] == 0xAA && cbuf->buf[(head + 1) % cbuf->max] == 0xBB) && (head != tail)){
-		lenMsg++;
-		head = (head + 1) % cbuf->max;
-	}
+    u16 lenMsg = 2;
+    u16 tail = (cbuf->tail + 1) % cbuf->max;
+    u16 head;
+    u16 lenData, lenFull;
+    static u8 cnt = 0;
+    
+    // printf("head %d, tail %d\r\n", cbuf->head, cbuf->tail);
 
-	if(tail == head){
-		D(printf("ERROR: TAIL == HEAD\r\n"));
-		return 0;
-	} else {
-		cbuf->tail = tail;
-		cbuf->head = head;
-                cnt++;
-		return lenMsg;
-	}
+    // if (cbuf->buf[tail] == 0xAA && cbuf->buf[(cbuf->tail + 1) % cbuf->max] == 0xBB) {
+    //     printf("tail AABB\r\n");
+    // }
+
+    // if (cbuf->buf[head] == 0xAA && cbuf->buf[(cbuf->head + 1) % cbuf->max] == 0xBB) {
+    //     printf("head AABB\r\n");
+    // }
+
+    // lenData = cbuf->buf[cbuf->head+1] << 8 | cbuf->buf[cbuf->head];
+    // lenFull = lenData + 6;
+
+    // printf("length %d\r\n", lenFull);
+
+    while(!(cbuf->buf[tail] == 0xAA && cbuf->buf[(tail + 1) % cbuf->max] == 0xBB) && (cbuf->tail != tail)){
+        tail = (tail + 1) % cbuf->max;
+    }
+    if(cbuf->tail == tail){
+        // D(printf("ERROR: TAIL == TAIL %d\r\n", cnt));
+        // lenData = cbuf->buf[tail+3] << 8 | cbuf->buf[tail+2];
+        // printf("length %d\r\n", lenData + 6);
+        cnt = 0;
+        return 0;
+    } else {
+        head = (tail + 2) % cbuf->max;
+    }
+    while(!(cbuf->buf[head] == 0xAA && cbuf->buf[(head + 1) % cbuf->max] == 0xBB) && (head != tail)){
+        lenMsg++;
+        head = (head + 1) % cbuf->max;
+    }
+
+    if(tail == head){
+        D(printf("ERROR: TAIL == HEAD\r\n"));
+        return 0;
+    } else {
+        cbuf->tail = tail;
+        cbuf->head = head;
+        cnt++;
+        return lenMsg;
+    }
 }
 
 

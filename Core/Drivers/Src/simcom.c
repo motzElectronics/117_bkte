@@ -21,10 +21,13 @@ void simInit(){
 	u8 fail = 0; 
 	u8 simBadAnsw = 0;
 	u8 isInit = 0;
+
+    bkte.isTCPOpen = 0;
+
 	while(!isInit){
 		simHardwareReset();
-		simTxATCmd(SIM_CMD_ATE0, SIM_SZ_CMD_ATE0);
-		retMsg = simTxATCmd(SIM_CMD_AT, SIM_SZ_CMD_AT);
+		simTxATCmd(SIM_CMD_ATE0, SIM_SZ_CMD_ATE0, 1000);
+		retMsg = simTxATCmd(SIM_CMD_AT, SIM_SZ_CMD_AT, 1000);
 		token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 		if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
 		D(printf("simInit AT: %s\r\n", token));
@@ -42,7 +45,7 @@ void simInit(){
 				osDelay(3000);
 				HAL_NVIC_SystemReset();
 			}
-		} else{
+		} else {
 			bkte.erFlags.simAT = 0;
 			osDelay(5000);
 			if(SIM_GPS_INIT() != SIM_SUCCESS){ 
@@ -63,13 +66,12 @@ void simInit(){
 			}
 		}
 	}
-
-	// SIM_GPS_INIT();
+    
 	D(printf("OK: simInit()\r\n"));
 }
 
-char* simGetStatusAnsw(){
-	waitIdle("", &(uInfoSim.irqFlags), 200, 20000);
+char* simGetStatusAnsw(u32 timeout){
+	waitIdle("", &(uInfoSim.irqFlags), 200, timeout);
 	if(uInfoSim.irqFlags.isIrqIdle){
 		return (char*)uInfoSim.pRxBuf;
 	} else{
@@ -79,9 +81,9 @@ char* simGetStatusAnsw(){
 }
 
 
-char* simTxATCmd(char* command, u16 sz){
+char* simTxATCmd(char* command, u16 sz, u32 timeout){
 	uartTx(command, sz, &uInfoSim);
-	return simGetStatusAnsw();
+	return simGetStatusAnsw(timeout);
 }
 
 u8 simCmd(char* cmdCode, char* params, u8 retriesCnt, char* SUCCESS_RET){
@@ -94,7 +96,7 @@ u8 simCmd(char* cmdCode, char* params, u8 retriesCnt, char* SUCCESS_RET){
 		sprintf((char*)simBufCmd, "AT+%s=%s\r\n", cmdCode, params);
 	}
 	for(; retriesCnt > 0; --retriesCnt){
-		retMsg = simTxATCmd(simBufCmd, strlen(simBufCmd));
+		retMsg = simTxATCmd(simBufCmd, strlen(simBufCmd), 20000);
 		token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 		if(token == NULL || token[0] == '\0') token = SIM_NO_RESPONSE_TEXT;
 		if(SUCCESS_RET != NULL && strcmp((const char*)token, (const char*)SUCCESS_RET)){
@@ -119,7 +121,7 @@ void copyStr(char* dist, char* source, u16 distSz){
 
 
 char* simDownloadData(char* data, u16 sz){
-	return simTxATCmd(data, sz);
+	return simTxATCmd(data, sz, 40000);
 }
 
 u8 simCheckCSQ(){
@@ -127,9 +129,10 @@ u8 simCheckCSQ(){
 	char* retMsg;
 	char* token;
 
-	retMsg = simTxATCmd("AT+CSQ\r\n", 8);  // check signal level
+	retMsg = simTxATCmd("AT+CSQ\r\n", 8, 1000);  // check signal level
 	token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 	csq = (token != NULL) && (strlen(token) > 8) ? atoi(token + 6) : 0;
+    bkte.csq = csq;
 	return csq;
 }
 
@@ -255,45 +258,48 @@ u8 simTCPSend(u8* data, u16 sz){
 	static char params[8];
 	char* token;
 	char* retMsg;
+
+    u32 ttt = HAL_GetTick();
+
 	if(sz == 0){
 		D(printf("ERROR SZ\r\n"));
-	}
-	memset(params, '\0', 8);
-	sprintf(params,"%d", sz);
-	if(simCmd(SIM_CIPSEND, params, 3, "> ") == SIM_FAIL){
-		sdWriteLog(SD_ER_CIPSEND, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	}
 	D(printf("simDownloadData() sz:%d\r\n", sz));
+	memset(params, '\0', 8);
+	sprintf(params,"%d", sz);
+	if(simCmd(SIM_CIPSEND, params, 1, "> ") == SIM_FAIL){
+		sdWriteLog(SD_ER_CIPSEND, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
+		return SIM_FAIL;
+	}
 	retMsg = simDownloadData(data, sz);
 	token = strtok(retMsg, SIM_SEPARATOR_TEXT);
 	if(token == NULL || token[0] == '\0') 
 			token = SIM_NO_RESPONSE_TEXT;
+
+    ttt = HAL_GetTick() - ttt;
+
 	if(strcmp((const char*)token, (const char*)"SEND OK") != 0){
-		D(printf("ER: simDownloadData() %s\r\n", token));
+		D(printf("ER: simDownloadData() %s time %d\r\n", token, ttt));
 		sdWriteLog(SD_ER_DOWNLOAD_DATA_AND_SEND_OK, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);
 		return SIM_FAIL;
 	} else{
-		D(printf("OK: simTCPSend()\r\n"));
+		D(printf("OK: simTCPSend() time %d\r\n", ttt));
 	}
 	return SIM_SUCCESS;
-
-	// D(printf("%s", retMsg));
-    //     showWebPckg();
-
-
 }
 
-long long simGetPhoneNum(){
+long long simGetPhoneNum() {
 	char* retMsg;
-	retMsg = simTxATCmd(SIM_CMD_CNUM, SIM_SZ_CMD_CNUM);
-        if(retMsg[0] != '\0'){
+	retMsg = simTxATCmd(SIM_CMD_CNUM, SIM_SZ_CMD_CNUM, 2000);
+        if(retMsg[0] != '\0') {
+            printf("Num is %s\r\n", retMsg);
           return atoll(retMsg + 15);
         } else
           return 0; 
 }
 
-u8 procReturnStatus(u8 ret){
+u8 procReturnStatus(u8 ret) {
 	static u8 notSend = 0;
 	if(ret != TCP_OK){
 		notSend++;
@@ -305,51 +311,49 @@ u8 procReturnStatus(u8 ret){
 		HAL_GPIO_TogglePin(LED2G_GPIO_Port, LED2G_Pin);
 	}
 
-	if(notSend == 4){
+	if (notSend == 1) {
 		simReset();
-	} else if(notSend == 5){
-		simReset();
-		D(printf("DANGEROUS: LOST PCKGS\r\n"));
-		ret = SEND_TCP_ER_LOST_PCKG;
+		D(printf("DANGER DANGER HIGH VOLTAGE\r\n"));
+		ret = TCP_SEND_ER_LOST_PCKG;
 		notSend = 0;
 	}
 
 	return ret;
 }
 
-u8 openTcp(){
+u8 openTcp() {
 	u8 ret = TCP_OK;
-	waitGoodCsq();
-	if(simTCPinit() != SIM_SUCCESS){
+	if (!waitGoodCsq(5400)) {
+        D(printf("ER: waitGoodCsq\r\n"));
+		ret = TCP_CSQ_ER;
+    }
+	if(ret == TCP_OK && simTCPinit() != SIM_SUCCESS) {
 		D(printf("ER: simTCPinit\r\n"));
-		ret = INIT_TCP_ER;
+		ret = TCP_INIT_ER;
 	}
-	if(ret == TCP_OK && simTCPOpen() != SIM_SUCCESS){
+	if(ret == TCP_OK && simTCPOpen() != SIM_SUCCESS) {
 		D(printf("ER: simTCPOpen\r\n"));
-		ret = OPEN_TCP_ER;
+		ret = TCP_OPEN_ER;
 	}
+    if (ret == TCP_OK) {
+        bkte.isTCPOpen = 1;
+    }
 	return procReturnStatus(ret);
 
 }
 
-u8 openSendTcp(u8* data, u16 sz){
+u8 sendTcp(u8* data, u16 sz) {
 	u8 ret = TCP_OK;
-	if(sz == 0){
-		D(printf("ERROR SZ\r\n"));
-	}
-	waitGoodCsq();
-	if(simTCPinit() != SIM_SUCCESS){
-		D(printf("ER: simTCPinit\r\n"));
-		ret = INIT_TCP_ER;
-	}
-	if(ret == TCP_OK && simTCPOpen() != SIM_SUCCESS){
-
-		D(printf("ER: simTCPOpen\r\n"));
-		ret = OPEN_TCP_ER;
-	}
-	if(ret == TCP_OK && simTCPSend(data, sz) != SIM_SUCCESS){
+    if (!bkte.isTCPOpen) {
+        return TCP_SEND_ER;
+    }
+	if (!waitGoodCsq(120)) {
+        D(printf("ER: waitGoodCsq\r\n"));
+		ret = TCP_CSQ_ER;
+    }
+	if(ret == TCP_OK && simTCPSend(data, sz) != SIM_SUCCESS) {
 		D(printf("ER: simTCPSend\r\n"));
-		ret = SEND_TCP_ER;
+		ret = TCP_SEND_ER;
 	}
 	return procReturnStatus(ret);
 }

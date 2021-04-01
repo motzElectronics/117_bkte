@@ -7,6 +7,7 @@ static PckgTemp pckgTempWireless;
 static PckgTelemetry pckgTelWireless;
 extern CircularBuffer circBufAllPckgs;
 static s8 tempsWireless[BKTE_MAX_CNT_1WIRE];
+
 void taskWirelessSens(void const * argument){
     cBufInit(&circBufWirelessSens, uInfoWirelessSens.pRxBuf, uInfoWirelessSens.szRxBuf, CIRC_TYPE_WIRELESS);
     vTaskSuspend(wirelessSensHandle);
@@ -16,20 +17,31 @@ void taskWirelessSens(void const * argument){
         memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
         while(!waitRx("", &uInfoWirelessSens.irqFlags, 1000, 15000)){
             D(printf("ERROR: NO WIRELESS SENS\r\n"));
+            continue;
         }
         while(cBufRead(&circBufWirelessSens, (u8*)bufSens, 0)){
             lenData = bufSens[3] << 8 | bufSens[2];
             lenAllPckg = lenData + SZ_HEADER_CRC16;
             if((bufSens[lenAllPckg - 1] << 8 | bufSens[lenAllPckg - 2]) == crc16WirelesSens(bufSens + 4, lenData)){
                 parceWirelessSens(bufSens + 4, lenData);
+                osDelay(10);
+                // parceWirelessSens(bufSens + 4, lenData);
+                // osDelay(10);
+                // parceWirelessSens(bufSens + 4, lenData);
+                // osDelay(10);
+                // parceWirelessSens(bufSens + 4, lenData);
+                // osDelay(10);
+                // parceWirelessSens(bufSens + 4, lenData);
+                // osDelay(10);
+                // parceWirelessSens(bufSens + 4, lenData);
                 // D(printf("OK: read wireless sensPckg\r\n"));
                 memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
             } else {
-                D(printf("Error: crc16 wireless\r\n"));
+                //D(printf("Error: crc16 wireless\r\n"));
             }
 
         }
-        D(printf("empty wirelessSensHandle\r\n"));
+        // D(printf("empty wirelessSensHandle\r\n"));
     }
 
 }

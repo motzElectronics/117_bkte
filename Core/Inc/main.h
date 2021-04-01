@@ -1,22 +1,22 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under Ultimate Liberty license
+ * SLA0044, the "License"; You may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at:
+ *                             www.st.com/SLA0044
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -87,6 +87,8 @@ void Error_Handler(void);
 #define PWR_STATE_Pin GPIO_PIN_1
 #define PWR_STATE_GPIO_Port GPIOB
 #define PWR_STATE_EXTI_IRQn EXTI1_IRQn
+#define MEM_HOLD_Pin GPIO_PIN_2
+#define MEM_HOLD_GPIO_Port GPIOB
 #define ONEWIRE_3_EN_Pin GPIO_PIN_8
 #define ONEWIRE_3_EN_GPIO_Port GPIOE
 #define ONEWIRE_2_EN_Pin GPIO_PIN_9
@@ -130,85 +132,84 @@ void Error_Handler(void);
 #define DEBUG 1
 
 #if DEBUG
-  #define D(x)  x
+#define D(x) x
 #else
-  #define D(x)
+#define D(x)
 #endif
 
-#define LOG_SZ_ERROR	100
-#define WAIT_TIMEOUT 	15000
-#define DUMMY_BYTE		0xFF
+#define LOG_SZ_ERROR 100
+#define WAIT_TIMEOUT 15000
+#define DUMMY_BYTE 0xFF
 
-#define URL_TCP_ADDR            (char*)"188.242.176.25"
-#define URL_TCP_PORT            8086
+#define URL_TCP_ADDR (char*)"188.242.176.25"
+#define URL_TCP_PORT 8086
 
-#define BKTE_SZ_UART_MSG		132
-#define BKTE_SZ_TEMP_MSG		4
+#define BKTE_SZ_UART_MSG 132
+#define BKTE_SZ_TEMP_MSG 4
 
-#define SZ_CMD_ENERGY		  12
-#define SZ_CMD_VOLTAMPER	8
-#define SZ_CMD_TEMP			  8
-#define SZ_CMD_TELEMETRY  10
-#define SZ_CMD_TELEMETRY_PHONE_NUM  14
+#define SZ_CMD_ENERGY 12
+#define SZ_CMD_VOLTAMPER 8
+#define SZ_CMD_TEMP 8
+#define SZ_CMD_TELEMETRY 10
+#define SZ_CMD_TELEMETRY_PHONE_NUM 14
 
 #define SZ_PAGE 255
 #define SZ_BUF_ENERGY_FROM_UART1 500
-#define AMOUNT_MAX_PAGES  3
-#define SZ_PAGES          1275 // SZ_PAGE * AMOUNT_MAX_PAGES
+#define AMOUNT_MAX_PAGES 5
+#define SZ_PAGES 1275  // SZ_PAGE * AMOUNT_MAX_PAGES
 
-#define BKTE_PREAMBLE			0xABCD
-#define BKTE_PREAMBLE_LSB		0xAB
-#define BKTE_PREAMBLE_MSB		0xCD
+#define BKTE_PREAMBLE 0xABCD
+#define BKTE_PREAMBLE_LSB 0xAB
+#define BKTE_PREAMBLE_MSB 0xCD
 
-#define SZ_WEB_PCKG     1400
+#define SZ_WEB_PCKG 1400
 
-extern char logError[LOG_SZ_ERROR]; 
-typedef uint8_t			u8;
-typedef uint16_t		u16;
-typedef uint32_t		u32;
-typedef uint64_t		u64;
-typedef unsigned int 	uint;
+extern char logError[LOG_SZ_ERROR];
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef unsigned int uint;
 
-typedef int8_t		s8;
-typedef int16_t		s16;
-typedef int32_t		s32;
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
 
+typedef union {
+    struct {
+        u8 isIrqTx : 1;
+        u8 isIrqRx : 1;
+        u8 isIrqIdle : 3;
+    };
+    u8 regIrq;
+} IrqFlags;
 
-typedef union{
-	struct{
-		u8 isIrqTx:		1;
-		u8 isIrqRx: 	1;
-		u8 isIrqIdle:	3;
-	};
-	u8 regIrq;
-}IrqFlags;
+typedef struct {
+    u8 hour;
+    u8 min;
+    u8 sec;
+    u8 year;
+    u8 month;
+    u8 day;
+} DateTime;
 
-typedef struct{
-	u8 hour;
-	u8 min;
-	u8 sec;
-	u8 year;
-	u8 month;
-	u8 day;
-}DateTime;
+typedef struct {
+    u64 header;
+    u8 numFirmware;
+    char verFirmware;
+    u8 numTrainCar;
+} FIRMWARE_INFO;
 
-typedef struct{
-	u64		header;
-	u8		numFirmware;
-	char	verFirmware;
-  u8    numTrainCar;
-}FIRMWARE_INFO;
-
-typedef struct{
-  char* tcpAddr;
-  u32   tcpPort;
-}Urls;
+typedef struct {
+    char* tcpAddr;
+    u32 tcpPort;
+} Urls;
 
 extern Urls urls;
-u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
-u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
-u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout);
-u8 waitIdleCnt(char* waitStr, IrqFlags* pFlags, u8 cnt, u16 pause, u16 timeout);
+u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout);
+u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout);
+u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout);
+u8 waitIdleCnt(char* waitStr, IrqFlags* pFlags, u8 cnt, u16 pause, u32 timeout);
 void urlsInit();
 /* USER CODE END Private defines */
 

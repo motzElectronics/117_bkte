@@ -19,29 +19,46 @@ static u8 partFirmware[SZ_PART_FIRMW + 1];
 static u32 flashAddrFirmware = FLASH_ADDR_BUF_NEW_FIRMWARE;
 static u32 szSoft = 0;
 
-void taskGetNewBin(void const * argument){
+void taskGetNewBin(void const * argument) {
 	u32 curSzSoft = 0;
 	u32	szPartSoft;
 	u8 cntFailTCPReq = 0;
+        
+        FLASH_Erase_Sector(FLASH_SECTOR_3, VOLTAGE_RANGE_3);
+    
+	vTaskSuspend(getNewBinHandle);
+    
 	lockAllTasks();
 	isRxNewFirmware = 1;
 
-	while(!(szSoft = getSzFirmware())){
-	}
+    if (!bkte.isTCPOpen) {
+	    while(openTcp() != TCP_OK);
+    }
+
+	while(!(szSoft = getSzFirmware()));
 	flashClearPage(FLASH_SECTOR_11);
 	clearAllWebPckgs();
 	HAL_GPIO_WritePin(LED4G_GPIO_Port, LED4G_Pin, GPIO_PIN_SET);
-	while(openTcp() != TCP_OK);
+
 	for(;;){
-		if(szSoft != curSzSoft){
-			if(szSoft - curSzSoft > SZ_PART_FIRMW) szPartSoft = SZ_PART_FIRMW;
-			else szPartSoft = szSoft - curSzSoft;
+		if(szSoft != curSzSoft) {
+			if (szSoft - curSzSoft > SZ_PART_FIRMW) {
+                szPartSoft = SZ_PART_FIRMW;
+			} else {
+                szPartSoft = szSoft - curSzSoft;
+            }
 			pckgInfoFirmware.fromByte = curSzSoft;
 			pckgInfoFirmware.toByte = szPartSoft + curSzSoft;
 			memcpy(bufNumBytesFirmware, &pckgInfoFirmware.fromByte, 4);
 			memcpy(bufNumBytesFirmware + 4, &pckgInfoFirmware.toByte, 4);
 			memset(partFirmware, 0xFF, SZ_PART_FIRMW + 1);
-			if(getPartFirmware(bufNumBytesFirmware, partFirmware, szPartSoft + 4, 8) == SUCCESS && isCrcOk(partFirmware, szPartSoft)){
+            
+            if (!bkte.isTCPOpen) {
+                while(openTcp() != TCP_OK);
+            }
+
+			if(getPartFirmware(bufNumBytesFirmware, partFirmware, szPartSoft + 4, 8) == SUCCESS
+                 && isCrcOk(partFirmware, szPartSoft)){
 				curSzSoft += szPartSoft;
 				D(printf("OK: DOWNLOAD %d BYTES\r\n", (int)curSzSoft));
 				HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);
@@ -50,10 +67,11 @@ void taskGetNewBin(void const * argument){
 			} else {
 				D(printf("ERROR: httpPost() DOWNLOAD\r\n"));
 				cntFailTCPReq++;
-				if(cntFailTCPReq > 10) simReset();
-				while(openTcp() != TCP_OK);
+				if(cntFailTCPReq > 10) {
+                    simReset();
+                }
 			}
-		} else{ 
+		} else { 
 			updBootInfo();
 			NVIC_SystemReset();
 		}
@@ -80,7 +98,6 @@ void updBootInfo(){
 
 
 void lockAllTasks(){
-	vTaskSuspend(getNewBinHandle);
 	osMutexWait(mutexWebHandle, osWaitForever);
 	vTaskSuspend(webExchangeHandle);
 	vTaskSuspend(getEnergyHandle);
@@ -88,8 +105,8 @@ void lockAllTasks(){
 	vTaskSuspend(keepAliveHandle);
 	// vTaskSuspend(loraHandle);
 	vTaskSuspend(createWebPckgHandle);
-        vTaskSuspend(wirelessSensHandle);
-		osMutexRelease(mutexWebHandle);
+    vTaskSuspend(wirelessSensHandle);
+    osMutexRelease(mutexWebHandle);
 	
 }
 
@@ -112,20 +129,20 @@ ErrorStatus getPartFirmware(u8* reqData, u8* answBuf, u16 szAnsw, u8 szReq){
 	WebPckg* curPckg;
 	ErrorStatus ret = SUCCESS;
 	curPckg = createWebPckgReq(CMD_REQUEST_PART_FIRMWARE, reqData, szReq, SZ_REQUEST_GET_PART_FIRMWARE);
-	xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-	if(simTCPSend(curPckg->buf, curPckg->shift) != SIM_SUCCESS){
+	osMutexWait(mutexWebHandle, osWaitForever);
+	if(sendTcp(curPckg->buf, curPckg->shift) != TCP_OK) {
 		sdWriteLog(SD_ER_PART_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
 		D(printf("ERROR: part Firmware\r\n"));
 		HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_SET);
 		ret = ERROR;
-	}else {
+	} else {
 		waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), szAnsw / SZ_TCP_PCKG + 1, 100, 6000);
 		osDelay(100);
 		HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);
 		memcpy(answBuf, &uInfoSim.pRxBuf[11], szAnsw);
 	}
-	xSemaphoreGive(mutexWebHandle);
+	osMutexRelease(mutexWebHandle);
     clearWebPckg(curPckg);
 	return ret;
 }

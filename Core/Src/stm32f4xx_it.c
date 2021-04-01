@@ -460,7 +460,7 @@ void USART6_IRQHandler(void)
     if ((__HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE) != RESET) &&
 		  (__HAL_UART_GET_IT_SOURCE(&huart6, UART_IT_IDLE) != RESET)){
 	  uInfoSim.irqFlags.isIrqIdle += 1;
-//	  printf("INTERRUPT: IDLE\r\n");
+	//   printf("%s", uInfoSim.pRxBuf);
   }
 
   __HAL_UART_CLEAR_PEFLAG(&huart6);

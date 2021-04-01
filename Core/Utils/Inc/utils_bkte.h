@@ -138,6 +138,9 @@ typedef struct{
 	PWRInfo pwrInfo;
 	ErrorFlags erFlags;
 	u8 isSentData;
+    u8 isTCPOpen;
+    u8 tcpErrCnt;
+    u8 csq;
 //	FInfo	fInfo[NUM_READ_FILES];
 }BKTE;
 
@@ -235,17 +238,6 @@ typedef struct{
 	u8 code;
 }PckgTelemetry;
 
-
-//typedef struct{
-//	u16			preambule;
-//	Coord		latitude;
-//	Coord		longitude;
-//	u16			speed;
-//	u16			cource;
-//	DateTime	dateTime;
-//	u8			crc;
-//}PckgGnss;
-
 typedef struct{
 	u32 unixTimeStamp;
 	s8	temp[BKTE_MAX_CNT_1WIRE];
@@ -284,7 +276,7 @@ void getServerTime();
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 void checkBufForWritingToFlash();
 void updSpiFlash(CircularBuffer* cbuf);
-void waitGoodCsq();
+u8 waitGoodCsq(u32 timeout);
 
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf);
 u32 getUnixTimeStamp();

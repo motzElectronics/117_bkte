@@ -132,7 +132,7 @@ int main(void)
   };
   cBufInit(&rxUart1CircBuf, uart1Buf, SZ_BUF_ENERGY_FROM_UART1, CIRC_TYPE_ENERGY_UART);
 	cBufInit(&circBufAllPckgs, bufPckgs, SZ_PAGE, CIRC_TYPE_PCKG_ALL);
-
+  HAL_GPIO_WritePin(GPIOB, MEM_HOLD_Pin, GPIO_PIN_SET);
   bkteInit();
   urlsInit();
   uartInitInfo();
@@ -225,8 +225,8 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout){
-	u16 tout = 0;
+u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout){
+	u32 tout = 0;
 	while(!pFlags->isIrqTx && tout < timeout){
 		osDelay(pause);
 		tout += pause;
@@ -236,8 +236,8 @@ u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout){
   return pFlags->isIrqTx;
 }
 
-u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout){
-	u16 tout = 0;
+u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout){
+	u32 tout = 0;
 	while(!(pFlags->isIrqRx) && tout < timeout){
 		osDelay(pause);
 		tout += pause;
@@ -247,19 +247,19 @@ u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout){
   return pFlags->isIrqRx;
 }
 
-u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u16 timeout){
-	u16 tout = 0;
+u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout){
+	u32 tout = 0;
 	while(!(pFlags->isIrqIdle) && tout < timeout){
 		osDelay(pause);
 		tout += pause;
-		if(strlen(waitStr) > 1)
-			D(printf("%s timeout: %d\r\n", waitStr, tout));
+		//if(strlen(waitStr) > 1)
+			// D(printf("%s timeout: %d\r\n", waitStr, tout));
 	}
   return pFlags->isIrqIdle;
 }
 
-u8 waitIdleCnt(char* waitStr, IrqFlags* pFlags, u8 cnt, u16 pause, u16 timeout){
-	u16 tout = 0;
+u8 waitIdleCnt(char* waitStr, IrqFlags* pFlags, u8 cnt, u16 pause, u32 timeout){
+	u32 tout = 0;
 	while((pFlags->isIrqIdle) < cnt && tout < timeout){
 		osDelay(pause);
 		tout += pause;

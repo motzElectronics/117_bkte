@@ -131,7 +131,7 @@ void spiFlashWrEn(){
 }
 
 u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
-	D(printf("spiFlash WrPg\r\n"));
+	// D(printf("spiFlash WrPg\r\n"));
 	u32 addr;
 	u8 ret = 0;
 	if(spiFlash64.tailNumPg > spiFlash64.headNumPg && 
@@ -177,7 +177,7 @@ u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 }
 
 void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
-	D(printf("spiFlash RdPg"));
+	// D(printf("spiFlash RdPg\r\n"));
 	u32 addr;
 	while(spiFlash64.lock == 1)
 		osDelay(200);

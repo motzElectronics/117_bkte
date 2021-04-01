@@ -98,10 +98,11 @@
 #define HTTP_RESPONSE_MAXIMUM_LENGTH		64
 
 #define TCP_OK	                0
-#define INIT_TCP_ER             1
-#define OPEN_TCP_ER             2
-#define SEND_TCP_ER             3
-#define SEND_TCP_ER_LOST_PCKG   4
+#define TCP_INIT_ER             1
+#define TCP_OPEN_ER             2
+#define TCP_SEND_ER             3
+#define TCP_SEND_ER_LOST_PCKG   4
+#define TCP_CSQ_ER              5       
 
 void simInit();
 char* simGetStatusAnsw();
@@ -120,10 +121,10 @@ u8 simTCPOpen();
 u8 simTCPSend(u8* data, u16 sz);
 u8 simTCPCheckStatus(const char* stat, u16 timeout, u16 delay);
 u8 simCmd(char* cmdCode, char* params, u8 retriesCnt, char* SUCCESS_RET);
-char* simTxATCmd(char* command, u16 sz);
+char* simTxATCmd(char* command, u16 sz, u32 timeout);
 long long simGetPhoneNum();
 
-u8 openSendTcp(u8* data, u16 sz);
+u8 sendTcp(u8* data, u16 sz);
 u8 openTcp();
 
 #define SIM_GPS_INIT() simCmd(SIM_SAPBR, "1,1", 1, SIM_OK_TEXT)

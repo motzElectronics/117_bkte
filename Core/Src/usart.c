@@ -404,7 +404,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 UartInfo uInfoSim;
 UartInfo uInfoWirelessSens;
 
-
 static u8 usartSimBufRx[USART_SZ_BUF_RX_USART6];
 static u8 usartSimBufTx[USART_SZ_BUF_TX_USART6];
 
@@ -418,123 +417,137 @@ extern u8 isRxNewFirmware;
 u8 cntTmp = 0;
 u8 isRxData = 1;
 
-void uartInitInfo(){
-  uInfoSim.irqFlags.regIrq = 0;
-  uInfoSim.pRxBuf = usartSimBufRx;
-  uInfoSim.szRxBuf = USART_SZ_BUF_RX_USART6;
-  uInfoSim.szTxBuf = USART_SZ_BUF_TX_USART6;
-  uInfoSim.pTxBuf = usartSimBufTx;
-  uInfoSim.pHuart = &huart6;
-  uartRxDma(&uInfoSim);
+void uartInitInfo()
+{
+    uInfoSim.irqFlags.regIrq = 0;
+    uInfoSim.pRxBuf = usartSimBufRx;
+    uInfoSim.szRxBuf = USART_SZ_BUF_RX_USART6;
+    uInfoSim.szTxBuf = USART_SZ_BUF_TX_USART6;
+    uInfoSim.pTxBuf = usartSimBufTx;
+    uInfoSim.pHuart = &huart6;
+    uartRxDma(&uInfoSim);
 
-  uInfoWirelessSens.irqFlags.regIrq = 0;
-  uInfoWirelessSens.pHuart = &huart2;
-  uInfoWirelessSens.pTxBuf = usartWirelessSensBufTx;
-  uInfoWirelessSens.szTxBuf = USART_SZ_BUF_TX_USART2;
-  uInfoWirelessSens.szRxBuf = USART_SZ_BUF_RX_USART2;
-  uInfoWirelessSens.pRxBuf = usartWirelessSensBufRx;
-  uartRxDma(&uInfoWirelessSens);
-
-  USART_RE2_WRITE_EN();
-  // __HAL_UART_ENABLE_IT(uInfoWirelessSens.pHuart, UART_IT_IDLE);
-}
-
-
-void uartRxDma(UartInfo* pUInf){
-	HAL_UART_Receive_DMA(pUInf->pHuart, pUInf->pRxBuf, pUInf->szRxBuf);
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef* uartHandle){
-  // D(printf("OK: UART RxCpltCallback\r\n"));
-	if(uartHandle->Instance == USART6){
-		uInfoSim.irqFlags.isIrqRx = 1;
-		uartRxDma(&uInfoSim);
-	}else if(uartHandle->Instance == USART1){
-		cBufWriteToBuf(&rxUart1CircBuf, (u8*)rxBufUart1, SZ_RX_UART1 * 2);
-		if(!isRxNewFirmware){
-			rxUart1_IT();
-		}
-	} else if(uartHandle->Instance == USART2){
-    uInfoWirelessSens.irqFlags.isIrqRx = 1;
-    USART_RE2_READ_EN();
-		uartRxDma(&uInfoWirelessSens);
-  }
-
-}
-
-void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart){
-  if(huart->Instance == USART2){
-    uInfoWirelessSens.irqFlags.isIrqRx = 1;
-
-  }
-}
-
-
-void uartClearInfo(UartInfo* pUinf){
-  pUinf->irqFlags.regIrq = 0;
-  memset(pUinf->pRxBuf, '\0', pUinf->szRxBuf);
-}
-
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
-	// D(printf("OK: UART TxCpltCallback\r\n"));
-//	xQueueSendToBackFromISR(queue1WireHandle, &isRxData, &woke);
-	if(huart->Instance == USART6){
-//		printf("IRQ: TXGSM\r\n");
-		__HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
-		uInfoSim.irqFlags.isIrqTx = 1;
-  } else 	if(huart->Instance == USART2){
-//		printf("IRQ: TXGSM\r\n");
-		__HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
-		uInfoWirelessSens.irqFlags.isIrqTx = 1;
-  }
-
-}
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
-	u32 error = HAL_UART_GetError(huart);
-  D(printf("HAL_UART_ErrorCallback\r\n"));
-	if(huart->Instance == USART6){
-		u32 error = HAL_UART_GetError(huart);
-		D(printf("HAL_UART_ErrorCallback() sim800 ERROR_CODE: %d\r\n", (int)error));
-//		sprintf(bufResponse, "HAL_UART_ErrorCallback() sim800 ERROR_CODE: %d\r\n", (int)error);
-//		createLog(logError, LOG_SZ_ERROR, bufResponse);
-		uartRxDma(&uInfoSim);
-	} else if(huart == &huart1){
-		D(printf("HAL_UART_ErrorCallback() Energy: %d\r\n", (int)error));
-		rxUart1_IT();
-	} else if(huart->Instance == USART2){
-    D(printf("ERROR: HAL_UART_ErrorCallback() USART2\r\n"));
-    uartClearInfo(&uInfoWirelessSens);
+    uInfoWirelessSens.irqFlags.regIrq = 0;
+    uInfoWirelessSens.pHuart = &huart2;
+    uInfoWirelessSens.pTxBuf = usartWirelessSensBufTx;
+    uInfoWirelessSens.szTxBuf = USART_SZ_BUF_TX_USART2;
+    uInfoWirelessSens.szRxBuf = USART_SZ_BUF_RX_USART2;
+    uInfoWirelessSens.pRxBuf = usartWirelessSensBufRx;
     uartRxDma(&uInfoWirelessSens);
-    USART_RE2_READ_EN();
-  }
 
+    USART_RE2_WRITE_EN();
+    // __HAL_UART_ENABLE_IT(uInfoWirelessSens.pHuart, UART_IT_IDLE);
 }
 
-void rxUart1_IT(){
-//	memset((u8*)rxBufUart1, '\0', SZ_RX_UART1 * 2);
-	HAL_GPIO_WritePin(UART1_RE_GPIO_Port, UART1_RE_Pin, GPIO_PIN_SET);
-	HAL_UART_Receive_DMA(&huart1, (u8*)rxBufUart1, SZ_RX_UART1);
-	HAL_GPIO_WritePin(UART1_RE_GPIO_Port, UART1_RE_Pin, GPIO_PIN_RESET);
+void uartRxDma(UartInfo *pUInf)
+{
+    HAL_UART_Receive_DMA(pUInf->pHuart, pUInf->pRxBuf, pUInf->szRxBuf);
 }
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *uartHandle)
+{
+    // D(printf("OK: UART RxCpltCallback\r\n"));
+    if (uartHandle->Instance == USART6)
+    {
+        uInfoSim.irqFlags.isIrqRx = 1;
+        uartRxDma(&uInfoSim);
+    }
+    else if (uartHandle->Instance == USART1)
+    {
+        cBufWriteToBuf(&rxUart1CircBuf, (u8 *)rxBufUart1, SZ_RX_UART1 * 2);
+        if (!isRxNewFirmware)
+        {
+            rxUart1_IT();
+        }
+    }
+    else if (uartHandle->Instance == USART2)
+    {
+        uInfoWirelessSens.irqFlags.isIrqRx = 1;
+        USART_RE2_READ_EN();
+        uartRxDma(&uInfoWirelessSens);
+    }
+}
 
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART2)
+    {
+        uInfoWirelessSens.irqFlags.isIrqRx = 1;
+    }
+}
 
-void uartTx(char* data, u16 sz, UartInfo* pUInf){
-  uartClearInfo(pUInf);
-	__HAL_DMA_DISABLE(pUInf->pHuart->hdmarx);
-	__HAL_DMA_SET_COUNTER(pUInf->pHuart->hdmarx, pUInf->szRxBuf);
-	__HAL_DMA_ENABLE(pUInf->pHuart->hdmarx);
-	waitRx("", &(pUInf->irqFlags), 10, USART_TIMEOUT);
-	__HAL_UART_DISABLE_IT(pUInf->pHuart, UART_IT_IDLE);
-	osDelay(100);
-	pUInf->irqFlags.regIrq = 0;
+void uartClearInfo(UartInfo *pUinf)
+{
+    pUinf->irqFlags.regIrq = 0;
+    memset(pUinf->pRxBuf, '\0', pUinf->szRxBuf);
+}
 
-  HAL_UART_Transmit_DMA(pUInf->pHuart, (u8*)data, sz);
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    // D(printf("OK: UART TxCpltCallback\r\n"));
+    //	xQueueSendToBackFromISR(queue1WireHandle, &isRxData, &woke);
+    if (huart->Instance == USART6)
+    {
+        //		printf("IRQ: TXGSM\r\n");
+        __HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
+        uInfoSim.irqFlags.isIrqTx = 1;
+    }
+    else if (huart->Instance == USART2)
+    {
+        //		printf("IRQ: TXGSM\r\n");
+        __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
+        uInfoWirelessSens.irqFlags.isIrqTx = 1;
+    }
+}
 
-	waitTx("", &(pUInf->irqFlags), 50, USART_TIMEOUT);
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    u32 error = HAL_UART_GetError(huart);
+    D(printf("HAL_UART_ErrorCallback\r\n"));
+    if (huart->Instance == USART6)
+    {
+        u32 error = HAL_UART_GetError(huart);
+        D(printf("HAL_UART_ErrorCallback() sim800 ERROR_CODE: %d\r\n", (int)error));
+        //		sprintf(bufResponse, "HAL_UART_ErrorCallback() sim800 ERROR_CODE: %d\r\n", (int)error);
+        //		createLog(logError, LOG_SZ_ERROR, bufResponse);
+        uartRxDma(&uInfoSim);
+    }
+    else if (huart == &huart1)
+    {
+        D(printf("HAL_UART_ErrorCallback() Energy: %d\r\n", (int)error));
+        rxUart1_IT();
+    }
+    else if (huart->Instance == USART2)
+    {
+        D(printf("ERROR: HAL_UART_ErrorCallback() USART2\r\n"));
+        uartClearInfo(&uInfoWirelessSens);
+        uartRxDma(&uInfoWirelessSens);
+        USART_RE2_READ_EN();
+    }
+}
 
+void rxUart1_IT()
+{
+    //	memset((u8*)rxBufUart1, '\0', SZ_RX_UART1 * 2);
+    HAL_GPIO_WritePin(UART1_RE_GPIO_Port, UART1_RE_Pin, GPIO_PIN_SET);
+    HAL_UART_Receive_DMA(&huart1, (u8 *)rxBufUart1, SZ_RX_UART1);
+    HAL_GPIO_WritePin(UART1_RE_GPIO_Port, UART1_RE_Pin, GPIO_PIN_RESET);
+}
+
+void uartTx(char *data, u16 sz, UartInfo *pUInf)
+{
+    uartClearInfo(pUInf);
+    __HAL_DMA_DISABLE(pUInf->pHuart->hdmarx);
+    __HAL_DMA_SET_COUNTER(pUInf->pHuart->hdmarx, pUInf->szRxBuf);
+    __HAL_DMA_ENABLE(pUInf->pHuart->hdmarx);
+    waitRx("", &(pUInf->irqFlags), 10, USART_TIMEOUT);
+    __HAL_UART_DISABLE_IT(pUInf->pHuart, UART_IT_IDLE);
+    osDelay(100);
+    pUInf->irqFlags.regIrq = 0;
+
+    HAL_UART_Transmit_DMA(pUInf->pHuart, (u8 *)data, sz);
+
+    waitTx("", &(pUInf->irqFlags), 50, USART_TIMEOUT);
 }
 /* USER CODE END 1 */
 

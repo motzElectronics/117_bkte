@@ -33,11 +33,15 @@ void taskGetEnergy(void const * argument){
 	cBufReset(&circBufAllPckgs);
 	sdInit();
 	simInit();
+    while(openTcp() != TCP_OK);
 	getServerTime();
 
 	generateInitTelemetry();
 	unLockTasks();
 	rxUart1_IT();
+
+    // FLASH_Erase_Sector(FLASH_SECTOR_3, VOLTAGE_RANGE_3);
+    // NVIC_SystemReset();
 
     for(;;){
         memset(testBufUart1, '\0', sizeof(testBufUart1));
@@ -65,7 +69,8 @@ void taskGetEnergy(void const * argument){
     }
 }
 
-void unLockTasks(){
+void unLockTasks() {
+    D(printf("unLockTasks\r\n"));
 	// vTaskResume(getNewBinHandle); //! debug download firmware
 	vTaskResume(webExchangeHandle);
 	vTaskResume(getTempHandle);

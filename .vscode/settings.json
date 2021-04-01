@@ -7,6 +7,9 @@
         "task_wireless_sens.h": "c",
         "circularbuffer.h": "c",
         "utils_crc.h": "c",
-        "cmsis_os.h": "c"
+        "cmsis_os.h": "c",
+        "utils_sd.h": "c",
+        "task_get_new_bin.h": "c",
+        "main.h": "c"
     }
 }

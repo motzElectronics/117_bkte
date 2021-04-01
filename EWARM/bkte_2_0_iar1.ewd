@@ -1106,7 +1106,7 @@
                 </option>
                 <option>
                     <name>CCSTLinkDAPNumber</name>
-                    <state />
+                    <state>0</state>
                 </option>
                 <option>
                     <name>CCSTLinkDebugAccessPortRadio</name>

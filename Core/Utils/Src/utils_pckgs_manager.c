@@ -43,10 +43,10 @@ void addInfoToWebPckg(WebPckg* pPckg, u8* src, u16 sz, u8 cnt, u8 cmdData){
 }
 
 void showWebPckg(WebPckg* pPckg){
-    for(u16 i = 0; i < pPckg->shift; i++){
-        D(printf("%02x", pPckg->buf[i]));
-    }
-    D(printf("\r\n"));
+    // for(u16 i = 0; i < pPckg->shift; i++){
+    //     D(printf("%02x", pPckg->buf[i]));
+    // }
+    // D(printf("\r\n"));
 }
 
 void closeWebPckg(WebPckg* pPckg){
@@ -73,7 +73,7 @@ WebPckg* getFreePckg(){
             return &webPckgs[i];
       }
     }
-    D(printf("ER: NO FREEPCKG\r\n"));
+    // D(printf("ER: NO FREEPCKG\r\n"));
     return NULL;
 }
 
@@ -84,7 +84,7 @@ WebPckg* getFreePckgReq(){
         return &webPckgs[CNT_WEBPCKGS];
     }
 
-    D(printf("ER: NO FREEPCKG\r\n"));
+    // D(printf("ER: NO FREEPCKG\r\n"));
     return NULL;
 }
 
@@ -144,8 +144,9 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
         addInfo(curPckg, req, szReq);
         closeWebPckg(curPckg);
         showWebPckg(curPckg);
-        xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
-        while((statSend = openSendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && statSend != SEND_TCP_ER_LOST_PCKG);
+
+	    osMutexWait(mutexWebHandle, osWaitForever);
+        statSend = sendTcp(curPckg->buf, curPckg->shift);
         if(statSend != TCP_OK) ret = ERROR;
         else if(uInfoSim.pRxBuf[11] == '\0' && uInfoSim.pRxBuf[12] == '\0' 
                 && uInfoSim.pRxBuf[13] == '\0' && uInfoSim.pRxBuf[14] == '\0'){
@@ -159,7 +160,7 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
         } else{
             memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
         }
-        xSemaphoreGive(mutexWebHandle);
+        osMutexRelease(mutexWebHandle);
         clearWebPckg(curPckg);
     } else {
         ret = ERROR;
