@@ -344,10 +344,10 @@ u8 openTcp() {
 
 u8 sendTcp(u8* data, u16 sz) {
 	u8 ret = TCP_OK;
-    if (!bkte.isTCPOpen) {
-        return TCP_SEND_ER;
-    }
-	if (!waitGoodCsq(120)) {
+    // if (!bkte.isTCPOpen) {
+    //     return TCP_SEND_ER;
+    // }
+	if (!waitGoodCsq(60)) {
         D(printf("ER: waitGoodCsq\r\n"));
 		ret = TCP_CSQ_ER;
     }

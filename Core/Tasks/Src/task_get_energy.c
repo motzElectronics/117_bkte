@@ -128,6 +128,5 @@ void generateInitTelemetry(){
 
 	updSpiFlash(&circBufAllPckgs);
 	xSemaphoreGive(semCreateWebPckgHandle);
-	
 }
 

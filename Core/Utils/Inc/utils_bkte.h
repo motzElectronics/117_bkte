@@ -197,7 +197,8 @@ typedef enum{
 	TEL_CD_HW_LORA,
 	TEL_CD_HW_BATTERY,
 	TEL_CD_HW_BKTE_ALIVE,
-	TEL_CD_HW_WIRELESS_SENS_RSSI
+	TEL_CD_HW_WIRELESS_SENS_RSSI,
+    TEL_CD_HW_UPDATED
 }TELEMETRY_CODE_STATES;
 
 typedef enum{
@@ -274,7 +275,7 @@ void toggleRedLeds();
 void getServerTime();
 
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
-void checkBufForWritingToFlash();
+// void checkBufForWritingToFlash();
 void updSpiFlash(CircularBuffer* cbuf);
 u8 waitGoodCsq(u32 timeout);
 

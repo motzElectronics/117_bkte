@@ -128,6 +128,32 @@ WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq){
     return curPckg;
 }
 
+ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq) {
+    WebPckg* curPckg;
+    u8 req[32];
+    ErrorStatus ret = SUCCESS;
+    //curPckg = createWebPckgReq(CMD_DATA, data, sz, szReq);
+    req[0] = CMD_DATA;
+    req[1] = szReq;
+    curPckg = getFreePckg();
+    initWebPckg(curPckg, sz + 2, 0);
+    if (sz) {
+        memcpy(req + 2, data, sz);
+    }
+    addInfo(curPckg, req, sz + 2);
+    closeWebPckg(curPckg);
+    showWebPckg(curPckg);
+
+    osMutexWait(mutexWebHandle, osWaitForever);
+    if (sendTcp(curPckg->buf, curPckg->shift) != TCP_OK) {
+        D(printf("ERROR: send data failed\r\n"));
+        ret = ERROR;
+    }
+    osMutexRelease(mutexWebHandle);
+    clearWebPckg(curPckg);
+    return ret;
+}
+
 
 ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u16 szAnsw){
     ErrorStatus ret = SUCCESS;

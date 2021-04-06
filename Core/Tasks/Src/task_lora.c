@@ -377,7 +377,7 @@ void parceServicesData(LoraAlgTransition* pRx){
 			/*fillTelemetry(&tmpPckg, TEL_PERIPH_STAT, 
 				(i << 16) |(pRx->loraCarInfo[i].temperature << 8) | (pRx->loraCarInfo[i].statusInfo) & 0xFF);*/ //! use new telemetry fun
 			//cBufSafeWrite(&circBufPckgEnergy, (u8*)&tmpPckg, SZ_PCKGENERGY, mutexWriteToEnergyBufHandle, portMAX_DELAY);
-			checkBufForWritingToFlash();
+			// checkBufForWritingToFlash();
 		}
 	}
 }

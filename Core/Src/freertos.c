@@ -64,6 +64,7 @@ osMutexId mutexWriteToEnergyBufHandle;
 osMutexId mutexWebHandle;
 osMutexId mutexRTCHandle;
 osMutexId mutexSDHandle;
+osMutexId mutexFlashWriteHandle;
 osSemaphoreId semLoraRxPckgHandle;
 osSemaphoreId semCreateWebPckgHandle;
 
@@ -126,6 +127,10 @@ void MX_FREERTOS_Init(void) {
   osMutexDef(mutexSD);
   mutexSDHandle = osMutexCreate(osMutex(mutexSD));
 
+  /* definition and creation of mutexFlashWrite */
+  osMutexDef(mutexFlashWrite);
+  mutexFlashWriteHandle = osMutexCreate(osMutex(mutexFlashWrite));
+
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -162,7 +167,7 @@ void MX_FREERTOS_Init(void) {
   getEnergyHandle = osThreadCreate(osThread(getEnergy), NULL);
 
   /* definition and creation of getNewBin */
-  osThreadDef(getNewBin, taskGetNewBin, osPriorityNormal, 0, 512);
+  osThreadDef(getNewBin, taskGetNewBin, osPriorityNormal, 0, 300);
   getNewBinHandle = osThreadCreate(osThread(getNewBin), NULL);
 
   /* definition and creation of keepAlive */
@@ -170,7 +175,7 @@ void MX_FREERTOS_Init(void) {
   keepAliveHandle = osThreadCreate(osThread(keepAlive), NULL);
 
   /* definition and creation of webExchange */
-  osThreadDef(webExchange, taskWebExchange, osPriorityNormal, 0, 512);
+  osThreadDef(webExchange, taskWebExchange, osPriorityNormal, 0, 300);
   webExchangeHandle = osThreadCreate(osThread(webExchange), NULL);
 
   /* definition and creation of getTemp */
@@ -186,11 +191,11 @@ void MX_FREERTOS_Init(void) {
   loraHandle = osThreadCreate(osThread(lora), NULL);
 
   /* definition and creation of createWebPckg */
-  osThreadDef(createWebPckg, taskCreateWebPckg, osPriorityNormal, 0, 512);
+  osThreadDef(createWebPckg, taskCreateWebPckg, osPriorityNormal, 0, 300);
   createWebPckgHandle = osThreadCreate(osThread(createWebPckg), NULL);
 
   /* definition and creation of wirelessSens */
-  osThreadDef(wirelessSens, taskWirelessSens, osPriorityNormal, 0, 512);
+  osThreadDef(wirelessSens, taskWirelessSens, osPriorityNormal, 0, 300);
   wirelessSensHandle = osThreadCreate(osThread(wirelessSens), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */

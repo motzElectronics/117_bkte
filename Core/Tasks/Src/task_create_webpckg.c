@@ -29,11 +29,16 @@ void taskCreateWebPckg(void const *argument)
     u8 len;
     xSemaphoreTake(semCreateWebPckgHandle, 1);
 
+    // osSemaphoreWait(semCreateWebPckgHandle, osWaitForever);
+
     offAllLeds();
     vTaskSuspend(createWebPckgHandle);
 
     for (;;)
     {
+        // osSemaphoreWait(semCreateWebPckgHandle, osWaitForever);
+        // delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
+        // while (delayPages > BKTE_THRESHOLD_CNT_PAGES && (curPckg = getFreePckg()) != NULL)
         delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
         while ((delayPages > BKTE_THRESHOLD_CNT_PAGES || (xSemaphoreTake(semCreateWebPckgHandle, 1) == pdTRUE)) && (curPckg = getFreePckg()) != NULL)
         {

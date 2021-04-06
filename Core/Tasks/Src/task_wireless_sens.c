@@ -70,7 +70,6 @@ void parceWirelessSens(u8* data, u16 len){
             numSens = data[i * SZ_BLOCK_SENS + 1];
 
             // D(printf("RSSI %d: %d\r\n", numSens, value));
-
             
             pckgTelWireless.group = TEL_GR_HARDWARE_STATUS;
             pckgTelWireless.code = TEL_CD_HW_WIRELESS_SENS_RSSI;

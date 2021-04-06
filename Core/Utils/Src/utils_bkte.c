@@ -13,14 +13,15 @@
 GPIO_TypeDef* oneWirePorts[BKTE_MAX_CNT_1WIRE] = {
     ONEWIRE_1_EN_GPIO_Port, ONEWIRE_2_EN_GPIO_Port, ONEWIRE_3_EN_GPIO_Port,
     ONEWIRE_4_EN_GPIO_Port};
-u16 oneWirePins[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_Pin, ONEWIRE_2_EN_Pin,
-                                       ONEWIRE_3_EN_Pin, ONEWIRE_4_EN_Pin};
+u16 oneWirePins[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_Pin, ONEWIRE_2_EN_Pin, ONEWIRE_3_EN_Pin, ONEWIRE_4_EN_Pin};
+
 // extern osMessageQId queue1WireHandle;
 extern UART_HandleTypeDef huart3;
 extern RTC_HandleTypeDef hrtc;
 extern osMutexId mutexRTCHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
+extern osMutexId mutexFlashWriteHandle;
 extern osThreadId getNewBinHandle;
 extern osSemaphoreId semCreateWebPckgHandle;
 // extern osMutexId mutexRTCHandle;
@@ -147,23 +148,9 @@ u32 getUnixTimeStamp() {
 
 u32 getFlashData(u32 ADDR) { return (*(__IO u32*)ADDR); }
 
-/*u8 getDeviation(EnergyData* pCurData, EnergyData* pLastData){
-        float low = (1 - BKTE_PERCENT_DEVIATION_ENERGY_DATA);
-        float high = (1 + BKTE_PERCENT_DEVIATION_ENERGY_DATA);
-        if(pLastData->current * low > pCurData->current || pLastData->current *
-high < pCurData->current || pLastData->enAct * low > pCurData -> enAct ||
-pLastData->enAct * high < pCurData->enAct || pLastData->enReact * low > pCurData
--> enReact || pLastData->enReact * high < pCurData->enReact || pLastData->volt *
-low > pCurData -> volt || pLastData->volt * high < pCurData->volt){ *pLastData =
-*pCurData; return 1;
-        }
-        return 0;
-}*/
-
 u8 isCrcOk(char* pData, int len) {
     u32 crcCalc = crc32_byte(pData, len);
-    u32 crcRecv = pData[len] << 24 | pData[len + 1] << 16 |
-                  pData[len + 2] << 8 | pData[len + 3];
+    u32 crcRecv = pData[len] << 24 | pData[len + 1] << 16 | pData[len + 2] << 8 | pData[len + 3];
     if (crcCalc != crcRecv) {
         D(printf("ERROR: crc \r\n"));
     }
@@ -194,18 +181,6 @@ void resetTempLine(u8 numLine) {
                       GPIO_PIN_RESET);
 }
 
-// void getSzNewSoft(){
-//	u8 timestamp[LEN_TIMESTAMP + 1];
-//	memset(timestamp, '\0', LEN_TIMESTAMP);
-//	rxUartSIM_IT();
-//	while(simGetDateTime(timestamp) != SIM_SUCCESS){
-//		memset(timestamp, '\0', LEN_TIMESTAMP);
-//		printf("ERROR: bad time\r\n");
-//		sdWriteError("simGetDateTime() ISSUE:BAD_TIME\r\n");
-////		rxUartSIM_IT();
-//	}
-//}
-
 void offAllLeds() {
     HAL_GPIO_WritePin(LED1G_GPIO_Port, LED1G_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(LED1R_GPIO_Port, LED1R_Pin, GPIO_PIN_SET);
@@ -234,28 +209,21 @@ void toggleRedLeds(){
           HAL_GPIO_TogglePin(LED4R_GPIO_Port, LED4R_Pin);
 }*/
 
-void checkBufForWritingToFlash() {  //! need to delete
-
-    D(printf("checkBufForWritingToFlash()\r\n"));
-    /*xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
-    if((circBufPckgEnergy.numPckgInBuf + 1) * SZ_PCKGENERGY + 1 >
-    spiFlash64.pgSz){ updSpiFlash();
-    }
-    xSemaphoreGive(mutexWriteToEnergyBufHandle);*/
-}
-
 void updSpiFlash(CircularBuffer* cbuf) {
     u16 bufEnd[2] = {0, BKTE_PREAMBLE};
-    // xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+
+    // osMutexWait(mutexFlashWriteHandle, osWaitForever);
 
     bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
     cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
     spiFlash64.lock = 0;
     spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
     cBufReset(cbuf);
-
-    // xSemaphoreGive(mutexWriteToEnergyBufHandle);
+    
     D(printf("updSpiFlash()\r\n"));
+
+    // osSemaphoreRelease(semCreateWebPckgHandle);
+    // osMutexRelease(mutexFlashWriteHandle);
 }
 
 u8 waitGoodCsq(u32 timeout) {
@@ -284,15 +252,21 @@ u8 waitGoodCsq(u32 timeout) {
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf) {
     u16 bufEnd[2] = {0, BKTE_PREAMBLE};
     xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
+
+    // osMutexWait(mutexFlashWriteHandle, osWaitForever);
+    
     if (cbuf->writeAvailable < sz + 2 + 4) {
         bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
         cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
         spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
         cBufReset(cbuf);
+
+        // osSemaphoreRelease(semCreateWebPckgHandle);
     } else {
         cBufWriteToBuf(cbuf, &cmdData, 1);
         cBufWriteToBuf(cbuf, data, sz);
     }
+    // osMutexRelease(mutexFlashWriteHandle);
     xSemaphoreGive(mutexWriteToEnergyBufHandle);
 }
 

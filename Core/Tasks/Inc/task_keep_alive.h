@@ -12,5 +12,9 @@ u16 getAdcVoltBat();
 void pwrOffBkte();
 void updRTC();
 void generateMsgKeepAlive();
+void generateMsgBat();
 void generateMsgDevOff();
+
+ErrorStatus sendMsgFWUpdated();
+ErrorStatus sendMsgDevOff();
 #endif

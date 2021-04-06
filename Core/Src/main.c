@@ -230,9 +230,10 @@ u8 waitTx(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout){
 	while(!pFlags->isIrqTx && tout < timeout){
 		osDelay(pause);
 		tout += pause;
-		if(strlen(waitStr) > 1)
-			D(printf("%s timeout: %d\r\n", waitStr, tout));
+		// if(strlen(waitStr) > 1)
+		// 	D(printf("%s timeout: %d\r\n", waitStr, tout));
 	}
+    if(strlen(waitStr) > 1) D(printf("%s timeout: %d\r\n", waitStr, tout));
   return pFlags->isIrqTx;
 }
 
@@ -241,9 +242,10 @@ u8 waitRx(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout){
 	while(!(pFlags->isIrqRx) && tout < timeout){
 		osDelay(pause);
 		tout += pause;
-		if(strlen(waitStr) > 1)
-			D(printf("%s timeout: %d\r\n", waitStr, tout));
+		// if(strlen(waitStr) > 1)
+		// 	D(printf("%s timeout: %d\r\n", waitStr, tout));
 	}
+    if(strlen(waitStr) > 1) D(printf("%s timeout: %d\r\n", waitStr, tout));
   return pFlags->isIrqRx;
 }
 
@@ -255,6 +257,7 @@ u8 waitIdle(char* waitStr, IrqFlags* pFlags, u16 pause, u32 timeout){
 		//if(strlen(waitStr) > 1)
 			// D(printf("%s timeout: %d\r\n", waitStr, tout));
 	}
+    if(strlen(waitStr) > 1) D(printf("%s timeout: %d\r\n", waitStr, tout));
   return pFlags->isIrqIdle;
 }
 
@@ -263,9 +266,10 @@ u8 waitIdleCnt(char* waitStr, IrqFlags* pFlags, u8 cnt, u16 pause, u32 timeout){
 	while((pFlags->isIrqIdle) < cnt && tout < timeout){
 		osDelay(pause);
 		tout += pause;
-		if(strlen(waitStr) > 1)
-			D(printf("%s timeout: %d\r\n", waitStr, tout));
+		// if(strlen(waitStr) > 1)
+		// 	D(printf("%s timeout: %d\r\n", waitStr, tout));
 	}
+    if(strlen(waitStr) > 1) D(printf("%s timeout: %d\r\n", waitStr, tout));
   return pFlags->isIrqIdle;
 }
 
