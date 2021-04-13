@@ -34,11 +34,32 @@ void spiFlashInit(u8* buf){
 	spiFlash64.headNumPg = 0;
 	spiFlash64.lock = 0;
 	spiFlashRdPg(buf, 256, 0, BKTE_SAVE_NUM_PAGE);
+    
+	bkte.enAct = buf[16] | buf[17] << 8 | buf[18] << 16 | buf[19] << 24;
+	bkte.enReact = buf[20] | buf[21] << 8 | buf[22] << 16 | buf[23] << 24;
+    if (bkte.enAct > 0xA0000000) bkte.enAct = 0;
+    if (bkte.enReact > 0xA0000000) bkte.enReact = 0;
+    D(printf("Read energy: act %d, react %d\r\n", bkte.enAct, bkte.enReact));
+    
 	tmp = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-	if(tmp < SPIFLASH_NUM_PG_GNSS) 
-		spiFlash64.headNumPg = tmp;
-        spiFlash64.tailNumPg = spiFlash64.headNumPg;
-        spiFlashES(spiFlash64.headNumPg / SPIFLASH_NUM_PG_IN_SEC);
+    D(printf("Read headNumPg: %d\r\n", tmp));
+	spiFlash64.headNumPg = tmp;
+    
+    tmp = buf[4] | buf[5] << 8 | buf[6] << 16 | buf[7] << 24;
+    D(printf("Read tailNumPg: %d\r\n", tmp));
+	spiFlash64.tailNumPg = tmp;
+
+    if (spiFlash64.headNumPg > SPIFLASH_NUM_PG_GNSS 
+         || spiFlash64.tailNumPg > SPIFLASH_NUM_PG_GNSS) {
+            spiFlash64.headNumPg = 0;
+            spiFlash64.tailNumPg = spiFlash64.headNumPg;
+            spiFlashES(spiFlash64.headNumPg / SPIFLASH_NUM_PG_IN_SEC);
+        }
+
+    // spiFlash64.headNumPg = 0;
+    // spiFlash64.tailNumPg = spiFlash64.headNumPg;
+    // spiFlashES(spiFlash64.headNumPg / SPIFLASH_NUM_PG_IN_SEC);
+    // spiFlashSaveData();
 	//TODO:бинарный поиск head, tail
 
 //	for(u8 i = 0; i < SPIFLASH_NUM_SEC_GNSS; i++)
@@ -85,14 +106,14 @@ u8 spiFlashRxData(u8* data, u16 sz){
 
 void spiFlashES(u32 numSec)
 {
+    D(printf("spiFlash ErSec %d\r\n", numSec));
 	u32 secAddr;
 
 	while(spiFlash64.lock == 1)
 		osDelay(100);
 
 	secAddr = numSec * spiFlash64.secSz;
-	u8 data[] = {SPIFLASH_SE, ((secAddr & 0xFF0000) >> 16),
-			((secAddr & 0xFF00) >> 8), (secAddr & 0xFF)};
+	u8 data[] = {SPIFLASH_SE, ((secAddr & 0xFF0000) >> 16), ((secAddr & 0xFF00) >> 8), (secAddr & 0xFF)};
 
 	spiFlash64.lock = 1;
 	spiFlashWaitReady();
@@ -131,7 +152,7 @@ void spiFlashWrEn(){
 }
 
 u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
-	// D(printf("spiFlash WrPg\r\n"));
+	D(printf("spiFlash WrPg %d\r\n", numPage));
 	u32 addr;
 	u8 ret = 0;
 	if(spiFlash64.tailNumPg > spiFlash64.headNumPg && 
@@ -176,8 +197,8 @@ u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 	return ret;
 }
 
-void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
-	// D(printf("spiFlash RdPg\r\n"));
+void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage) {
+	D(printf("spiFlash RdPg %d\r\n", numPage));
 	u32 addr;
 	while(spiFlash64.lock == 1)
 		osDelay(200);
@@ -197,6 +218,52 @@ void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 	osDelay(10);
 	spiFlash64.tailNumPg = (spiFlash64.tailNumPg + 1) % SPIFLASH_NUM_PG_GNSS;
 	spiFlash64.lock = 0;
+}
+
+int getDelayPages() {
+    return spiFlash64.headNumPg >= spiFlash64.tailNumPg ? 
+            spiFlash64.headNumPg - spiFlash64.tailNumPg : 
+            spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
+}
+
+void spiFlashSaveData() {
+	u32 addr;
+    u8 buf[32];
+
+    memset(buf, 0, 32);
+    memcpy(&buf[0], &spiFlash64.headNumPg, 4);
+    memcpy(&buf[4], &spiFlash64.tailNumPg, 4);
+    memcpy(&buf[16], &bkte.enAct, 4);
+    memcpy(&buf[20], &bkte.enReact, 4);
+
+    spiFlashES(BKTE_SAVE_NUM_PAGE / SPIFLASH_NUM_PG_IN_SEC);
+
+    while(spiFlash64.lock == 1)
+        osDelay(200);
+    spiFlash64.lock = 1;
+
+    D(printf("Save pages: head %d, tail %d\r\n", spiFlash64.headNumPg, spiFlash64.tailNumPg));
+    D(printf("Save energy: act %d, react %d\r\n", bkte.enAct, bkte.enReact));
+
+    addr = (BKTE_SAVE_NUM_PAGE * spiFlash64.pgSz);
+	u8 data[] = {SPIFLASH_PP, ((addr & 0xFF0000) >> 16), ((addr & 0xFF00) >> 8), (addr & 0xFF)};
+	// D(printf("spiFlashWaitReady()\r\n"));
+	spiFlashWaitReady();
+	// D(printf("spiFlashWrEn()\r\n"));
+	spiFlashWrEn();
+
+	SPIFLASH_CS_SEL;
+	// D(printf("SPIFLASH_PP()\r\n"));
+	spiFlashTxRxCmd(data, 4);
+	// D(printf("spiFlashTxData()\r\n"));
+	spiFlashTxData(buf, 32);
+	SPIFLASH_CS_UNSEL;
+
+	// D(printf("spiFlashWaitReady()\r\n"));
+	spiFlashWaitReady();
+	osDelay(10);
+
+    spiFlash64.lock = 0;
 }
 
 //u32 spiFlashReadByte(u8 *pBuffer, u32 Bytes_Address){

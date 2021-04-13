@@ -32,10 +32,6 @@ void taskGetNewBin(void const* argument) {
     lockAllTasks();
     isRxNewFirmware = 1;
 
-    if (!bkte.isTCPOpen) {
-        while (openTcp() != TCP_OK);
-    }
-
     while (!(szSoft = getSzFirmware()));
     flashClearPage(FLASH_SECTOR_11);
     clearAllWebPckgs();
@@ -59,8 +55,7 @@ void taskGetNewBin(void const* argument) {
                 cntFailTCPReq = 0;
             }
 
-            if (getPartFirmware(bufNumBytesFirmware, partFirmware,
-                                szPartSoft + 4, 8) == SUCCESS &&
+            if (getPartFirmware(bufNumBytesFirmware, partFirmware, szPartSoft + 4, 8) == SUCCESS &&
                 isCrcOk(partFirmware, szPartSoft)) {
                 curSzSoft += szPartSoft;
                 D(printf("OK: DOWNLOAD %d BYTES\r\n", (int)curSzSoft));
@@ -76,14 +71,12 @@ void taskGetNewBin(void const* argument) {
                 }
             }
         } else {
-            if (!bkte.isTCPOpen) {
-                while (openTcp() != TCP_OK);
-            }
             if (sendMsgFWUpdated() != SUCCESS) {
                 D(printf("ERROR: Send FW UPDATED\r\n"));
             }
             D(printf("DOWNLOAD COMPLETE\r\n"));
             updBootInfo();
+            spiFlashSaveData();
             osDelay(100);
             NVIC_SystemReset();
         }

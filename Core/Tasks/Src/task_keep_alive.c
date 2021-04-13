@@ -17,7 +17,7 @@ extern CircularBuffer circBufAllPckgs;
 
 // static PckgEnergy curPckgEnergy;
 
-u8 bufTxData[20];
+u8 bufTxData[256];
 
 void taskKeepAlive(void const* argument) {
     u16 timeout = 1;
@@ -57,7 +57,8 @@ u16 getAdcVoltBat() {
 
 void pwrOffBkte() {
     char strVolts[4];
-    static u32 delayPages = 1;
+    u32 delayPages = BKTE_THRESHOLD_CNT_PAGES + 1;
+    u32 curTime = 0;
     u8 cnt;
     vTaskSuspend(getEnergyHandle);
     vTaskSuspend(getTempHandle);
@@ -72,19 +73,32 @@ void pwrOffBkte() {
     generateMsgBat();
     D(printf("OK: PWR OFF WAIT: %d\r\n", getUnixTimeStamp()));
 
-    while (delayPages > BKTE_THRESHOLD_CNT_PAGES &&
-           (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360) {
+    curTime = 0;
+    delayPages = getDelayPages();
+    while (delayPages > BKTE_THRESHOLD_CNT_PAGES && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360) {
         osDelay(5000);
-        printf("delayPages %d\r\n", delayPages);
-        delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? 
-                    spiFlash64.headNumPg - spiFlash64.tailNumPg : 
-                    spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
+        curTime += 5000;
+        delayPages = getDelayPages();
+        printf("wait dalaypages %d\r\n", delayPages);
+
+        if (curTime > 300000) {
+            if (sendMsgDevOffValue(11) != SUCCESS) {
+                D(printf("ERROR: Send dev off val\r\n"));
+            }
+        }
     }
 
-    while ((cnt = getCntFreePckg()) != CNT_WEBPCKGS &&
-                 (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 300) {
+    curTime = 0;
+    while ((cnt = getCntFreePckg()) != CNT_WEBPCKGS && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 350) {
         osDelay(5000);
-        printf("getCntFreePckg %d\r\n", cnt);
+        curTime += 5000;
+        printf("wait free pckg %d\r\n", cnt);
+
+        if (curTime > 300000) {
+            if (sendMsgDevOffValue(12) != SUCCESS) {
+                D(printf("ERROR: Send dev off val\r\n"));
+            }
+        }
     }
 
     bkte.pwrInfo.adcVoltBat = getAdcVoltBat();
@@ -95,10 +109,17 @@ void pwrOffBkte() {
     updSpiFlash(&circBufAllPckgs);
     xSemaphoreGive(semCreateWebPckgHandle);
     
-    while ((bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360 &&
-           !bkte.isSentData) {
+    curTime = 0;
+    while (!bkte.isSentData && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 340) {
         osDelay(1000);
-        printf("wait isSentData\r\n");
+        curTime += 1000;
+        printf("wait data send\r\n");
+
+        if (curTime > 300000) {
+            if (sendMsgDevOffValue(13) != SUCCESS) {
+                D(printf("ERROR: Send dev off val\r\n"));
+            }
+        }
     }
     if (!bkte.isSentData) {
         sdWriteLog(SD_MSG_NOT_SENT, SD_LEN_NOT_SENT, NULL, 0, &sdSectorLogs);
@@ -110,6 +131,8 @@ void pwrOffBkte() {
     sprintf(strVolts, "%03d", bkte.pwrInfo.adcVoltBat);
     sdWriteLog(SD_MSG_OFF_BKTE, SD_LEN_OFF_BKTE, strVolts, 3, &sdSectorLogs);
     sdUpdLog(&sdSectorLogs);
+
+    spiFlashSaveData();
 
     osDelay(10000);
     HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);  // OFF
@@ -183,6 +206,79 @@ ErrorStatus sendMsgDevOff() {
     copyTelemetry(bufTxData, &pckgTel);
 
     ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY, 1);
+    
+    return ret;
+}
+
+ErrorStatus sendMsgDevOffValue(u32 val) {
+    ErrorStatus ret = SUCCESS;
+    PckgTelemetry pckgTel;
+
+    memset(bufTxData, 0, 20);
+    pckgTel.group = TEL_GR_HARDWARE_STATUS;
+	pckgTel.code = TEL_CD_HW_BKTE;
+	pckgTel.data = val;
+    pckgTel.unixTimeStamp = getUnixTimeStamp();
+    copyTelemetry(bufTxData, &pckgTel);
+
+    ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY, 1);
+    
+    return ret;
+}
+
+ErrorStatus sendInitTelemetry() {
+    ErrorStatus ret = SUCCESS;
+    PckgTelemetry pckgTel;
+    long long phoneNum;
+    u32 tmp;
+    u8 ptr = 0;
+
+    memset(bufTxData, 0, 256);
+
+    pckgTel.unixTimeStamp = getUnixTimeStamp();
+    pckgTel.group = TEL_GR_GENINF;
+    pckgTel.code = TEL_CD_GENINF_NUM_FIRMWARE;
+    pckgTel.data = BKTE_ID_FIRMWARE;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = TEL_CD_GENINF_NUM_BOOT;
+    pckgTel.data = BKTE_ID_BOOT;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = TEL_CD_GENINF_NUM_PCB;
+    pckgTel.data = BKTE_ID_PCB;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    phoneNum = simGetPhoneNum();
+    if (phoneNum > 0) {
+        tmp = phoneNum % 1000000000;
+        pckgTel.code = TEL_CD_GENINF_PHONE_NUM1;
+        pckgTel.data = tmp;
+        copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+    }
+
+    pckgTel.group = TEL_GR_HARDWARE_STATUS;
+    pckgTel.code = TEL_CD_HW_BKTE;
+    pckgTel.data = 1;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = TEL_CD_HW_SD;
+    pckgTel.data = bkte.hwStat.isFatMount;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = TEL_CD_HW_DS2482;
+    pckgTel.data = bkte.hwStat.isDS2482;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = TEL_CD_HW_SPI_FLASH;
+    pckgTel.data = bkte.hwStat.isSPIFlash;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = TEL_CD_HW_LORA;
+    pckgTel.data = bkte.hwStat.isLoraOk;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY * ptr, ptr);
     
     return ret;
 }

@@ -130,7 +130,7 @@ WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq){
 
 ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq) {
     WebPckg* curPckg;
-    u8 req[32];
+    u8 req[128];
     ErrorStatus ret = SUCCESS;
     //curPckg = createWebPckgReq(CMD_DATA, data, sz, szReq);
     req[0] = CMD_DATA;

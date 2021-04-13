@@ -1,6 +1,6 @@
 #include "../Tasks/Inc/task_wireless_sens.h"
 extern osThreadId wirelessSensHandle;
-static char bufSens[USART_SZ_BUF_RX_USART2];
+char bufSens[USART_SZ_BUF_RX_USART2];
 CircularBuffer circBufWirelessSens = {.buf = NULL, .max = 0};
 static u16 lenData, lenAllPckg;
 static PckgTemp pckgTempWireless;
@@ -15,33 +15,45 @@ void taskWirelessSens(void const * argument){
     for(;;){
         uInfoWirelessSens.irqFlags.isIrqRx = 0;
         memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
+        // read data from cBuf
         while(!waitRx("", &uInfoWirelessSens.irqFlags, 1000, 15000)){
-            D(printf("ERROR: NO WIRELESS SENS\r\n"));
+            // D(printf("ERROR: NO WIRELESS SENS\r\n"));
             continue;
         }
+        
         while(cBufRead(&circBufWirelessSens, (u8*)bufSens, 0)){
             lenData = bufSens[3] << 8 | bufSens[2];
             lenAllPckg = lenData + SZ_HEADER_CRC16;
             if((bufSens[lenAllPckg - 1] << 8 | bufSens[lenAllPckg - 2]) == crc16WirelesSens(bufSens + 4, lenData)){
                 parceWirelessSens(bufSens + 4, lenData);
                 osDelay(10);
-                // parceWirelessSens(bufSens + 4, lenData);
-                // osDelay(10);
-                // parceWirelessSens(bufSens + 4, lenData);
-                // osDelay(10);
-                // parceWirelessSens(bufSens + 4, lenData);
-                // osDelay(10);
-                // parceWirelessSens(bufSens + 4, lenData);
-                // osDelay(10);
-                // parceWirelessSens(bufSens + 4, lenData);
                 // D(printf("OK: read wireless sensPckg\r\n"));
                 memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
             } else {
                 //D(printf("Error: crc16 wireless\r\n"));
             }
+        }
+        
 
+        /*// read data by idle interrupt
+        while(!waitIdle("", &uInfoWirelessSens.irqFlags, 1, 15000)){
+            D(printf("ERROR: NO WIRELESS SENS\r\n"));
+            continue;
+        }
+        uInfoWirelessSens.irqFlags.isIrqIdle = 0;
+
+        lenData = bufSens[3] << 8 | bufSens[2];
+        lenAllPckg = lenData + SZ_HEADER_CRC16;
+        if((bufSens[lenAllPckg - 1] << 8 | bufSens[lenAllPckg - 2]) == crc16WirelesSens(bufSens + 4, lenData)){
+            parceWirelessSens(bufSens + 4, lenData);
+            osDelay(10);
+            // D(printf("OK: read wireless sensPckg\r\n"));
+            memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
+        } else {
+            //D(printf("Error: crc16 wireless\r\n"));
         }
         // D(printf("empty wirelessSensHandle\r\n"));
+        */
     }
 
 }

@@ -29,6 +29,12 @@ void taskGetTemp(void const* argument) {
         osDelay(100);
         fillPckgTemp(&pckgTemp, temps);
         saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
+        osDelay(100);
+        fillPckgTemp(&pckgTemp, temps);
+        saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
+        osDelay(100);
+        fillPckgTemp(&pckgTemp, temps);
+        saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
     }
 }
 
@@ -103,6 +109,7 @@ u8 readTemp() {
 
         return 1;
     }
+    return 1;
 }
 
 void saveErrorToTel() {

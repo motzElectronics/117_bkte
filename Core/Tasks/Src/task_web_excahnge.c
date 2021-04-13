@@ -57,7 +57,7 @@ void taskWebExchange(void const* argument) {
             openTcp();
             osMutexRelease(mutexWebHandle);
         } else if (bkte.isTCPOpen == 1) {
-            if (statSend == TCP_OK || statSend == TCP_SEND_ER_LOST_PCKG) {
+            if (statSend == TCP_OK) {
                 if (curPckg != NULL) {
                     clearWebPckg(curPckg);
                     curPckg = NULL;
@@ -67,6 +67,10 @@ void taskWebExchange(void const* argument) {
 
             osMutexWait(mutexWebHandle, osWaitForever);
             statSend = sendTcp(curPckg->buf, curPckg->shift);
+            if (statSend == TCP_OK) {
+                clearWebPckg(curPckg);
+                curPckg = NULL;
+            }
             osMutexRelease(mutexWebHandle);
 
             osDelay(10);

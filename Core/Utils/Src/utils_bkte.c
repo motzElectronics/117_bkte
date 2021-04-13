@@ -37,8 +37,7 @@ void bkteInit() {
     HAL_GPIO_WritePin(SD_PWR_EN_GPIO_Port, SD_PWR_EN_Pin, GPIO_PIN_RESET);
 
     HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_SET);
-    bkte.pwrInfo.isPwrState =
-        HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
+    bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
     if (bkte.pwrInfo.isPwrState) {
         HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);
         HAL_Delay(5000);
@@ -113,11 +112,24 @@ void fillPckgEnergy(PckgEnergy* pckg, u16* data) {
                   data[BKTE_NUM_ACT_ENERGY + 2] << 16 |
                   data[BKTE_NUM_ACT_ENERGY + 1] << 8 |
                   data[BKTE_NUM_ACT_ENERGY];
+    if (pckg->enAct < bkte.enAct) {
+        pckg->enAct = 0;
+    } else {
+        bkte.enAct = pckg->enAct;
+    }
 
     pckg->enReact = data[BKTE_NUM_REACT_ENERGY + 3] << 24 |
                     data[BKTE_NUM_REACT_ENERGY + 2] << 16 |
                     data[BKTE_NUM_REACT_ENERGY + 1] << 8 |
                     data[BKTE_NUM_REACT_ENERGY];
+    bkte.enReact = pckg->enReact;
+    if (pckg->enReact < bkte.enReact) {
+        pckg->enReact = 0;
+    } else {
+        bkte.enReact = pckg->enReact;
+    }
+
+    // D(printf("Energy: act %d, reatc %d\r\n", bkte.enAct, bkte.enReact));
 }
 
 void fillPckgTemp(PckgTemp* pckg, s8* data) {

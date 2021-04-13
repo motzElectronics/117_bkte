@@ -42,6 +42,7 @@ void simInit(){
 				sdUpdLog(&sdSectorLogError);
 				sdUpdLog(&sdSectorLogs);
 		//				  createLog(logError, LOG_SZ_ERROR, "ERROR: TOTAL RESET \r\n");
+                spiFlashSaveData();
 				osDelay(3000);
 				HAL_NVIC_SystemReset();
 			}
@@ -55,7 +56,9 @@ void simInit(){
 					sdWriteLog(SD_ER_SAPBR, SD_LEN_ER_MSG, "1", 1, &sdSectorLogError);
 					sdUpdLog(&sdSectorLogError);
 					sdUpdLog(&sdSectorLogs);
-					fail = 0;  
+					fail = 0;
+                    spiFlashSaveData();
+				    osDelay(3000);
 					HAL_NVIC_SystemReset();
 				}
 				sdWriteLog(SD_ER_SAPBR, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogError);      
@@ -121,7 +124,7 @@ void copyStr(char* dist, char* source, u16 distSz){
 
 
 char* simDownloadData(char* data, u16 sz){
-	return simTxATCmd(data, sz, 40000);
+	return simTxATCmd(data, sz, 90000);
 }
 
 u8 simCheckCSQ(){
@@ -313,7 +316,7 @@ u8 procReturnStatus(u8 ret) {
 
 	if (notSend == 1) {
 		simReset();
-		D(printf("DANGER DANGER HIGH VOLTAGE\r\n"));
+		D(printf("LOST PACKAGES!\r\n"));
 		ret = TCP_SEND_ER_LOST_PCKG;
 		notSend = 0;
 	}
@@ -344,10 +347,10 @@ u8 openTcp() {
 
 u8 sendTcp(u8* data, u16 sz) {
 	u8 ret = TCP_OK;
-    // if (!bkte.isTCPOpen) {
-    //     return TCP_SEND_ER;
-    // }
-	if (!waitGoodCsq(60)) {
+    if (!bkte.isTCPOpen) {
+        while (openTcp() != TCP_OK);
+    }
+	if (ret == TCP_OK && !waitGoodCsq(90)) {
         D(printf("ER: waitGoodCsq\r\n"));
 		ret = TCP_CSQ_ER;
     }

@@ -10,6 +10,7 @@
         "cmsis_os.h": "c",
         "utils_sd.h": "c",
         "task_get_new_bin.h": "c",
-        "main.h": "c"
+        "main.h": "c",
+        "task_get_energy.h": "c"
     }
 }

@@ -26,7 +26,7 @@
 #define BKTE_ID_TRAINCAR_MAX	2
 #define BKTE_IS_LORA_MASTER		1
 
-#define BKTE_ID_FIRMWARE		7
+#define BKTE_ID_FIRMWARE		8
 #define BKTE_ID_BOOT			2
 #define BKTE_ID_PCB				3
 #define BKTE_ID_TRAIN			1706
@@ -141,6 +141,8 @@ typedef struct{
     u8 isTCPOpen;
     u8 tcpErrCnt;
     u8 csq;
+    u32 enAct;
+    u32 enReact;
 //	FInfo	fInfo[NUM_READ_FILES];
 }BKTE;
 
