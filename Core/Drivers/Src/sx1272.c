@@ -287,7 +287,7 @@ void sx1272_send(u8 *data, u8 sz){
     /* Initializes TX mode to send the packet in FIFO */
     sx1272_set_op_mode((LORA << LRANGE_MODE) | (LORA_ACCESS << REG_SHARE) | (TX << MODE));
     sx1272_get_op_mode();
-//    xSemaphoreTake(IRQLORASemaphoreHandle,  portMAX_DELAY);
+//    osMutexWait(IRQLORASemaphoreHandle,  osWaitForever);
 
     uint8_t flags = sx1272_get_irq_flags();
 
@@ -343,7 +343,7 @@ u8 sx1272_receive(u8* pBuf, u8* pRssi, u16 timeOut){
     flags = sx1272_get_irq_flags();
     /* Polls for ValidHeader flag */
 
-	if(xSemaphoreTake(semLoraRxPckgHandle, timeOut / portTICK_RATE_MS) == pdPASS){
+	if(osMutexWait(semLoraRxPckgHandle, timeOut / portTICK_RATE_MS) == pdPASS){
 
 		flags = sx1272_get_irq_flags();
 		/* Polls for ValidHeader flag */

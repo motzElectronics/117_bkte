@@ -25,7 +25,7 @@ void taskWirelessSens(void const * argument){
             lenData = bufSens[3] << 8 | bufSens[2];
             lenAllPckg = lenData + SZ_HEADER_CRC16;
             if((bufSens[lenAllPckg - 1] << 8 | bufSens[lenAllPckg - 2]) == crc16WirelesSens(bufSens + 4, lenData)){
-                parceWirelessSens(bufSens + 4, lenData);
+                parseWirelessSens(bufSens + 4, lenData);
                 osDelay(10);
                 // D(printf("OK: read wireless sensPckg\r\n"));
                 memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
@@ -45,7 +45,7 @@ void taskWirelessSens(void const * argument){
         lenData = bufSens[3] << 8 | bufSens[2];
         lenAllPckg = lenData + SZ_HEADER_CRC16;
         if((bufSens[lenAllPckg - 1] << 8 | bufSens[lenAllPckg - 2]) == crc16WirelesSens(bufSens + 4, lenData)){
-            parceWirelessSens(bufSens + 4, lenData);
+            parseWirelessSens(bufSens + 4, lenData);
             osDelay(10);
             // D(printf("OK: read wireless sensPckg\r\n"));
             memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
@@ -58,7 +58,7 @@ void taskWirelessSens(void const * argument){
 
 }
 
-void parceWirelessSens(u8* data, u16 len){
+void parseWirelessSens(u8* data, u16 len){
     u16 cntBlocks = len / SZ_BLOCK_SENS;
     u32 value;
     u8 numSens;

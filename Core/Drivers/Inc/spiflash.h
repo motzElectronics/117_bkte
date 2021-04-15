@@ -43,7 +43,6 @@ typedef struct
 	u8		blCnt;
 	u32		capacityKb;
 	u8		statusRegister1;
-	u8		lock;
 	u32		headNumPg;
 	u32		tailNumPg;
 }SPIFlash;

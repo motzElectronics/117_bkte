@@ -10,26 +10,24 @@ extern osThreadId createWebPckgHandle;
 extern osThreadId getNewBinHandle;
 extern osThreadId wirelessSensHandle;
 extern osSemaphoreId semCreateWebPckgHandle;
-
 extern osMutexId mutexWriteToEnergyBufHandle;
 
 extern CircularBuffer rxUart1CircBuf;
-
 extern CircularBuffer circBufAllPckgs;
 
 static u16 testBufUart1[SZ_RX_UART1];
-static EnergyData lastData = {
-    .current = 0, .enAct = 0, .enReact = 0, .volt = 0};
 
 static PckgVoltAmper pckgVoltAmper;
 static PckgEnergy pckgEnergy;
+
+u8 isVoltAmperFresh(PckgVoltAmper *pckg);
+u8 isEnergyFresh(PckgEnergy *pckg);
 
 // u8 test = 0;
 
 void taskGetEnergy(void const* argument) {
     // vTaskSuspend(getEnergyHandle);
     u8 numIteration = 0;
-    u8 energyTime = 0;
     u16 retLen;
 
     spiFlashInit(circBufAllPckgs.buf);
@@ -49,26 +47,55 @@ void taskGetEnergy(void const* argument) {
         memset(testBufUart1, '\0', sizeof(testBufUart1));
         retLen = cBufRead(&rxUart1CircBuf, (u8*)testBufUart1, 0);
         if (retLen == BKTE_SZ_UART_MSG) {
-            numIteration = (numIteration + 1) % BKTE_ENERGY_FULL_LOOP;
+            numIteration = (numIteration + 1) % BKTE_MEASURE_FULL_LOOP;
             fillPckgVoltAmper(&pckgVoltAmper, testBufUart1);
-            // if(getDeviation(&curPckgEnergy.energyData, &lastData) || !numIteration){
-
-            saveData((u8*)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
-            fillPckgVoltAmper(&pckgVoltAmper, testBufUart1);
-            saveData((u8*)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
-            fillPckgVoltAmper(&pckgVoltAmper, testBufUart1);
-            saveData((u8*)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
-
-            // }
-            energyTime = (energyTime + 1) % 3;  //! change time after debugging!
-            if (!energyTime) {
-                fillPckgEnergy(&pckgEnergy, testBufUart1);
-                saveData((u8*)&pckgEnergy, SZ_CMD_ENERGY, CMD_DATA_ENERGY, &circBufAllPckgs);
-                // D(printf("OK: enAct: %08x, enReact: %08x", pckgEnergy.enAct, pckgEnergy.enReact));
+            // D(printf("Energy: volt %d, amper %d (prev: %d %d)\r\n", pckgVoltAmper.volt, pckgVoltAmper.amper, bkte.lastData.volt, bkte.lastData.current));
+            if (isVoltAmperFresh(&pckgVoltAmper) || !numIteration) {
+                saveData((u8*)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
+                // D(printf("Energy: volt %d, amper %d\r\n", pckgVoltAmper.volt, pckgVoltAmper.amper));
             }
+
+            fillPckgEnergy(&pckgEnergy, testBufUart1);
+            // D(printf("Energy: act %d, react %d (prev: %d %d)\r\n", pckgEnergy.enAct, pckgEnergy.enReact, bkte.lastData.enAct, bkte.lastData.enReact));
+            if (isEnergyFresh(&pckgEnergy) || !numIteration) {
+                saveData((u8*)&pckgEnergy, SZ_CMD_ENERGY, CMD_DATA_ENERGY, &circBufAllPckgs);
+                // D(printf("Energy: act %d, react %d (prev: %d %d)\r\n", pckgEnergy.enAct, pckgEnergy.enReact, bkte.lastData.enAct, bkte.lastData.enReact));
+            }
+            // D(printf("OK: enAct: %08x, enReact: %08x", pckgEnergy.enAct, pckgEnergy.enReact));
         }
         osDelay(400);
     }
+}
+
+u8 isVoltAmperFresh(PckgVoltAmper *pckg) {
+    if (pckg->amper != bkte.lastData.current || pckg->volt != bkte.lastData.volt) {
+        bkte.lastData.current = pckg->amper;
+        bkte.lastData.volt = pckg->volt;
+        return 1;
+    }
+    return 0;
+}
+
+u8 isEnergyFresh(PckgEnergy *pckg) {
+    u8 ret = 0;
+
+    if (pckg->enAct < bkte.lastData.enAct) {
+        pckg->enAct = 0;
+        ret |= 1;
+    } else if (pckg->enAct > bkte.lastData.enAct) {
+        bkte.lastData.enAct = pckg->enAct;
+        ret |= 1;
+    }
+
+    if (pckg->enReact < bkte.lastData.enReact) {
+        pckg->enReact = 0;
+        ret |= 1;
+    } else if (pckg->enReact > bkte.lastData.enReact) {
+        bkte.lastData.enReact = pckg->enReact;
+        ret |= 1;
+    }
+
+    return ret;
 }
 
 void unLockTasks() {
@@ -129,5 +156,5 @@ void generateInitTelemetry() {
     saveTelemetry(&pckgTel, &circBufAllPckgs);
 
     updSpiFlash(&circBufAllPckgs);
-    xSemaphoreGive(semCreateWebPckgHandle);
+    osSemaphoreRelease(semCreateWebPckgHandle);
 }

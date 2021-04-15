@@ -9,7 +9,12 @@ extern osThreadId keepAliveHandle;
 extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
 extern osThreadId wirelessSensHandle;
+extern osTimerId timerPowerOffHandle;
+extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
+extern osMutexId mutexRTCHandle;
+extern osMutexId mutexSDHandle;
+extern osMutexId mutexSpiFlashHandle;
 
 extern CircularBuffer circBufAllPckgs;
 
@@ -71,13 +76,18 @@ void taskGetNewBin(void const* argument) {
                 }
             }
         } else {
+            D(printf("DOWNLOAD COMPLETE\r\n"));
+            updBootInfo();
+            osTimerStart(timerPowerOffHandle, 300000);
+
+            osDelay(100);
+            spiFlashSaveData();
+            osDelay(1000);
+            bkte.isTCPOpen = 0;
             if (sendMsgFWUpdated() != SUCCESS) {
                 D(printf("ERROR: Send FW UPDATED\r\n"));
             }
-            D(printf("DOWNLOAD COMPLETE\r\n"));
-            updBootInfo();
-            spiFlashSaveData();
-            osDelay(100);
+            osDelay(1000);
             NVIC_SystemReset();
         }
     }
@@ -102,7 +112,12 @@ void updBootInfo() {
 }
 
 void lockAllTasks() {
+    osMutexWait(mutexWriteToEnergyBufHandle, osWaitForever);
+    osMutexWait(mutexRTCHandle, osWaitForever);
+    osMutexWait(mutexSpiFlashHandle, osWaitForever);
+    osMutexWait(mutexSDHandle, osWaitForever);
     osMutexWait(mutexWebHandle, osWaitForever);
+
     vTaskSuspend(webExchangeHandle);
     vTaskSuspend(getEnergyHandle);
     vTaskSuspend(getTempHandle);
@@ -110,7 +125,13 @@ void lockAllTasks() {
     // vTaskSuspend(loraHandle);
     vTaskSuspend(createWebPckgHandle);
     vTaskSuspend(wirelessSensHandle);
+
+    osMutexRelease(mutexWriteToEnergyBufHandle);
+    osMutexRelease(mutexRTCHandle);
+    osMutexRelease(mutexSpiFlashHandle);
+    osMutexRelease(mutexSDHandle);
     osMutexRelease(mutexWebHandle);
+    
 }
 
 u32 getSzFirmware() {

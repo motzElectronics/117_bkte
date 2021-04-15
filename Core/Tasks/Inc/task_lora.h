@@ -11,8 +11,8 @@
 #define LR_TASK_TIME_SLOT      1000
 #define LR_TASK_TIME_FULL    (BKTE_ID_TRAINCAR_MAX - BKTE_ID_TRAINCAR) * LR_TASK_TIME_SLOT * 2
 
-#define LR_TASK_PARCE_VALID_PCKG        0
-#define LR_TASK_PARCE_INCVALID_PCKG     1
+#define LR_TASK_PARSE_VALID_PCKG        0
+#define LR_TASK_PARSE_INCVALID_PCKG     1
 
 typedef struct{
     u32 timeStart;
@@ -33,9 +33,9 @@ void initTransmition();
 void lrStartTim(LoraTimer* pTim, u16 shift);
 void lrUpdTim(LoraTimer* pTim);
 void lrStopTim(LoraTimer* pTim);
-u8 parceReq(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
-u8 parceAnsw(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
-// u8 parceAnswMaster(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
+u8 parseReq(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
+u8 parseAnsw(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
+// u8 parseAnswMaster(u8* pBufData, LoraAlgTransition* pRx, LoraAlgTransition* pTx);
 void updReq(LoraAlgTransition* pTx);
 void updAnsw(LoraAlgTransition* pTx);
 void serializeLoraAlgTrans(u8* pBuf, LoraAlgTransition* pTx);
@@ -44,7 +44,7 @@ void clearLoraAlgTrans(LoraAlgTransition* pckg);
 
 void updStat(LoraStatPckg* pckgStat, LoraAlgTransition* pckg);
 void initLoraStat(LoraStatPckg* pckg);
-void parceServicesData(LoraAlgTransition* pRx);
+void parseServicesData(LoraAlgTransition* pRx);
 void updServices(LoraAlgTransition* pTx);
 void cpyRxInf(LoraAlgTransition* pRx, LoraAlgTransition* pTx);
 

@@ -27,7 +27,7 @@ void taskCreateWebPckg(void const *argument)
     u16 szAllPages = 0;
     u8 amntPages;
     u8 len;
-    xSemaphoreTake(semCreateWebPckgHandle, 1);
+    osSemaphoreWait(semCreateWebPckgHandle, 1);
 
     // osSemaphoreWait(semCreateWebPckgHandle, osWaitForever);
 
@@ -37,7 +37,7 @@ void taskCreateWebPckg(void const *argument)
     for (;;)
     {
         delayPages = getDelayPages();
-        while ((delayPages > BKTE_THRESHOLD_CNT_PAGES || (xSemaphoreTake(semCreateWebPckgHandle, 1) == pdTRUE)) && (curPckg = getFreePckg()) != NULL)
+        while ((delayPages > BKTE_THRESHOLD_CNT_PAGES || (osSemaphoreWait(semCreateWebPckgHandle, 1) == osOK)) && (curPckg = getFreePckg()) != NULL)
         {
             clearAllPages();
             if (bkte.csq < 10) {
@@ -54,7 +54,7 @@ void taskCreateWebPckg(void const *argument)
                 spiFlashRdPg((u8 *)tmpBufPage, 256, 0, spiFlash64.tailNumPg);
 
                 if ((len = isDataFromFlashOk(tmpBufPage, 256))) {
-                    parceData(tmpBufPage, len);
+                    parseData(tmpBufPage, len);
                 } else {
                     D(printf("ERROR: bad crc isDataFromFlashOk()\r\n"));
                 }
@@ -62,7 +62,7 @@ void taskCreateWebPckg(void const *argument)
             szAllPages = getSzAllPages();
             initWebPckg(curPckg, szAllPages, 0);
             addPagesToWebPckg(curPckg);
-            xQueueSendToBack(queueWebPckgHandle, &curPckg, portMAX_DELAY);
+            xQueueSendToBack(queueWebPckgHandle, &curPckg, osWaitForever);
             delayPages = getDelayPages();
         }
 
@@ -81,7 +81,7 @@ void clearAllPages()
     }
 }
 
-void parceData(u8 *tmpBufPage, u8 len)
+void parseData(u8 *tmpBufPage, u8 len)
 {
     u8 i = 0;
     while (i < len)

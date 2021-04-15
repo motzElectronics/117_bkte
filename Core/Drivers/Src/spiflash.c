@@ -7,11 +7,14 @@
 
 
 #include "../Drivers/Inc/spiflash.h"
+
 SPIFlash spiFlash64;
+
+extern osMutexId mutexSpiFlashHandle;
 
 void spiFlashInit(u8* buf){
 	
-	spiFlash64.lock = 1;
+	osMutexWait(mutexSpiFlashHandle, 60000);
 	spiMemInfo.pHSpi = &hspi2;
 	SPIFLASH_CS_UNSEL;
 	osDelay(100);
@@ -32,14 +35,15 @@ void spiFlashInit(u8* buf){
 	spiFlash64.blSz = spiFlash64.secSz * 16;
 	spiFlash64.capacityKb = (spiFlash64.secCnt * spiFlash64.secSz) / 1024;
 	spiFlash64.headNumPg = 0;
-	spiFlash64.lock = 0;
+
+	osMutexRelease(mutexSpiFlashHandle);
 	spiFlashRdPg(buf, 256, 0, BKTE_SAVE_NUM_PAGE);
     
-	bkte.enAct = buf[16] | buf[17] << 8 | buf[18] << 16 | buf[19] << 24;
-	bkte.enReact = buf[20] | buf[21] << 8 | buf[22] << 16 | buf[23] << 24;
-    if (bkte.enAct > 0xA0000000) bkte.enAct = 0;
-    if (bkte.enReact > 0xA0000000) bkte.enReact = 0;
-    D(printf("Read energy: act %d, react %d\r\n", bkte.enAct, bkte.enReact));
+	bkte.lastData.enAct = buf[16] | buf[17] << 8 | buf[18] << 16 | buf[19] << 24;
+	bkte.lastData.enReact = buf[20] | buf[21] << 8 | buf[22] << 16 | buf[23] << 24;
+    if (bkte.lastData.enAct >= 0xA0000000) bkte.lastData.enAct = 0;
+    if (bkte.lastData.enReact >= 0xA0000000) bkte.lastData.enReact = 0;
+    D(printf("Read energy: act %d, react %d\r\n", bkte.lastData.enAct, bkte.lastData.enReact));
     
 	tmp = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
     D(printf("Read headNumPg: %d\r\n", tmp));
@@ -60,7 +64,7 @@ void spiFlashInit(u8* buf){
     // spiFlash64.tailNumPg = spiFlash64.headNumPg;
     // spiFlashES(spiFlash64.headNumPg / SPIFLASH_NUM_PG_IN_SEC);
     // spiFlashSaveData();
-	//TODO:бинарный поиск head, tail
+    //TODO:бинарный поиск head, tail
 
 //	for(u8 i = 0; i < SPIFLASH_NUM_SEC_GNSS; i++)
 //		spiFlashES(i);
@@ -109,13 +113,11 @@ void spiFlashES(u32 numSec)
     D(printf("spiFlash ErSec %d\r\n", numSec));
 	u32 secAddr;
 
-	while(spiFlash64.lock == 1)
-		osDelay(100);
+	osMutexWait(mutexSpiFlashHandle, 60000);
 
 	secAddr = numSec * spiFlash64.secSz;
 	u8 data[] = {SPIFLASH_SE, ((secAddr & 0xFF0000) >> 16), ((secAddr & 0xFF00) >> 8), (secAddr & 0xFF)};
 
-	spiFlash64.lock = 1;
 	spiFlashWaitReady();
 	spiFlashWrEn();
 
@@ -125,7 +127,7 @@ void spiFlashES(u32 numSec)
 
 	spiFlashWaitReady();
 	osDelay(10);
-	spiFlash64.lock = 0;
+	osMutexRelease(mutexSpiFlashHandle);
 }
 
 u8 spiFlashWaitReady(){
@@ -167,10 +169,7 @@ u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 	else if(spiFlash64.headNumPg % SPIFLASH_NUM_PG_IN_SEC == 0)
 		spiFlashES(spiFlash64.headNumPg / SPIFLASH_NUM_PG_IN_SEC);
 
-	while(spiFlash64.lock == 1)
-		osDelay(200);
-	
-	spiFlash64.lock = 1;
+	osMutexWait(mutexSpiFlashHandle, 60000);
 	
 	if((offset + sz) > spiFlash64.pgSz)
 		sz = spiFlash64.pgSz - offset;
@@ -193,16 +192,16 @@ u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 	spiFlashWaitReady();
 	osDelay(10);
 	spiFlash64.headNumPg = (spiFlash64.headNumPg + 1) % SPIFLASH_NUM_PG_GNSS;
-	spiFlash64.lock = 0;
+
+	osMutexRelease(mutexSpiFlashHandle);
 	return ret;
 }
 
 void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage) {
 	D(printf("spiFlash RdPg %d\r\n", numPage));
 	u32 addr;
-	while(spiFlash64.lock == 1)
-		osDelay(200);
-	spiFlash64.lock = 1;
+
+	osMutexWait(mutexSpiFlashHandle, 60000);
 
 	if((offset + sz) > spiFlash64.pgSz)
 		sz = spiFlash64.pgSz - offset;
@@ -217,7 +216,7 @@ void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage) {
 
 	osDelay(10);
 	spiFlash64.tailNumPg = (spiFlash64.tailNumPg + 1) % SPIFLASH_NUM_PG_GNSS;
-	spiFlash64.lock = 0;
+	osMutexRelease(mutexSpiFlashHandle);
 }
 
 int getDelayPages() {
@@ -233,17 +232,15 @@ void spiFlashSaveData() {
     memset(buf, 0, 32);
     memcpy(&buf[0], &spiFlash64.headNumPg, 4);
     memcpy(&buf[4], &spiFlash64.tailNumPg, 4);
-    memcpy(&buf[16], &bkte.enAct, 4);
-    memcpy(&buf[20], &bkte.enReact, 4);
+    memcpy(&buf[16], &bkte.lastData.enAct, 4);
+    memcpy(&buf[20], &bkte.lastData.enReact, 4);
 
     spiFlashES(BKTE_SAVE_NUM_PAGE / SPIFLASH_NUM_PG_IN_SEC);
 
-    while(spiFlash64.lock == 1)
-        osDelay(200);
-    spiFlash64.lock = 1;
+    osMutexWait(mutexSpiFlashHandle, 60000);
 
     D(printf("Save pages: head %d, tail %d\r\n", spiFlash64.headNumPg, spiFlash64.tailNumPg));
-    D(printf("Save energy: act %d, react %d\r\n", bkte.enAct, bkte.enReact));
+    D(printf("Save energy: act %d, react %d\r\n", bkte.lastData.enAct, bkte.lastData.enReact));
 
     addr = (BKTE_SAVE_NUM_PAGE * spiFlash64.pgSz);
 	u8 data[] = {SPIFLASH_PP, ((addr & 0xFF0000) >> 16), ((addr & 0xFF00) >> 8), (addr & 0xFF)};
@@ -263,7 +260,7 @@ void spiFlashSaveData() {
 	spiFlashWaitReady();
 	osDelay(10);
 
-    spiFlash64.lock = 0;
+    osMutexRelease(mutexSpiFlashHandle);
 }
 
 //u32 spiFlashReadByte(u8 *pBuffer, u32 Bytes_Address){

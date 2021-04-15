@@ -20,14 +20,14 @@ static WebPckg* curPckg = NULL;
 //                 clearWebPckg(curPckg);
 //                 curPckg = NULL;
 //             }
-//             xQueueReceive(queueWebPckgHandle, &curPckg, portMAX_DELAY);
+//             xQueueReceive(queueWebPckgHandle, &curPckg, osWaitForever);
 //         }
-//         xSemaphoreTake(mutexWebHandle, portMAX_DELAY);
+//         osMutexWait(mutexWebHandle, osWaitForever);
 //         while ((statSend = openSendTcp(curPckg->buf, curPckg->shift)) !=
 //         TCP_OK &&
 //                statSend != TCP_SEND_ER_LOST_PCKG);
 //         statSend = fastSendTcp(statSend);
-//         xSemaphoreGive(mutexWebHandle);
+//         osMutexRelease(mutexWebHandle);
 //     }
 // }
 
@@ -62,7 +62,7 @@ void taskWebExchange(void const* argument) {
                     clearWebPckg(curPckg);
                     curPckg = NULL;
                 }
-                xQueueReceive(queueWebPckgHandle, &curPckg, portMAX_DELAY);
+                xQueueReceive(queueWebPckgHandle, &curPckg, osWaitForever);
             }
 
             osMutexWait(mutexWebHandle, osWaitForever);

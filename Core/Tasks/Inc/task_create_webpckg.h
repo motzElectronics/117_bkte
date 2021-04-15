@@ -27,7 +27,7 @@ void saveCsq(u8 csq);
 
 void clearPage(Page* pg);
 void clearAllPages();
-void parceData(u8* tmpBufPage, u8 len);
+void parseData(u8* tmpBufPage, u8 len);
 u16 getSzAllPages();
 void addToPage(Page* pg, u8* src, u8 sz);
 void addPagesToWebPckg();

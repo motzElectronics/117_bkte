@@ -18,6 +18,6 @@ typedef enum{
 
 extern char bufSens[USART_SZ_BUF_RX_USART2];
 
-void parceWirelessSens(u8* data, u16 len);
+void parseWirelessSens(u8* data, u16 len);
 
 #endif

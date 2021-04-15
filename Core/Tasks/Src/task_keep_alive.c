@@ -6,12 +6,16 @@ extern osThreadId getTempHandle;
 extern osThreadId getEnergyHandle;
 extern osThreadId loraHandle;
 extern osThreadId wirelessSensHandle;
-extern u8 isRxNewFirmware;
+extern osTimerId timerPowerOffHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
+extern osMutexId mutexRTCHandle;
+extern osMutexId mutexSDHandle;
+extern osMutexId mutexSpiFlashHandle;
 extern osSemaphoreId semCreateWebPckgHandle;
 
 extern CircularBuffer circBufAllPckgs;
+extern u8 isRxNewFirmware;
 // extern CircularBuffer circBufPckgEnergy;
 // extern u8 SZ_PCKGENERGY;
 
@@ -20,31 +24,39 @@ extern CircularBuffer circBufAllPckgs;
 u8 bufTxData[256];
 
 void taskKeepAlive(void const* argument) {
-    u16 timeout = 1;
+    u32 timeout = 1;
     vTaskSuspend(keepAliveHandle);
 
     for (;;) {
         HAL_GPIO_TogglePin(LED1G_GPIO_Port, LED1G_Pin);
-        if (!(timeout % 60) && !isRxNewFirmware) {
+        if (!(timeout % 600) && !isRxNewFirmware) {
             D(printf("\r\ngetNumFirmware\r\n\r\n"));
             getNumFirmware();
         }
-        if (!(timeout % 600) && !isRxNewFirmware) {
+        if (!(timeout % 6000) && !isRxNewFirmware) {
             D(printf("\r\ngenerateMsgKeepAlive\r\n\r\n"));
             generateMsgKeepAlive();
         }
-        if (!(timeout % 3600) && !isRxNewFirmware) {
+        if (!(timeout % 36000) && !isRxNewFirmware) {
             D(printf("\r\nupdRTC\r\n\r\n"));
             updRTC();
         }
         if (bkte.pwrInfo.isPwrState) {
+            osTimerStart(timerPowerOffHandle, 1100000);
             pwrOffBkte();
         }
         
         bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
         timeout++;
-        osDelay(2000);
+        osDelay(200);
     }
+}
+
+void timerPowerOff_callback(void const * argument)
+{
+    HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);  // OFF
+    osDelay(1000);
+    NVIC_SystemReset();
 }
 
 u16 getAdcVoltBat() {
@@ -60,10 +72,23 @@ void pwrOffBkte() {
     u32 delayPages = BKTE_THRESHOLD_CNT_PAGES + 1;
     u32 curTime = 0;
     u8 cnt;
+
+    osMutexWait(mutexWriteToEnergyBufHandle, osWaitForever);
+    osMutexWait(mutexRTCHandle, osWaitForever);
+    osMutexWait(mutexSpiFlashHandle, osWaitForever);
+    osMutexWait(mutexSDHandle, osWaitForever);
+    osMutexWait(mutexWebHandle, osWaitForever);
+
     vTaskSuspend(getEnergyHandle);
     vTaskSuspend(getTempHandle);
     // vTaskSuspend(loraHandle);
     vTaskSuspend(wirelessSensHandle);
+
+    osMutexRelease(mutexWriteToEnergyBufHandle);
+    osMutexRelease(mutexRTCHandle);
+    osMutexRelease(mutexSpiFlashHandle);
+    osMutexRelease(mutexSDHandle);
+    osMutexRelease(mutexWebHandle);
 
     osDelay(2000);
     D(printf("OK: PWR OFF START\r\n"));
@@ -82,9 +107,11 @@ void pwrOffBkte() {
         printf("wait dalaypages %d\r\n", delayPages);
 
         if (curTime > 300000) {
+            bkte.isTCPOpen = 0;
             if (sendMsgDevOffValue(11) != SUCCESS) {
                 D(printf("ERROR: Send dev off val\r\n"));
             }
+            break;
         }
     }
 
@@ -95,9 +122,11 @@ void pwrOffBkte() {
         printf("wait free pckg %d\r\n", cnt);
 
         if (curTime > 300000) {
+            bkte.isTCPOpen = 0;
             if (sendMsgDevOffValue(12) != SUCCESS) {
                 D(printf("ERROR: Send dev off val\r\n"));
             }
+            break;
         }
     }
 
@@ -107,18 +136,20 @@ void pwrOffBkte() {
     D(printf("OFF  VOLT: %d\r\n", bkte.pwrInfo.adcVoltBat));
     bkte.isSentData = 0;
     updSpiFlash(&circBufAllPckgs);
-    xSemaphoreGive(semCreateWebPckgHandle);
+    osSemaphoreRelease(semCreateWebPckgHandle);
     
     curTime = 0;
     while (!bkte.isSentData && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 340) {
-        osDelay(1000);
-        curTime += 1000;
+        osDelay(5000);
+        curTime += 5000;
         printf("wait data send\r\n");
 
         if (curTime > 300000) {
+            bkte.isTCPOpen = 0;
             if (sendMsgDevOffValue(13) != SUCCESS) {
                 D(printf("ERROR: Send dev off val\r\n"));
             }
+            break;
         }
     }
     if (!bkte.isSentData) {

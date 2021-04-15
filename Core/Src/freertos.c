@@ -60,11 +60,12 @@ osThreadId loraHandle;
 osThreadId createWebPckgHandle;
 osThreadId wirelessSensHandle;
 osMessageQId queueWebPckgHandle;
+osTimerId timerPowerOffHandle;
 osMutexId mutexWriteToEnergyBufHandle;
 osMutexId mutexWebHandle;
 osMutexId mutexRTCHandle;
 osMutexId mutexSDHandle;
-osMutexId mutexFlashWriteHandle;
+osMutexId mutexSpiFlashHandle;
 osSemaphoreId semLoraRxPckgHandle;
 osSemaphoreId semCreateWebPckgHandle;
 
@@ -82,11 +83,15 @@ void taskManageIWDG(void const * argument);
 void taskLora(void const * argument);
 void taskCreateWebPckg(void const * argument);
 void taskWirelessSens(void const * argument);
+void timerPowerOff_callback(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* GetIdleTaskMemory prototype (linked to static allocation support) */
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
+
+/* GetTimerTaskMemory prototype (linked to static allocation support) */
+void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer, uint32_t *pulTimerTaskStackSize );
 
 /* USER CODE BEGIN GET_IDLE_TASK_MEMORY */
 static StaticTask_t xIdleTaskTCBBuffer;
@@ -100,6 +105,19 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
   /* place for user code */
 }                   
 /* USER CODE END GET_IDLE_TASK_MEMORY */
+
+/* USER CODE BEGIN GET_TIMER_TASK_MEMORY */
+static StaticTask_t xTimerTaskTCBBuffer;
+static StackType_t xTimerStack[configTIMER_TASK_STACK_DEPTH];
+
+void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer, uint32_t *pulTimerTaskStackSize )
+{
+  *ppxTimerTaskTCBBuffer = &xTimerTaskTCBBuffer;
+  *ppxTimerTaskStackBuffer = &xTimerStack[0];
+  *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+  /* place for user code */
+}
+/* USER CODE END GET_TIMER_TASK_MEMORY */
 
 /**
   * @brief  FreeRTOS initialization
@@ -127,9 +145,9 @@ void MX_FREERTOS_Init(void) {
   osMutexDef(mutexSD);
   mutexSDHandle = osMutexCreate(osMutex(mutexSD));
 
-  /* definition and creation of mutexFlashWrite */
-  osMutexDef(mutexFlashWrite);
-  mutexFlashWriteHandle = osMutexCreate(osMutex(mutexFlashWrite));
+  /* definition and creation of mutexSpiFlash */
+  osMutexDef(mutexSpiFlash);
+  mutexSpiFlashHandle = osMutexCreate(osMutex(mutexSpiFlash));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -148,6 +166,11 @@ void MX_FREERTOS_Init(void) {
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
 
+  /* Create the timer(s) */
+  /* definition and creation of timerPowerOff */
+  osTimerDef(timerPowerOff, timerPowerOff_callback);
+  timerPowerOffHandle = osTimerCreate(osTimer(timerPowerOff), osTimerOnce, NULL);
+
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
@@ -163,7 +186,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of getEnergy */
-  osThreadDef(getEnergy, taskGetEnergy, osPriorityNormal, 0, 400);
+  osThreadDef(getEnergy, taskGetEnergy, osPriorityNormal, 0, 300);
   getEnergyHandle = osThreadCreate(osThread(getEnergy), NULL);
 
   /* definition and creation of getNewBin */
@@ -365,6 +388,14 @@ __weak void taskWirelessSens(void const * argument)
     osDelay(1);
   }
   /* USER CODE END taskWirelessSens */
+}
+
+/* timerPowerOff_callback function */
+__weak void timerPowerOff_callback(void const * argument)
+{
+  /* USER CODE BEGIN timerPowerOff_callback */
+
+  /* USER CODE END timerPowerOff_callback */
 }
 
 /* Private application code --------------------------------------------------*/

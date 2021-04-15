@@ -8,17 +8,22 @@ static s8 temps[BKTE_MAX_CNT_1WIRE];
 u32 testTimestamp, tmpTime;
 
 u8 readTemp();
+u8 isTemperatureFresh(PckgTemp *pckg);
 
 void taskGetTemp(void const* argument) {
-    // vTaskSuspend(getTempHandle);
+    u8 numIteration = 0;
     ds2482Init();
     vTaskSuspend(getTempHandle);
     HAL_GPIO_WritePin(LED3G_GPIO_Port, LED3G_Pin, GPIO_PIN_RESET);
+
+    readTemp();
+    osDelay(1000);
 
     for (;;) {
         testTimestamp = getUnixTimeStamp();
         if (readTemp() == 0) {
             osDelay(1000);
+            D(printf("ERROR: temperature read\r\n"));
             continue;
         }
         tmpTime = getUnixTimeStamp() - testTimestamp;
@@ -28,14 +33,19 @@ void taskGetTemp(void const* argument) {
         }
         osDelay(100);
         fillPckgTemp(&pckgTemp, temps);
-        saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
-        osDelay(100);
-        fillPckgTemp(&pckgTemp, temps);
-        saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
-        osDelay(100);
-        fillPckgTemp(&pckgTemp, temps);
-        saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
+        if (isTemperatureFresh(&pckgTemp) || !numIteration) {
+            saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
+        }
+        numIteration = (numIteration + 1) % BKTE_MEASURE_FULL_LOOP;
     }
+}
+
+u8 isTemperatureFresh(PckgTemp *pckg) {
+    if (pckg->temp[3] != bkte.lastData.temp[3]) {
+        bkte.lastData.temp[3] = pckg->temp[3];
+        return 1;
+    }
+    return 0;
 }
 
 u8 readTemp() {
@@ -97,8 +107,7 @@ u8 readTemp() {
             return 0;
         }
 
-        if ((tmpTemp = ds2482ConvTemp(tempBytes[0], tempBytes[1])) >
-                BKTE_MAX_TEMP ||
+        if ((tmpTemp = ds2482ConvTemp(tempBytes[0], tempBytes[1])) > BKTE_MAX_TEMP ||
             tmpTemp < BKTE_MIN_TEMP) {
             tmpTemp = BKTE_NO_TEMP;
         }

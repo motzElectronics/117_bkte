@@ -131,7 +131,7 @@ int main(void)
 		  .numFirmware = BKTE_ID_FIRMWARE, .verFirmware = BKTE_VER_BETA_FIRMWARE, .numTrainCar = BKTE_ID_TRAINCAR
   };
   cBufInit(&rxUart1CircBuf, uart1Buf, SZ_BUF_ENERGY_FROM_UART1, CIRC_TYPE_ENERGY_UART);
-	cBufInit(&circBufAllPckgs, bufPckgs, SZ_PAGE, CIRC_TYPE_PCKG_ALL);
+  cBufInit(&circBufAllPckgs, bufPckgs, SZ_PAGE, CIRC_TYPE_PCKG_ALL);
   HAL_GPIO_WritePin(GPIOB, MEM_HOLD_Pin, GPIO_PIN_SET);
   bkteInit();
   urlsInit();

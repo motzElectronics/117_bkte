@@ -21,7 +21,7 @@ extern RTC_HandleTypeDef hrtc;
 extern osMutexId mutexRTCHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
 extern osMutexId mutexWebHandle;
-extern osMutexId mutexFlashWriteHandle;
+extern osMutexId mutexSpiFlashHandle;
 extern osThreadId getNewBinHandle;
 extern osSemaphoreId semCreateWebPckgHandle;
 // extern osMutexId mutexRTCHandle;
@@ -103,6 +103,8 @@ void fillPckgVoltAmper(PckgVoltAmper* pckg, u16* data) {
     pckg->unixTimeStamp = getUnixTimeStamp();
     pckg->amper = data[BKTE_NUM_CURRENT + 1] << 8 | data[BKTE_NUM_CURRENT];
     pckg->volt = data[BKTE_NUM_VOLT + 1] << 8 | data[BKTE_NUM_VOLT];
+
+    if (pckg->volt >= 0xFF00) pckg->volt = 0;
 }
 
 void fillPckgEnergy(PckgEnergy* pckg, u16* data) {
@@ -112,24 +114,15 @@ void fillPckgEnergy(PckgEnergy* pckg, u16* data) {
                   data[BKTE_NUM_ACT_ENERGY + 2] << 16 |
                   data[BKTE_NUM_ACT_ENERGY + 1] << 8 |
                   data[BKTE_NUM_ACT_ENERGY];
-    if (pckg->enAct < bkte.enAct) {
-        pckg->enAct = 0;
-    } else {
-        bkte.enAct = pckg->enAct;
-    }
+
 
     pckg->enReact = data[BKTE_NUM_REACT_ENERGY + 3] << 24 |
                     data[BKTE_NUM_REACT_ENERGY + 2] << 16 |
                     data[BKTE_NUM_REACT_ENERGY + 1] << 8 |
                     data[BKTE_NUM_REACT_ENERGY];
-    bkte.enReact = pckg->enReact;
-    if (pckg->enReact < bkte.enReact) {
-        pckg->enReact = 0;
-    } else {
-        bkte.enReact = pckg->enReact;
-    }
 
-    // D(printf("Energy: act %d, reatc %d\r\n", bkte.enAct, bkte.enReact));
+    if (pckg->enAct >= 0xA0000000) pckg->enAct = 0;
+    if (pckg->enReact >= 0xA0000000) pckg->enReact = 0;
 }
 
 void fillPckgTemp(PckgTemp* pckg, s8* data) {
@@ -141,7 +134,7 @@ u32 getUnixTimeStamp() {
     time_t t;
     static struct tm curTime;
 
-    xSemaphoreTake(mutexRTCHandle, portMAX_DELAY);
+    osMutexWait(mutexRTCHandle, osWaitForever);
     HAL_RTC_GetTime(&hrtc, &tmpTime, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &tmpDate, RTC_FORMAT_BIN);
     curTime.tm_year = tmpDate.Year + 100;
@@ -151,7 +144,7 @@ u32 getUnixTimeStamp() {
     curTime.tm_hour = tmpTime.Hours;
     curTime.tm_min = tmpTime.Minutes;
     curTime.tm_sec = tmpTime.Seconds;
-    xSemaphoreGive(mutexRTCHandle);
+    osMutexRelease(mutexRTCHandle);
     curTime.tm_isdst = 0;
 
     t = mktime(&curTime);
@@ -224,18 +217,13 @@ void toggleRedLeds(){
 void updSpiFlash(CircularBuffer* cbuf) {
     u16 bufEnd[2] = {0, BKTE_PREAMBLE};
 
-    // osMutexWait(mutexFlashWriteHandle, osWaitForever);
-
     bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
     cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
-    spiFlash64.lock = 0;
+
     spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
     cBufReset(cbuf);
     
     D(printf("updSpiFlash()\r\n"));
-
-    // osSemaphoreRelease(semCreateWebPckgHandle);
-    // osMutexRelease(mutexFlashWriteHandle);
 }
 
 u8 waitGoodCsq(u32 timeout) {
@@ -263,23 +251,18 @@ u8 waitGoodCsq(u32 timeout) {
 
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf) {
     u16 bufEnd[2] = {0, BKTE_PREAMBLE};
-    xSemaphoreTake(mutexWriteToEnergyBufHandle, portMAX_DELAY);
-
-    // osMutexWait(mutexFlashWriteHandle, osWaitForever);
+    osMutexWait(mutexWriteToEnergyBufHandle, osWaitForever);
     
     if (cbuf->writeAvailable < sz + 2 + 4) {
         bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
         cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
         spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
         cBufReset(cbuf);
-
-        // osSemaphoreRelease(semCreateWebPckgHandle);
     } else {
         cBufWriteToBuf(cbuf, &cmdData, 1);
         cBufWriteToBuf(cbuf, data, sz);
     }
-    // osMutexRelease(mutexFlashWriteHandle);
-    xSemaphoreGive(mutexWriteToEnergyBufHandle);
+    osMutexRelease(mutexWriteToEnergyBufHandle);
 }
 
 u8 isDataFromFlashOk(char* pData, u8 len) {

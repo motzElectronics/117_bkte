@@ -69,9 +69,9 @@ void cBufWriteToBuf(CBufHandle cbuf, u8* data, u8 sz){
 }
 
 void cBufSafeWrite(CBufHandle cbuf, u8* data, u8 sz, osMutexId mutex, TickType_t ticks){
-	xSemaphoreTake(mutex, ticks);
+	osMutexWait(mutex, ticks);
 	cBufWriteToBuf(cbuf, data, sz);
-	xSemaphoreGive(mutex);
+	osMutexRelease(mutex);
 }
 
 //u8 cBufRead(CBufHandle cbuf, u8* dist, u8 sz){
@@ -160,12 +160,12 @@ void copyGetDatafromBuf(CBufHandle cbuf, u8* dist, u16 sz, CircTypeBuf type){
 	--(cbuf->numPckgInBuf);
 }
 
-u8 getLenMsgSimUart(CBufHandle cbuf){
+u8 getLenMsgSimUart(CBufHandle cbuf) {
 	u16 lenMsg = 0;
 	u16 tail = cbuf->tail;
-	if(cbuf->numPckgInBuf > 0){
-		while(tail != cbuf->head){
-			if(cbuf->buf[tail] == CIRC_END1_MSG && cbuf->buf[(tail + 1) % cbuf->max] == CIRC_END2_MSG){
+	if (cbuf->numPckgInBuf > 0) {
+		while (tail != cbuf->head) {
+			if (cbuf->buf[tail] == CIRC_END1_MSG && cbuf->buf[(tail + 1) % cbuf->max] == CIRC_END2_MSG) {
 				cbuf->buf[tail] = '\0';
 				cbuf->buf[(tail + 1) % cbuf->max] = '\0';
 				break;
@@ -180,15 +180,15 @@ u8 getLenMsgSimUart(CBufHandle cbuf){
 u8 getLenMsgEnergyUart(CBufHandle cbuf){
 	u16 lenMsg = 0;
 	u16 tail = cbuf->tail;
-	if(cbuf->numPckgInBuf > 1){
-		while(tail != cbuf->head){
-			if(cbuf->buf[tail] == CIRC_HEADER1 && cbuf->buf[(tail + 1) % cbuf->max] == CIRC_HEADER2){
+	if (cbuf->numPckgInBuf > 1){
+		while (tail != cbuf->head){
+			if (cbuf->buf[tail] == CIRC_HEADER1 && cbuf->buf[(tail + 1) % cbuf->max] == CIRC_HEADER2) {
 //				cbuf->buf[tail] = '\0';
 //				cbuf->buf[(tail + 1) % cbuf->max] = '\0';
 //				tail = (tail + 2) % cbuf->max;
 //				lenMsg = 2;
 				cbuf->tail = tail;
-				do{
+				do {
 					lenMsg++;
 					if(tail == cbuf->head){
 						lenMsg = 0;
@@ -197,7 +197,7 @@ u8 getLenMsgEnergyUart(CBufHandle cbuf){
 					}
 					tail = (tail + 1) % cbuf->max;
 
-				}while(!(cbuf->buf[tail] == CIRC_HEADER1 && cbuf->buf[(tail + 1) % cbuf->max] == CIRC_HEADER2) && lenMsg);
+				} while (!(cbuf->buf[tail] == CIRC_HEADER1 && cbuf->buf[(tail + 1) % cbuf->max] == CIRC_HEADER2) && lenMsg);
 				break;
 			}
 			cbuf->writeAvailable++;
@@ -205,7 +205,7 @@ u8 getLenMsgEnergyUart(CBufHandle cbuf){
 			cbuf->buf[tail] = '\0';
 			tail = (tail + 1) % cbuf->max;
 		}
-//		printf("WRITEAV: %d   READAVAIL: %d\r\n", cbuf->writeAvailable, cbuf->readAvailable);
+		// printf("WRITEAV: %d   READAVAIL: %d\r\n", cbuf->writeAvailable, cbuf->readAvailable);
 	}
 
 	return lenMsg;
