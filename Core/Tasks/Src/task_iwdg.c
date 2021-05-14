@@ -15,10 +15,8 @@ void taskManageIWDG(void const* argument) {
                (!isRxNewFirmware && (iwdgTaskReg & IWDG_TASK_REG_ALL) == IWDG_TASK_REG_ALL)) {
             iwdgTaskReg = 0;
             iwdgErrCount = 0;
-            printf("iwdg: ok\r\n");
         } else {
             iwdgErrCount++;
-            printf("iwdg: err %d\r\n", iwdgErrCount);
         }
 
         if (iwdgErrCount > 700) {

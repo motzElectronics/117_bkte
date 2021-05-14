@@ -113,7 +113,7 @@ void pwrOffBkte() {
 
     curTime = 0;
     delayPages = getDelayPages();
-    while (delayPages > BKTE_THRESHOLD_CNT_PAGES && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 360) {
+    while (delayPages > BKTE_THRESHOLD_CNT_PAGES && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 390) {
         osDelay(5000);
         curTime += 5000;
         delayPages = getDelayPages();
@@ -129,7 +129,7 @@ void pwrOffBkte() {
     }
 
     curTime = 0;
-    while ((cnt = getCntFreePckg()) != CNT_WEBPCKGS && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 350) {
+    while ((cnt = getCntFreePckg()) != CNT_WEBPCKGS && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 385) {
         osDelay(5000);
         curTime += 5000;
         printf("wait free pckg %d\r\n", cnt);
@@ -154,7 +154,7 @@ void pwrOffBkte() {
     
     curTime = 0;
     bkte.isSentData = 0;
-    while (!bkte.isSentData && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 340) {
+    while (!bkte.isSentData && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 380) {
         osDelay(5000);
         curTime += 5000;
         printf("wait data send\r\n");
