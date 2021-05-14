@@ -76,7 +76,6 @@ extern UART_HandleTypeDef huart6;
 extern TIM_HandleTypeDef htim1;
 
 /* USER CODE BEGIN EV */
-extern char bufSens[USART_SZ_BUF_RX_USART2];
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -336,22 +335,16 @@ void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
     u16 cnt;
+    u16 lenData, lenAllPckg;
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
     if ((__HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE) != RESET) &&
         (__HAL_UART_GET_IT_SOURCE(&huart2, UART_IT_IDLE) != RESET)) {
-        uInfoWirelessSens.irqFlags.isIrqIdle += 1;
-
-        cnt = uInfoWirelessSens.szRxBuf - uInfoWirelessSens.pHuart->hdmarx->Instance->NDTR;
-        memcpy(bufSens, uInfoWirelessSens.pRxBuf, cnt);
-
-        __HAL_DMA_DISABLE(uInfoWirelessSens.pHuart->hdmarx);
-        __HAL_DMA_SET_COUNTER(uInfoWirelessSens.pHuart->hdmarx, uInfoWirelessSens.szRxBuf);
-        __HAL_DMA_ENABLE(uInfoWirelessSens.pHuart->hdmarx);
+        uInfoWirelessSens.irqFlags.isIrqIdle = 1;
+        
+        __HAL_UART_CLEAR_IDLEFLAG(&huart2);
     }
-
-    __HAL_UART_CLEAR_PEFLAG(&huart2);
   /* USER CODE END USART2_IRQn 1 */
 }
 
@@ -467,7 +460,6 @@ void USART6_IRQHandler(void)
     if ((__HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE) != RESET) &&
         (__HAL_UART_GET_IT_SOURCE(&huart6, UART_IT_IDLE) != RESET)) {
         uInfoSim.irqFlags.isIrqIdle += 1;
-        //   printf("%s", uInfoSim.pRxBuf);
     }
 
     __HAL_UART_CLEAR_PEFLAG(&huart6);

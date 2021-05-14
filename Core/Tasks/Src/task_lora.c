@@ -1,5 +1,6 @@
 #include "../Tasks/Inc/task_lora.h"
 
+#if 0
 static SX1272 node;
 static Config_Group config;
 extern osThreadId loraHandle;
@@ -24,7 +25,6 @@ static u8 testRssi;
 u32 stTime = 0;
 
 static u8 retStatus;
-
 void taskLora(void const * argument){
 	config.CarrierFreq = 0;
 	node.hspi = &hspi1;
@@ -396,3 +396,5 @@ void cpyRxInf(LoraAlgTransition* pRx, LoraAlgTransition* pTx){
 		pTx->loraCarInfo[i].temperature = pRx->loraCarInfo[i].temperature;
 	}
 }
+
+#endif

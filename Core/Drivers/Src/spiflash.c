@@ -110,7 +110,7 @@ u8 spiFlashRxData(u8* data, u16 sz){
 
 void spiFlashES(u32 numSec)
 {
-    D(printf("spiFlash ErSec %d\r\n", numSec));
+    // D(printf("spiFlash ErSec %d\r\n", numSec));
 	u32 secAddr;
 
 	osMutexWait(mutexSpiFlashHandle, 60000);
@@ -154,7 +154,7 @@ void spiFlashWrEn(){
 }
 
 u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
-	D(printf("spiFlash WrPg %d\r\n", numPage));
+	// D(printf("spiFlash WrPg %d\r\n", numPage));
 	u32 addr;
 	u8 ret = 0;
 	if(spiFlash64.tailNumPg > spiFlash64.headNumPg && 
@@ -198,7 +198,7 @@ u8 spiFlashWrPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage){
 }
 
 void spiFlashRdPg(u8 *pBuf, u32 sz, u32 offset, u32 numPage) {
-	D(printf("spiFlash RdPg %d\r\n", numPage));
+	// D(printf("spiFlash RdPg %d\r\n", numPage));
 	u32 addr;
 
 	osMutexWait(mutexSpiFlashHandle, 60000);

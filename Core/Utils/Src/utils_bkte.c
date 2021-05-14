@@ -24,7 +24,6 @@ extern osMutexId mutexWebHandle;
 extern osMutexId mutexSpiFlashHandle;
 extern osThreadId getNewBinHandle;
 extern osSemaphoreId semCreateWebPckgHandle;
-// extern osMutexId mutexRTCHandle;
 static RTC_TimeTypeDef tmpTime;
 static RTC_DateTypeDef tmpDate;
 extern u8 SZ_PCKGENERGY;
@@ -40,6 +39,7 @@ void bkteInit() {
     bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
     if (bkte.pwrInfo.isPwrState) {
         HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LED2G_GPIO_Port, LED2G_Pin, GPIO_PIN_RESET);
         HAL_Delay(5000);
         NVIC_SystemReset();
     }
@@ -84,17 +84,16 @@ void getServerTime() {
 
 void getNumFirmware() {
     u8 bufFirmware[4];
-    if (generateWebPckgReq(CMD_REQUEST_NUM_FIRMWARE, NULL, 0,
-                           SZ_REQUEST_GET_NUM_FIRMWARE, bufFirmware,
-                           4) == ERROR) {
+    if (generateWebPckgReq(CMD_REQUEST_NUM_FIRMWARE, NULL, 0, SZ_REQUEST_GET_NUM_FIRMWARE, bufFirmware, 4) == ERROR) {
         sdWriteLog(SD_ER_NUM_FIRMWARE, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
         D(printf("ERROR: getNumFirmware()\r\n"));
     } else {
-        u32 numFirmware = bufFirmware[0] << 24 | bufFirmware[1] << 16 |
-                          bufFirmware[2] << 8 | bufFirmware[3];
+        u32 numFirmware = bufFirmware[0] << 24 | bufFirmware[1] << 16 | bufFirmware[2] << 8 | bufFirmware[3];
         if (numFirmware != BKTE_ID_FIRMWARE && numFirmware > 0) {
             D(printf("New FIRMWARE v.:%d\r\n", (int)numFirmware));
             vTaskResume(getNewBinHandle);
+        } else {
+            D(printf("Old FIRMWARE v.:%d\r\n", (int)numFirmware));
         }
     }
 }
@@ -245,7 +244,7 @@ u8 waitGoodCsq(u32 timeout) {
         D(printf("ER: CSQ %d\r\n", csq));
     }
     bkte.erFlags.simCSQINF = 0;
-    D(printf("OK: CSQ %d\r\n", csq));
+    // D(printf("OK: CSQ %d\r\n", csq));
     return 1;
 }
 

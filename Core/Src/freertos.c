@@ -56,7 +56,7 @@ osThreadId keepAliveHandle;
 osThreadId webExchangeHandle;
 osThreadId getTempHandle;
 osThreadId manageIWDGHandle;
-osThreadId loraHandle;
+// osThreadId loraHandle;
 osThreadId createWebPckgHandle;
 osThreadId wirelessSensHandle;
 osMessageQId queueWebPckgHandle;
@@ -186,23 +186,23 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of getEnergy */
-  osThreadDef(getEnergy, taskGetEnergy, osPriorityNormal, 0, 300);
+  osThreadDef(getEnergy, taskGetEnergy, osPriorityNormal, 0, 320);
   getEnergyHandle = osThreadCreate(osThread(getEnergy), NULL);
 
   /* definition and creation of getNewBin */
-  osThreadDef(getNewBin, taskGetNewBin, osPriorityNormal, 0, 300);
+  osThreadDef(getNewBin, taskGetNewBin, osPriorityNormal, 0, 320);
   getNewBinHandle = osThreadCreate(osThread(getNewBin), NULL);
 
   /* definition and creation of keepAlive */
-  osThreadDef(keepAlive, taskKeepAlive, osPriorityNormal, 0, 300);
+  osThreadDef(keepAlive, taskKeepAlive, osPriorityNormal, 0, 320);
   keepAliveHandle = osThreadCreate(osThread(keepAlive), NULL);
 
   /* definition and creation of webExchange */
-  osThreadDef(webExchange, taskWebExchange, osPriorityNormal, 0, 300);
+  osThreadDef(webExchange, taskWebExchange, osPriorityNormal, 0, 320);
   webExchangeHandle = osThreadCreate(osThread(webExchange), NULL);
 
   /* definition and creation of getTemp */
-  osThreadDef(getTemp, taskGetTemp, osPriorityNormal, 0, 300);
+  osThreadDef(getTemp, taskGetTemp, osPriorityNormal, 0, 320);
   getTempHandle = osThreadCreate(osThread(getTemp), NULL);
 
   /* definition and creation of manageIWDG */
@@ -210,15 +210,15 @@ void MX_FREERTOS_Init(void) {
   manageIWDGHandle = osThreadCreate(osThread(manageIWDG), NULL);
 
   /* definition and creation of lora */
-  osThreadDef(lora, taskLora, osPriorityNormal, 0, 256);
-  loraHandle = osThreadCreate(osThread(lora), NULL);
+//   osThreadDef(lora, taskLora, osPriorityNormal, 0, 256);
+//   loraHandle = osThreadCreate(osThread(lora), NULL);
 
   /* definition and creation of createWebPckg */
-  osThreadDef(createWebPckg, taskCreateWebPckg, osPriorityNormal, 0, 300);
+  osThreadDef(createWebPckg, taskCreateWebPckg, osPriorityNormal, 0, 320);
   createWebPckgHandle = osThreadCreate(osThread(createWebPckg), NULL);
 
   /* definition and creation of wirelessSens */
-  osThreadDef(wirelessSens, taskWirelessSens, osPriorityNormal, 0, 300);
+  osThreadDef(wirelessSens, taskWirelessSens, osPriorityNormal, 0, 320);
   wirelessSensHandle = osThreadCreate(osThread(wirelessSens), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */

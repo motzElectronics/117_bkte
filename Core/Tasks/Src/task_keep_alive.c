@@ -1,10 +1,13 @@
 #include "../Tasks/Inc/task_keep_alive.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
+#include "../Tasks/Inc/task_iwdg.h"
+
+extern u16 iwdgTaskReg;
 
 extern osThreadId keepAliveHandle;
 extern osThreadId getTempHandle;
 extern osThreadId getEnergyHandle;
-extern osThreadId loraHandle;
+// extern osThreadId loraHandle;
 extern osThreadId wirelessSensHandle;
 extern osTimerId timerPowerOffHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
@@ -31,29 +34,39 @@ void taskKeepAlive(void const* argument) {
         HAL_GPIO_TogglePin(LED1G_GPIO_Port, LED1G_Pin);
         if (!(timeout % 600) && !isRxNewFirmware) {
             D(printf("\r\ngetNumFirmware\r\n\r\n"));
+            osTimerStart(timerPowerOffHandle, 1100000);
             getNumFirmware();
+            osTimerStop(timerPowerOffHandle);
         }
         if (!(timeout % 6000) && !isRxNewFirmware) {
             D(printf("\r\ngenerateMsgKeepAlive\r\n\r\n"));
+            osTimerStart(timerPowerOffHandle, 1100000);
             generateMsgKeepAlive();
+            osTimerStop(timerPowerOffHandle);
         }
         if (!(timeout % 36000) && !isRxNewFirmware) {
             D(printf("\r\nupdRTC\r\n\r\n"));
+            osTimerStart(timerPowerOffHandle, 1100000);
             updRTC();
+            osTimerStop(timerPowerOffHandle);
         }
         if (bkte.pwrInfo.isPwrState) {
+            HAL_GPIO_WritePin(LED1R_GPIO_Port, LED1R_Pin, GPIO_PIN_RESET);
             osTimerStart(timerPowerOffHandle, 1100000);
             pwrOffBkte();
+            osTimerStop(timerPowerOffHandle);
         }
         
         bkte.pwrInfo.isPwrState = HAL_GPIO_ReadPin(PWR_STATE_GPIO_Port, PWR_STATE_Pin);
         timeout++;
         osDelay(200);
+        iwdgTaskReg |= IWDG_TASK_REG_ALIVE;
     }
 }
 
 void timerPowerOff_callback(void const * argument)
 {
+    D(printf("\r\nTIMER POWER OFF\r\n\r\n"));
     HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);  // OFF
     osDelay(1000);
     NVIC_SystemReset();
@@ -134,11 +147,13 @@ void pwrOffBkte() {
     generateMsgBat();
     generateMsgDevOff();
     D(printf("OFF  VOLT: %d\r\n", bkte.pwrInfo.adcVoltBat));
-    bkte.isSentData = 0;
+    
     updSpiFlash(&circBufAllPckgs);
     osSemaphoreRelease(semCreateWebPckgHandle);
+    osDelay(3000);
     
     curTime = 0;
+    bkte.isSentData = 0;
     while (!bkte.isSentData && (bkte.pwrInfo.adcVoltBat = getAdcVoltBat()) > 340) {
         osDelay(5000);
         curTime += 5000;
@@ -214,10 +229,8 @@ ErrorStatus sendMsgFWUpdated() {
 	pckgTel.data = 1;
     pckgTel.unixTimeStamp = getUnixTimeStamp();
     copyTelemetry(bufTxData, &pckgTel);
-    pckgTel.group = TEL_GR_HARDWARE_STATUS;
 	pckgTel.code = TEL_CD_HW_BKTE;
 	pckgTel.data = 0;
-    pckgTel.unixTimeStamp = getUnixTimeStamp();
     copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY], &pckgTel);
 
     ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY * 2, 2);

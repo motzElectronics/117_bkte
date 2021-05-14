@@ -1,12 +1,16 @@
 #include "../Tasks/Inc/task_get_new_bin.h"
 #include "../Tasks/Inc/task_keep_alive.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
+#include "../Tasks/Inc/task_iwdg.h"
+
+extern u16 iwdgTaskReg;
+
 extern osThreadId getEnergyHandle;
 extern osThreadId webExchangeHandle;
 extern osThreadId getTempHandle;
 extern osThreadId getNewBinHandle;
 extern osThreadId keepAliveHandle;
-extern osThreadId loraHandle;
+// extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
 extern osThreadId wirelessSensHandle;
 extern osTimerId timerPowerOffHandle;
@@ -43,6 +47,7 @@ void taskGetNewBin(void const* argument) {
     HAL_GPIO_WritePin(LED4G_GPIO_Port, LED4G_Pin, GPIO_PIN_SET);
 
     for (;;) {
+        iwdgTaskReg |= IWDG_TASK_REG_NEW_BIN;
         if (szSoft != curSzSoft) {
             if (szSoft - curSzSoft > SZ_PART_FIRMW) {
                 szPartSoft = SZ_PART_FIRMW;

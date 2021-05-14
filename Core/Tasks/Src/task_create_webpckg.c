@@ -1,4 +1,8 @@
 #include "../Tasks/Inc/task_create_webpckg.h"
+#include "../Tasks/Inc/task_iwdg.h"
+
+extern u16 iwdgTaskReg;
+
 extern osThreadId webExchangeHandle;
 extern osThreadId keepAliveHandle;
 extern osThreadId getNewBinHandle;
@@ -36,9 +40,14 @@ void taskCreateWebPckg(void const *argument)
 
     for (;;)
     {
+        iwdgTaskReg |= IWDG_TASK_REG_WEB_PCKG;
         delayPages = getDelayPages();
-        while ((delayPages > BKTE_THRESHOLD_CNT_PAGES || (osSemaphoreWait(semCreateWebPckgHandle, 1) == osOK)) && (curPckg = getFreePckg()) != NULL)
+        while (delayPages >= BKTE_THRESHOLD_CNT_PAGES || (osSemaphoreWait(semCreateWebPckgHandle, 1) == osOK))
         {
+            curPckg = getFreePckg();
+            if (curPckg == NULL) {
+                break;
+            }
             clearAllPages();
             if (bkte.csq < 10) {
                 amntPages = delayPages > 3 ? 3 : delayPages;
@@ -62,7 +71,7 @@ void taskCreateWebPckg(void const *argument)
             szAllPages = getSzAllPages();
             initWebPckg(curPckg, szAllPages, 0);
             addPagesToWebPckg(curPckg);
-            xQueueSendToBack(queueWebPckgHandle, &curPckg, osWaitForever);
+            osMessagePut(queueWebPckgHandle, (u32)curPckg, osWaitForever);
             delayPages = getDelayPages();
         }
 

@@ -1,11 +1,14 @@
 #include "../Tasks/Inc/task_get_energy.h"
 #include "../Tasks/Inc/task_keep_alive.h"
+#include "../Tasks/Inc/task_iwdg.h"
+
+extern u16 iwdgTaskReg;
 
 extern osThreadId getEnergyHandle;
 extern osThreadId webExchangeHandle;
 extern osThreadId getTempHandle;
 extern osThreadId keepAliveHandle;
-extern osThreadId loraHandle;
+// extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
 extern osThreadId getNewBinHandle;
 extern osThreadId wirelessSensHandle;
@@ -40,9 +43,6 @@ void taskGetEnergy(void const* argument) {
     unLockTasks();
     rxUart1_IT();
 
-    // FLASH_Erase_Sector(FLASH_SECTOR_3, VOLTAGE_RANGE_3);
-    // NVIC_SystemReset();
-
     for (;;) {
         memset(testBufUart1, '\0', sizeof(testBufUart1));
         retLen = cBufRead(&rxUart1CircBuf, (u8*)testBufUart1, 0);
@@ -64,6 +64,7 @@ void taskGetEnergy(void const* argument) {
             // D(printf("OK: enAct: %08x, enReact: %08x", pckgEnergy.enAct, pckgEnergy.enReact));
         }
         osDelay(400);
+        iwdgTaskReg |= IWDG_TASK_REG_ENERGY;
     }
 }
 

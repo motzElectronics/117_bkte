@@ -16,8 +16,6 @@ typedef enum{
     BLOCK_WIRELESS_RSSI
 }TYPE_BLOCK_WIRELESS;
 
-extern char bufSens[USART_SZ_BUF_RX_USART2];
-
 void parseWirelessSens(u8* data, u16 len);
 
 #endif

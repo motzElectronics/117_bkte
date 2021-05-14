@@ -1,4 +1,7 @@
 #include "../Tasks/Inc/task_get_temp.h"
+#include "../Tasks/Inc/task_iwdg.h"
+
+extern u16 iwdgTaskReg;
 
 extern osThreadId getTempHandle;
 extern osMutexId mutexWriteToEnergyBufHandle;
@@ -20,23 +23,29 @@ void taskGetTemp(void const* argument) {
     osDelay(1000);
 
     for (;;) {
-        testTimestamp = getUnixTimeStamp();
+        iwdgTaskReg |= IWDG_TASK_REG_TEMP;
+        testTimestamp = HAL_GetTick();
+
         if (readTemp() == 0) {
             osDelay(1000);
             D(printf("ERROR: temperature read\r\n"));
             continue;
         }
-        tmpTime = getUnixTimeStamp() - testTimestamp;
-        // D(printf("OK: LOOP TEMP |%d %d %d %d| %d\r\n", temps[0], temps[1], temps[2], temps[3], tmpTime));
-        if (tmpTime > 6) {
+        tmpTime = HAL_GetTick() - testTimestamp;
+        if (tmpTime > 6000) {
             D(printf("ERROR: too long time\r\n"));
         }
-        osDelay(100);
+        osDelay(52);
         fillPckgTemp(&pckgTemp, temps);
         if (isTemperatureFresh(&pckgTemp) || !numIteration) {
             saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
+            D(printf("OK: TEMP |%d %d %d %d| %d\r\n", temps[0], temps[1], temps[2], temps[3], tmpTime));
         }
         numIteration = (numIteration + 1) % BKTE_MEASURE_FULL_LOOP;
+
+        osDelay(800);
+        // tmpTime = HAL_GetTick() - testTimestamp;
+        // D(printf("OK: TEMP |%d %d %d %d| %d\r\n", temps[0], temps[1], temps[2], temps[3], tmpTime));
     }
 }
 

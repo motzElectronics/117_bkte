@@ -35,6 +35,7 @@
 #define SIM_FAIL									1
 #define SIM_RESTART									2
 #define SIM_HTTP_BAD_CODE_REQUEST					3
+#define SIM_TIMEOUT                                 4
 
 #define SIM_SZ_NO_GPSINFO							35
 #define SIM_SZ_GPSINFO								100
@@ -102,7 +103,9 @@
 #define TCP_OPEN_ER             2
 #define TCP_SEND_ER             3
 #define TCP_SEND_ER_LOST_PCKG   4
-#define TCP_CSQ_ER              5       
+#define TCP_CSQ_ER              5
+#define TCP_TIMEOUT_ER          6
+#define TCP_CONNECT_ER          7 
 
 void simInit();
 char* simGetStatusAnsw();
