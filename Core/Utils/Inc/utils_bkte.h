@@ -137,6 +137,7 @@ typedef struct {
     u8 isTCPOpen;
     u8 tcpErrCnt;
     u8 csq;
+    u8 idNewFirmware;
     LastData lastData;
     //	FInfo	fInfo[NUM_READ_FILES];
 } BKTE;
@@ -188,7 +189,8 @@ typedef enum {
     TEL_CD_HW_BATTERY,
     TEL_CD_HW_BKTE_ALIVE,
     TEL_CD_HW_WIRELESS_SENS_RSSI,
-    TEL_CD_HW_UPDATED
+    TEL_CD_HW_UPDATED,
+    TEL_CD_HW_UPDATE_ERR
 } TELEMETRY_CODE_STATES;
 
 typedef enum {
@@ -245,7 +247,6 @@ void fillPckgTemp(PckgTemp* pckg, s8* data);
 
 void fillPckgVoltAmper(PckgVoltAmper* pckg, u16* data);
 
-u32 getFlashData(u32 ADDR);
 void setDateTime(DateTime* dt);
 void setTM(time_t* pTimeStamp, DateTime* dt);
 

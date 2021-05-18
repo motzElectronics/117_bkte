@@ -6,7 +6,7 @@
  */
 
 #include "../Utils/Inc/utils_bkte.h"
-
+#include "../Utils/Inc/utils_flash.h"
 #include "../Utils/Inc/utils_crc.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
 #include "../Utils/Inc/utils_sd.h"
@@ -15,7 +15,6 @@ GPIO_TypeDef* oneWirePorts[BKTE_MAX_CNT_1WIRE] = {
     ONEWIRE_4_EN_GPIO_Port};
 u16 oneWirePins[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_Pin, ONEWIRE_2_EN_Pin, ONEWIRE_3_EN_Pin, ONEWIRE_4_EN_Pin};
 
-// extern osMessageQId queue1WireHandle;
 extern UART_HandleTypeDef huart3;
 extern RTC_HandleTypeDef hrtc;
 extern osMutexId mutexRTCHandle;
@@ -27,11 +26,7 @@ extern osSemaphoreId semCreateWebPckgHandle;
 static RTC_TimeTypeDef tmpTime;
 static RTC_DateTypeDef tmpDate;
 extern u8 SZ_PCKGENERGY;
-// extern FIL fAddr;
-/*static u8 lenLog[] = {SD_LEN_LOG_ENERGY, SD_LEN_LOG_TEMP, SD_LEN_LOG_RSSI};
-static char* fNamesLog[NUM_READ_FILES] = {FILE_LOG_ENERGY, FILE_LOG_TEMP,
-FILE_LOG_RSSI}; static char* fNamesAddr[NUM_READ_FILES] = {FILE_ADDR_ENERGY,
-FILE_ADDR_TEMP, FILE_ADDR_RSSI};*/
+
 void bkteInit() {
     HAL_GPIO_WritePin(SD_PWR_EN_GPIO_Port, SD_PWR_EN_Pin, GPIO_PIN_RESET);
 
@@ -54,13 +49,11 @@ void bkteInit() {
 
 void getServerTime() {
     u8 bufTime[4];
-    if (generateWebPckgReq(CMD_REQUEST_SERVER_TIME, NULL, 0,
-                           SZ_REQUEST_GET_SERVER_TIME, bufTime, 4) == ERROR) {
+    if (generateWebPckgReq(CMD_REQUEST_SERVER_TIME, NULL, 0, SZ_REQUEST_GET_SERVER_TIME, bufTime, 4) == ERROR) {
         sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
         D(printf("ERROR: bad server time\r\n"));
     } else {
-        time_t t =
-            bufTime[0] << 24 | bufTime[1] << 16 | bufTime[2] << 8 | bufTime[3];
+        time_t t = bufTime[0] << 24 | bufTime[1] << 16 | bufTime[2] << 8 | bufTime[3];
         struct tm* pTm;
         pTm = gmtime(&t);
         if (pTm != NULL) {
@@ -91,6 +84,7 @@ void getNumFirmware() {
         u32 numFirmware = bufFirmware[0] << 24 | bufFirmware[1] << 16 | bufFirmware[2] << 8 | bufFirmware[3];
         if (numFirmware != BKTE_ID_FIRMWARE && numFirmware > 0) {
             D(printf("New FIRMWARE v.:%d\r\n", (int)numFirmware));
+            bkte.idNewFirmware = numFirmware;
             vTaskResume(getNewBinHandle);
         } else {
             D(printf("Old FIRMWARE v.:%d\r\n", (int)numFirmware));
@@ -149,8 +143,6 @@ u32 getUnixTimeStamp() {
     t = mktime(&curTime);
     return (u32)t;
 }
-
-u32 getFlashData(u32 ADDR) { return (*(__IO u32*)ADDR); }
 
 u8 isCrcOk(char* pData, int len) {
     u32 crcCalc = crc32_byte(pData, len);

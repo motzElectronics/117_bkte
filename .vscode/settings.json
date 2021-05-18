@@ -12,6 +12,7 @@
         "task_get_new_bin.h": "c",
         "main.h": "c",
         "task_get_energy.h": "c",
-        "task_create_webpckg.h": "c"
+        "task_create_webpckg.h": "c",
+        "utils_flash.h": "c"
     }
 }

@@ -1,7 +1,9 @@
 #include "../Tasks/Inc/task_get_new_bin.h"
 #include "../Tasks/Inc/task_keep_alive.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
+#include "../Utils/Inc/utils_crc.h"
 #include "../Tasks/Inc/task_iwdg.h"
+
 
 extern u16 iwdgTaskReg;
 
@@ -25,9 +27,10 @@ extern CircularBuffer circBufAllPckgs;
 u8 isRxNewFirmware = 0;
 static u8 bufNumBytesFirmware[8];
 static PckgUpdFirmware pckgInfoFirmware;
-static u8 partFirmware[SZ_PART_FIRMW + 1];
+static u8 partNewFW[SZ_PART_FIRMW + 1];
 static u32 flashAddrFirmware = FLASH_ADDR_BUF_NEW_FIRMWARE;
-static u32 szSoft = 0;
+static u32 szNewFW = 0;
+static u32 crcNewFW;
 
 void taskGetNewBin(void const* argument) {
     u32 curSzSoft = 0;
@@ -41,37 +44,40 @@ void taskGetNewBin(void const* argument) {
     lockAllTasks();
     isRxNewFirmware = 1;
 
-    while (!(szSoft = getSzFirmware()));
+    while (!(szNewFW = getSzFirmware()));
     flashClearPage(FLASH_SECTOR_11);
     clearAllWebPckgs();
     HAL_GPIO_WritePin(LED4G_GPIO_Port, LED4G_Pin, GPIO_PIN_SET);
+    crcNewFW = 0xffffffff;
 
     for (;;) {
         iwdgTaskReg |= IWDG_TASK_REG_NEW_BIN;
-        if (szSoft != curSzSoft) {
-            if (szSoft - curSzSoft > SZ_PART_FIRMW) {
+        if (szNewFW != curSzSoft) {
+            if (szNewFW - curSzSoft > SZ_PART_FIRMW) {
                 szPartSoft = SZ_PART_FIRMW;
             } else {
-                szPartSoft = szSoft - curSzSoft;
+                szPartSoft = szNewFW - curSzSoft;
             }
             pckgInfoFirmware.fromByte = curSzSoft;
             pckgInfoFirmware.toByte = szPartSoft + curSzSoft;
             memcpy(bufNumBytesFirmware, &pckgInfoFirmware.fromByte, 4);
             memcpy(bufNumBytesFirmware + 4, &pckgInfoFirmware.toByte, 4);
-            memset(partFirmware, 0xFF, SZ_PART_FIRMW + 1);
+            memset(partNewFW, 0xFF, SZ_PART_FIRMW + 1);
 
             if (!bkte.isTCPOpen) {
                 while (openTcp() != TCP_OK);
                 cntFailTCPReq = 0;
             }
 
-            if (getPartFirmware(bufNumBytesFirmware, partFirmware, szPartSoft + 4, 8) == SUCCESS &&
-                isCrcOk(partFirmware, szPartSoft)) {
+            if (getPartFirmware(bufNumBytesFirmware, partNewFW, szPartSoft + 4, 8) == SUCCESS &&
+                    isCrcOk(partNewFW, szPartSoft)) {
+                crc32_chank(&crcNewFW, partNewFW, szPartSoft);
+                // D(printf("crcNewFW 0x%08x\r\n", crcNewFW));
                 curSzSoft += szPartSoft;
                 D(printf("OK: DOWNLOAD %d BYTES\r\n", (int)curSzSoft));
                 HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);
                 cntFailTCPReq = 0;
-                flashWrite(partFirmware, szPartSoft, &flashAddrFirmware);
+                flashWrite(partNewFW, szPartSoft, &flashAddrFirmware);
             } else {
                 D(printf("ERROR: httpPost() DOWNLOAD\r\n"));
                 cntFailTCPReq++;
@@ -100,20 +106,32 @@ void taskGetNewBin(void const* argument) {
 }
 
 void updBootInfo() {
-    szSoft = szSoft % 4 == 0 ? szSoft : ((szSoft / 4) + 1) * 4;
+    u8 diff = 4 - (szNewFW % 4);
+    // szNewFW = diff == 0 ? szNewFW : ((szNewFW / 4) + 1) * 4;
+    if (diff != 0) {
+        memset(partNewFW, 0xFF, diff);
+        crc32_chank(&crcNewFW, partNewFW, diff);
+        szNewFW += diff;
+    }
+    crcNewFW ^= 0xffffffff;
     while (HAL_FLASH_Unlock() != HAL_OK)
         D(printf("ERROR: HAL_FLASH_Unlock()\r\n"));
+
     FLASH_Erase_Sector(FLASH_SECTOR_3, VOLTAGE_RANGE_3);
     D(printf("FLASH_Erase_Sector\r\n"));
+
     while (HAL_FLASH_Program(TYPEPROGRAM_WORD, FLASH_ADDR_ID_BOOT, BKTE_ID_BOOT))
         D(printf("ERROR: HAL_FLASH_Program(BOOT_ADDR_ID_LOADER)\r\n"));
-    while (HAL_FLASH_Program(TYPEPROGRAM_WORD, FLASH_ADDR_IS_NEW_FIRWARE, (u32)1))
-        D(printf("ERROR: HAL_FLASH_Program(BOOT_ADDR_IS_NEW_FIRWARE)\r\n"));
-    while (HAL_FLASH_Program(TYPEPROGRAM_WORD, FLASH_ADDR_SZ_NEW_FIRMWARE, (u32)(szSoft)))
+    while (HAL_FLASH_Program(TYPEPROGRAM_WORD, FLASH_ADDR_IS_NEW_FIRMWARE, (u32)1))
+        D(printf("ERROR: HAL_FLASH_Program(BOOT_ADDR_IS_NEW_FIRMWARE)\r\n"));
+    while (HAL_FLASH_Program(TYPEPROGRAM_WORD, FLASH_ADDR_SZ_NEW_FIRMWARE, (u32)(szNewFW)))
         D(printf("ERROR: HAL_FLASH_Program(FLASH_ADDR_SZ_NEW_FIRMWARE)\r\n"));
+    while (HAL_FLASH_Program(TYPEPROGRAM_WORD, FLASH_ADDR_CRC_NEW_FIRMWARE, (u32)(crcNewFW)))
+        D(printf("ERROR: HAL_FLASH_Program(FLASH_ADDR_CRC_NEW_FIRMWARE)\r\n"));
+
     while (HAL_FLASH_Lock() != HAL_OK) D(printf("ERROR: HAL_FLASH_Lock()\r\n"));
     D(printf("BOOT_ID: %d\r\n", (int)getFlashData(FLASH_ADDR_ID_BOOT)));
-    D(printf("IS_NEW_FIRMARE: %d\r\n",(int)getFlashData(FLASH_ADDR_IS_NEW_FIRWARE)));
+    D(printf("IS_NEW_FIRMARE: %d\r\n",(int)getFlashData(FLASH_ADDR_IS_NEW_FIRMWARE)));
 }
 
 void lockAllTasks() {
@@ -146,9 +164,9 @@ u32 getSzFirmware() {
         D(printf("ERROR: sz firmware\r\n"));
         return 0;
     } else {
-        u32 numFirmware = bufSzFirmware[0] << 24 | bufSzFirmware[1] << 16 | bufSzFirmware[2] << 8 | bufSzFirmware[3];
-        D(printf("OK: sz firmware %d\r\n", numFirmware));
-        return numFirmware;
+        u32 szFirmware = bufSzFirmware[0] << 24 | bufSzFirmware[1] << 16 | bufSzFirmware[2] << 8 | bufSzFirmware[3];
+        D(printf("OK: sz firmware %d\r\n", szFirmware));
+        return szFirmware;
     }
 }
 
@@ -163,7 +181,7 @@ ErrorStatus getPartFirmware(u8* reqData, u8* answBuf, u16 szAnsw, u8 szReq) {
         HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_SET);
         ret = ERROR;
     } else {
-        waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), szAnsw / SZ_TCP_PCKG + 1, 200, 20000);
+        waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), szAnsw / SZ_TCP_PCKG, 200, 20000);
         osDelay(100);
         HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_RESET);
         HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);

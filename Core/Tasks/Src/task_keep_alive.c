@@ -1,6 +1,7 @@
 #include "../Tasks/Inc/task_keep_alive.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
 #include "../Tasks/Inc/task_iwdg.h"
+#include "../Utils/Inc/utils_flash.h"
 
 extern u16 iwdgTaskReg;
 
@@ -226,7 +227,7 @@ ErrorStatus sendMsgFWUpdated() {
     memset(bufTxData, 0, 20);
     pckgTel.group = TEL_GR_HARDWARE_STATUS;
 	pckgTel.code = TEL_CD_HW_UPDATED;
-	pckgTel.data = 1;
+	pckgTel.data = bkte.idNewFirmware;
     pckgTel.unixTimeStamp = getUnixTimeStamp();
     copyTelemetry(bufTxData, &pckgTel);
 	pckgTel.code = TEL_CD_HW_BKTE;
@@ -320,6 +321,12 @@ ErrorStatus sendInitTelemetry() {
 
     pckgTel.code = TEL_CD_HW_LORA;
     pckgTel.data = bkte.hwStat.isLoraOk;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = TEL_CD_HW_UPDATE_ERR;
+    tmp = getFlashData(FLASH_ADDR_ERR_NEW_FIRMWARE);
+    if (tmp == 0xFFFFFFFF) tmp = 0;
+    pckgTel.data = tmp;
     copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
 
     ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY * ptr, ptr);

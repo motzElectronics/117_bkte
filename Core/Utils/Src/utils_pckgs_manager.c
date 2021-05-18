@@ -170,6 +170,7 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
 
         osMutexWait(mutexWebHandle, osWaitForever);
         statSend = sendTcp(curPckg->buf, curPckg->shift);
+        osDelay(50);
 
         if (statSend != TCP_OK) {
             ret = ERROR;
@@ -183,6 +184,7 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
                 ret = ERROR;
             }
         } else {
+            osDelay(10);
             memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);
         }
         osMutexRelease(mutexWebHandle);

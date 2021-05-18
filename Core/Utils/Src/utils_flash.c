@@ -3,6 +3,11 @@
 //#include "utils_bsg.h"
 u32* data;
 //extern char logError[LOG_SZ_ERROR];
+
+u32 getFlashData(u32 ADDR){
+    return (*(__IO u32*) ADDR);
+}
+
 void flashClearPage(u32 page){
 	while(HAL_FLASH_Unlock() != HAL_OK) D(printf("ERROR: HAL_FLASH_Unlock()\r\n"));
 	FLASH_Erase_Sector(page, VOLTAGE_RANGE_3);

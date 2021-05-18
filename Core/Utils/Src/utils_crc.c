@@ -118,6 +118,10 @@ uint32_t crc32_byte(uint8_t *p, uint32_t bytelength)
 	return (crc ^ 0xffffffff);
 }
 
+void crc32_chank(uint32_t *crc, uint8_t *p, uint32_t bytelength) {
+    while (bytelength-- !=0) *crc = poly8_lookup[((uint8_t) *crc ^ *(p++))] ^ (*crc >> 8);
+}
+
 uint16_t crc16WirelesSens(uint8_t *pcBlock, uint16_t len)
 {
     uint16_t crc = 0xFFFF;
