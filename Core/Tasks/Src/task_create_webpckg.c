@@ -60,18 +60,20 @@ void taskCreateWebPckg(void const *argument)
             }
             // amntPages = delayPages > AMOUNT_MAX_PAGES ? AMOUNT_MAX_PAGES : delayPages;
             for (u8 i = 0; i < amntPages; i++) {
-                spiFlashRdPg((u8 *)tmpBufPage, 256, 0, spiFlash64.tailNumPg);
-
-                if ((len = isDataFromFlashOk(tmpBufPage, 256))) {
+                len = spiFlashReadLastPg((u8 *)tmpBufPage, 256, 0);
+                if (len) {
                     parseData(tmpBufPage, len);
-                } else {
-                    D(printf("ERROR: bad crc isDataFromFlashOk()\r\n"));
                 }
             }
             szAllPages = getSzAllPages();
-            initWebPckg(curPckg, szAllPages, 0);
-            addPagesToWebPckg(curPckg);
-            osMessagePut(queueWebPckgHandle, (u32)curPckg, osWaitForever);
+            if (szAllPages) {
+                D(printf("Create package\r\n"));
+                initWebPckg(curPckg, szAllPages, 0);
+                addPagesToWebPckg(curPckg);
+                osMessagePut(queueWebPckgHandle, (u32)curPckg, osWaitForever);
+            } else {
+                freeWebPckg(curPckg);
+            }
             delayPages = getDelayPages();
         }
 

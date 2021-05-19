@@ -22,7 +22,7 @@ void taskWirelessSens(void const * argument){
         uInfoWirelessSens.irqFlags.isIrqIdle = 0;
         memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
         // read data from cBuf
-        while(!waitIdle("", &uInfoWirelessSens.irqFlags, 1, 15000)){
+        while(!waitIdle("", &uInfoWirelessSens.irqFlags, 1, 30000)){
             D(printf("ERROR: NO WIRELESS SENS\r\n"));
             iwdgTaskReg |= IWDG_TASK_REG_WIRELESS;
             continue;

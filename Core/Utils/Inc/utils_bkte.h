@@ -65,8 +65,6 @@
 #define BKTE_NO_TEMP -127
 #define BKTE_WIRELESS_TEMP 101
 
-#define BKTE_SAVE_NUM_PAGE 2047
-
 #define BKTE_BAD_TIMESTAMP 2997993600
 
 #define BKTE_BIG_DIF_RTC_SERVTIME 600
@@ -138,6 +136,7 @@ typedef struct {
     u8 tcpErrCnt;
     u8 csq;
     u8 idNewFirmware;
+    u8 isSpiFlashReady;
     LastData lastData;
     //	FInfo	fInfo[NUM_READ_FILES];
 } BKTE;

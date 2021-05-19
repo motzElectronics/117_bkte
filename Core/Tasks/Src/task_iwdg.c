@@ -20,7 +20,7 @@ void taskManageIWDG(void const* argument) {
         }
 
         if (iwdgErrCount > 700) {
-            spiFlashSaveData();
+            spiFlashSaveInfo();
             NVIC_SystemReset();
         }
 

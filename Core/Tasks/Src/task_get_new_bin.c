@@ -92,7 +92,7 @@ void taskGetNewBin(void const* argument) {
             osTimerStart(timerPowerOffHandle, 300000);
 
             osDelay(100);
-            spiFlashSaveData();
+            spiFlashSaveInfo();
             osDelay(1000);
             bkte.isTCPOpen = 0;
             if (sendMsgFWUpdated() != SUCCESS) {

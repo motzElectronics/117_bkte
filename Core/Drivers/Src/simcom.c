@@ -45,7 +45,7 @@ void simInit() {
                 sdUpdLog(&sdSectorLogs);
                 //				  createLog(logError, LOG_SZ_ERROR,
                 //"ERROR: TOTAL RESET \r\n");
-                spiFlashSaveData();
+                spiFlashSaveInfo();
                 osDelay(3000);
                 HAL_NVIC_SystemReset();
             }
@@ -60,7 +60,7 @@ void simInit() {
                     sdUpdLog(&sdSectorLogError);
                     sdUpdLog(&sdSectorLogs);
                     fail = 0;
-                    spiFlashSaveData();
+                    spiFlashSaveInfo();
                     osDelay(3000);
                     HAL_NVIC_SystemReset();
                 }

@@ -211,7 +211,7 @@ void updSpiFlash(CircularBuffer* cbuf) {
     bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
     cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
 
-    spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
+    spiFlashWriteNextPg(cbuf->buf, cbuf->readAvailable, 0);
     cBufReset(cbuf);
     
     D(printf("updSpiFlash()\r\n"));
@@ -247,7 +247,7 @@ void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf) {
     if (cbuf->writeAvailable < sz + 2 + 4) {
         bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
         cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
-        spiFlashWrPg(cbuf->buf, cbuf->readAvailable, 0, spiFlash64.headNumPg);
+        spiFlashWriteNextPg(cbuf->buf, cbuf->readAvailable, 0);
         cBufReset(cbuf);
     } else {
         cBufWriteToBuf(cbuf, &cmdData, 1);

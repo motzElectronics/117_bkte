@@ -179,7 +179,7 @@ void pwrOffBkte() {
     sdWriteLog(SD_MSG_OFF_BKTE, SD_LEN_OFF_BKTE, strVolts, 3, &sdSectorLogs);
     sdUpdLog(&sdSectorLogs);
 
-    spiFlashSaveData();
+    spiFlashSaveInfo();
 
     osDelay(10000);
     HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);  // OFF
