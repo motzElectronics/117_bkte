@@ -26,8 +26,6 @@ void spiFlashInit(u8* buf){
     osDelay(100);
     u32 id, tmp;
 
-    memset((u8*)badPgMap, 0, sizeof(badPgMap));
-
     id = spiFlashReadID();
     tmp = id & 0x0000FFFF;
     if(tmp){ //! change to 2017
@@ -93,8 +91,6 @@ void spiFlashES(u32 numSec)
     D(printf("spiFlash ErSec %d\r\n", numSec));
     u32 secAddr;
 
-    osMutexWait(mutexSpiFlashHandle, 60000);
-
     secAddr = numSec * spiFlash64.secSz;
     u8 data[] = {SPIFLASH_SE, ((secAddr & 0xFF0000) >> 16), ((secAddr & 0xFF00) >> 8), (secAddr & 0xFF)};
 
@@ -107,7 +103,6 @@ void spiFlashES(u32 numSec)
 
     spiFlashWaitReady();
     osDelay(10);
-    osMutexRelease(mutexSpiFlashHandle);
 }
 
 u8 spiFlashWaitReady(){
@@ -170,6 +165,7 @@ u8 spiFlashIsPgBad(u32 numPage) {
 
 void spiFlashMarkPgBad(u32 numPage) {
     u16 curNumSec, numPgInSec;
+    D(printf("Mark bad page %d\r\n", numPage));
 
     curNumSec = numPage / SPIFLASH_NUM_PG_IN_SEC;
     numPgInSec = numPage % SPIFLASH_NUM_PG_IN_SEC;
@@ -246,7 +242,6 @@ u8 spiFlashReadLastPg(u8 *pBuf, u32 sz, u32 offset) {
     if (len == 0) {
         D(printf("ERROR: bad crc isDataFromFlashOk()\r\n"));
         if (bkte.isSpiFlashReady) {
-            D(printf("ERROR: Mark bad page %d\r\n", numPage));
             spiFlashMarkPgBad(numPage);
         }
     }
@@ -259,8 +254,8 @@ u8 spiFlashReadLastPg(u8 *pBuf, u32 sz, u32 offset) {
 
 int getDelayPages() {
     u32 numPage;
-    u16 curNumSec, numPgInSec;
     int delayPages, delayGoodPages;
+
     delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? 
                 spiFlash64.headNumPg - spiFlash64.tailNumPg :
                 spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
@@ -268,9 +263,7 @@ int getDelayPages() {
 
     numPage = spiFlash64.tailNumPg;
     for (u8 i = 0; i < delayPages; ++i) {
-        curNumSec = numPage / SPIFLASH_NUM_PG_IN_SEC;
-        numPgInSec = numPage % SPIFLASH_NUM_PG_IN_SEC;
-        if ((badPgMap[curNumSec] >> numPgInSec) & 0x01) {
+        if (spiFlashIsPgBad(numPage)) {
             delayGoodPages--;
         }
         numPage = (numPage + 1) % SPIFLASH_NUM_PG_GNSS;
@@ -292,9 +285,9 @@ void spiFlashSaveInfo() {
     memcpy(&buf[20], &bkte.lastData.enReact, 4);
     buf[31] = 0x01;
 
-    spiFlashES(BKTE_SAVE_NUM_PAGE / SPIFLASH_NUM_PG_IN_SEC);
-
     osMutexWait(mutexSpiFlashHandle, 60000);
+
+    spiFlashES(BKTE_SAVE_NUM_PAGE / SPIFLASH_NUM_PG_IN_SEC);
 
     D(printf("Save pages: head %d, tail %d\r\n", spiFlash64.headNumPg, spiFlash64.tailNumPg));
     D(printf("Save energy: act %d, react %d\r\n", bkte.lastData.enAct, bkte.lastData.enReact));
@@ -333,13 +326,18 @@ void spiFlashLoadInfo(u8* buf) {
           || spiFlash64.tailNumPg > SPIFLASH_NUM_PG_GNSS) {
         spiFlash64.headNumPg = 0;
         spiFlash64.tailNumPg = spiFlash64.headNumPg;
+        osMutexWait(mutexSpiFlashHandle, 60000);
         spiFlashES(spiFlash64.headNumPg / SPIFLASH_NUM_PG_IN_SEC);
+        osMutexRelease(mutexSpiFlashHandle);
     }
 
+    memset((u8*)badPgMap, 0, sizeof(badPgMap));
     if (isMapInFlash == 0x01) {
         spiFlashReadMap();
     } else {
+        osMutexWait(mutexSpiFlashHandle, 60000);
         spiFlashES(BKTE_BAD_PG_MAP_NUM_PAGE / SPIFLASH_NUM_PG_IN_SEC);
+        osMutexRelease(mutexSpiFlashHandle);
     }
 }
 

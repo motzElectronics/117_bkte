@@ -63,8 +63,7 @@ void cBufWriteToBuf(CBufHandle cbuf, u8* data, u8 sz) {
     }
 }
 
-void cBufSafeWrite(CBufHandle cbuf, u8* data, u8 sz, osMutexId mutex,
-                   TickType_t ticks) {
+void cBufSafeWrite(CBufHandle cbuf, u8* data, u8 sz, osMutexId mutex, TickType_t ticks) {
     osMutexWait(mutex, ticks);
     cBufWriteToBuf(cbuf, data, sz);
     osMutexRelease(mutex);
