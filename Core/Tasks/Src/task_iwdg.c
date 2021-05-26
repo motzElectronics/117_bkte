@@ -19,7 +19,7 @@ void taskManageIWDG(void const* argument) {
             iwdgErrCount++;
         }
 
-        if (iwdgErrCount > 700) {
+        if (iwdgErrCount > 800) {
             spiFlashSaveInfo();
             NVIC_SystemReset();
         }

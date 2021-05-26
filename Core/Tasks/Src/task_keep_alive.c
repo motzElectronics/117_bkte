@@ -325,8 +325,16 @@ ErrorStatus sendInitTelemetry() {
 
     pckgTel.code = TEL_CD_HW_UPDATE_ERR;
     tmp = getFlashData(FLASH_ADDR_ERR_NEW_FIRMWARE);
-    if (tmp == 0xFFFFFFFF) tmp = 0;
+    if (tmp > 2) tmp = 0;
     pckgTel.data = tmp;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = (u8)12;
+    pckgTel.data = bkte.lastData.enAct;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    pckgTel.code = (u8)13;
+    pckgTel.data = bkte.lastData.enReact;
     copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
 
     ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY * ptr, ptr);

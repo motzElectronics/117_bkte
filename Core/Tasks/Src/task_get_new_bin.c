@@ -107,11 +107,11 @@ void taskGetNewBin(void const* argument) {
 
 void updBootInfo() {
     u8 diff = 4 - (szNewFW % 4);
-    // szNewFW = diff == 0 ? szNewFW : ((szNewFW / 4) + 1) * 4;
+    szNewFW = szNewFW % 4 == 0 ? szNewFW : ((szNewFW / 4) + 1) * 4;
     if (diff != 0) {
         memset(partNewFW, 0xFF, diff);
         crc32_chank(&crcNewFW, partNewFW, diff);
-        szNewFW += diff;
+        // szNewFW += diff;
     }
     crcNewFW ^= 0xffffffff;
     while (HAL_FLASH_Unlock() != HAL_OK)

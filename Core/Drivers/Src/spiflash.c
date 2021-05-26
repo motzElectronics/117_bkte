@@ -278,14 +278,14 @@ void spiFlashSaveInfo() {
 
     spiFlashWriteMap();
 
+    osMutexWait(mutexSpiFlashHandle, 60000);
+
     memset(buf, 0, 32);
     memcpy(&buf[0], &spiFlash64.headNumPg, 4);
     memcpy(&buf[4], &spiFlash64.tailNumPg, 4);
     memcpy(&buf[16], &bkte.lastData.enAct, 4);
     memcpy(&buf[20], &bkte.lastData.enReact, 4);
     buf[31] = 0x01;
-
-    osMutexWait(mutexSpiFlashHandle, 60000);
 
     spiFlashES(BKTE_SAVE_NUM_PAGE / SPIFLASH_NUM_PG_IN_SEC);
 
@@ -347,6 +347,8 @@ void spiFlashWriteMap() {
     u16 curNumPg = BKTE_BAD_PG_MAP_NUM_PAGE;
 
     osMutexWait(mutexSpiFlashHandle, 60000);
+
+    spiFlashES(BKTE_BAD_PG_MAP_NUM_PAGE / SPIFLASH_NUM_PG_IN_SEC);
 
     for (u16 i = 0; i < SPIFLASH_NUM_PG_IN_SEC; ++i) {
         addr = (curNumPg * spiFlash64.pgSz);

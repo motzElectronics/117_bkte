@@ -81,7 +81,11 @@ u8 isEnergyFresh(PckgEnergy *pckg) {
     u8 ret = 0;
 
     if (pckg->enAct < bkte.lastData.enAct) {
-        pckg->enAct = 0;
+        if (pckg->enAct + 20 < bkte.lastData.enAct) {
+            bkte.lastData.enAct = pckg->enAct;
+        } else {
+            pckg->enAct = 0;
+        }
         ret |= 1;
     } else if (pckg->enAct > bkte.lastData.enAct) {
         bkte.lastData.enAct = pckg->enAct;
@@ -89,7 +93,11 @@ u8 isEnergyFresh(PckgEnergy *pckg) {
     }
 
     if (pckg->enReact < bkte.lastData.enReact) {
-        pckg->enReact = 0;
+         if (pckg->enReact + 20 < bkte.lastData.enReact) {
+            bkte.lastData.enReact = pckg->enReact;
+        } else {
+            pckg->enReact = 0;
+        }
         ret |= 1;
     } else if (pckg->enReact > bkte.lastData.enReact) {
         bkte.lastData.enReact = pckg->enReact;
@@ -154,6 +162,14 @@ void generateInitTelemetry() {
 
     pckgTel.code = TEL_CD_HW_LORA;
     pckgTel.data = bkte.hwStat.isLoraOk;
+    saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+    pckgTel.code = (u8)12;
+    pckgTel.data = bkte.lastData.enAct;
+    saveTelemetry(&pckgTel, &circBufAllPckgs);
+
+    pckgTel.code = (u8)13;
+    pckgTel.data = bkte.lastData.enReact;
     saveTelemetry(&pckgTel, &circBufAllPckgs);
 
     updSpiFlash(&circBufAllPckgs);
