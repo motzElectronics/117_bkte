@@ -37,7 +37,7 @@ void taskGetEnergy(void const* argument) {
     cBufReset(&circBufAllPckgs);
     sdInit();
     simInit();
-    getServerTime();
+    while(getServerTime() != SUCCESS);
 
     sendInitTelemetry();
     unLockTasks();

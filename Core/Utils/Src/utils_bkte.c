@@ -45,13 +45,15 @@ void bkteInit() {
              (uint)bkte.idMCU[2]));
     bkte.hwStat.regHardWareStat = 0;
     bkte.erFlags.errReg = 0;
+    bkte.idNewFirmware = 0xFD;
 }
 
-void getServerTime() {
+ErrorStatus getServerTime() {
     u8 bufTime[4];
     if (generateWebPckgReq(CMD_REQUEST_SERVER_TIME, NULL, 0, SZ_REQUEST_GET_SERVER_TIME, bufTime, 4) == ERROR) {
         sdWriteLog(SD_ER_BAD_SERVERTIME, SD_LEN_ER_MSG, NULL, 0, &sdSectorLogs);
         D(printf("ERROR: bad server time\r\n"));
+        return ERROR;
     } else {
         time_t t = bufTime[0] << 24 | bufTime[1] << 16 | bufTime[2] << 8 | bufTime[3];
         struct tm* pTm;
@@ -65,14 +67,13 @@ void getServerTime() {
             tmpDate.Month = pTm->tm_mon + 1;
             tmpDate.Year = pTm->tm_year - 100;
 
-            if (tmpDate.Year < 30 &&
-                tmpDate.Year > 19) {  // sometimes timestamp is wrong and has
-                                      // value like 2066 year
+            if (tmpDate.Year < 30 && tmpDate.Year > 19) {  // sometimes timestamp is wrong and has value like 2066 year
                 HAL_RTC_SetTime(&hrtc, &tmpTime, RTC_FORMAT_BIN);
                 HAL_RTC_SetDate(&hrtc, &tmpDate, RTC_FORMAT_BIN);
             }
         }
     }
+    return SUCCESS;
 }
 
 void getNumFirmware() {

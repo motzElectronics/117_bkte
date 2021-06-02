@@ -16,6 +16,7 @@ void generateMsgBat();
 void generateMsgDevOff();
 
 ErrorStatus sendMsgFWUpdated();
+ErrorStatus sendMsgFWUpdateBegin();
 ErrorStatus sendMsgDevOff();
 ErrorStatus sendMsgDevOffValue(u32 val);
 ErrorStatus sendInitTelemetry();

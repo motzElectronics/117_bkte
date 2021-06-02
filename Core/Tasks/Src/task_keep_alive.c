@@ -221,20 +221,46 @@ void generateMsgDevOff() {
 ErrorStatus sendMsgFWUpdated() {
     ErrorStatus ret = SUCCESS;
     PckgTelemetry pckgTel;
+    u8 ptr = 0;
 
     D(printf("sendMsgFWUpdated\r\n"));
 
-    memset(bufTxData, 0, 20);
+    memset(bufTxData, 0, 64);
     pckgTel.group = TEL_GR_HARDWARE_STATUS;
 	pckgTel.code = TEL_CD_HW_UPDATED;
 	pckgTel.data = bkte.idNewFirmware;
     pckgTel.unixTimeStamp = getUnixTimeStamp();
-    copyTelemetry(bufTxData, &pckgTel);
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+	pckgTel.code = TEL_CD_HW_UPDATE_LEN;
+	pckgTel.data = bkte.szNewFirmware;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
 	pckgTel.code = TEL_CD_HW_BKTE;
 	pckgTel.data = 0;
-    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY], &pckgTel);
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
 
-    ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY * 2, 2);
+    ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY * ptr, ptr);
+    
+    return ret;
+}
+
+ErrorStatus sendMsgFWUpdateBegin() {
+    ErrorStatus ret = SUCCESS;
+    PckgTelemetry pckgTel;
+    u8 ptr = 0;
+
+    D(printf("sendMsgFWUpdated\r\n"));
+
+    memset(bufTxData, 0, 64);
+    pckgTel.group = TEL_GR_HARDWARE_STATUS;
+	pckgTel.code = TEL_CD_HW_UPDATED;
+	pckgTel.data = bkte.idNewFirmware;
+    pckgTel.unixTimeStamp = getUnixTimeStamp();
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+	pckgTel.code = TEL_CD_HW_UPDATE_LEN;
+	pckgTel.data = bkte.szNewFirmware;
+    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
+
+    ret = sendWebPckgData(CMD_DATA_TELEMETRY, bufTxData, SZ_CMD_TELEMETRY * ptr, ptr);
     
     return ret;
 }

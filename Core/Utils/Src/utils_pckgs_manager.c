@@ -127,9 +127,11 @@ WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq) {
 }
 
 ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq) {
-    WebPckg* curPckg;
-    u8 req[128];
     ErrorStatus ret = SUCCESS;
+    WebPckg* curPckg;
+    u8 statSend;
+    u8 cnt = 0;
+    u8 req[128];
     
     req[0] = CMD_DATA;
     req[1] = szReq;
@@ -143,7 +145,11 @@ ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq) {
     showWebPckg(curPckg);
 
     osMutexWait(mutexWebHandle, osWaitForever);
-    if (sendTcp(curPckg->buf, curPckg->shift) != TCP_OK) {
+   while ((statSend = sendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && cnt < 5) {
+        D(printf("ERROR: sendWebPckgData %d\r\n", cnt));
+        cnt++;
+    }
+    if (statSend != TCP_OK) {
         D(printf("ERROR: send data failed\r\n"));
         ret = ERROR;
     }
@@ -154,9 +160,11 @@ ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq) {
 
 ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u16 szAnsw) {
     ErrorStatus ret = SUCCESS;
-    u8 statSend;
-    u8 req[10];
     WebPckg* curPckg;
+    u8 statSend;
+    u8 cnt = 0;
+    u8 req[10];
+
     req[0] = CMD_REQ;
     req[1] = 1;
     if ((curPckg = getFreePckgReq()) != NULL) {
@@ -169,8 +177,10 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
         showWebPckg(curPckg);
 
         osMutexWait(mutexWebHandle, osWaitForever);
-        statSend = sendTcp(curPckg->buf, curPckg->shift);
-        osDelay(50);
+        while ((statSend = sendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && cnt < 5) {
+            D(printf("ERROR: generateWebPckgReq %d\r\n", cnt));
+            cnt++;
+        }
 
         if (statSend != TCP_OK) {
             ret = ERROR;
@@ -182,6 +192,7 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
             } else {
                 D(printf("ERROR: NO ANSW REQ\r\n"));
                 ret = ERROR;
+                bkte.isTCPOpen = 0;
             }
         } else {
             osDelay(10);

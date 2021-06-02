@@ -43,8 +43,15 @@ void taskGetNewBin(void const* argument) {
 
     lockAllTasks();
     isRxNewFirmware = 1;
+    bkte.isTCPOpen = 0;
+    osTimerStop(timerPowerOffHandle);
 
     while (!(szNewFW = getSzFirmware()));
+    bkte.szNewFirmware = szNewFW;
+    if (sendMsgFWUpdateBegin() != SUCCESS) {
+        D(printf("ERROR: Send FW UPDATED\r\n"));
+    }
+
     flashClearPage(FLASH_SECTOR_11);
     clearAllWebPckgs();
     HAL_GPIO_WritePin(LED4G_GPIO_Port, LED4G_Pin, GPIO_PIN_SET);
@@ -95,6 +102,7 @@ void taskGetNewBin(void const* argument) {
             spiFlashSaveInfo();
             osDelay(1000);
             bkte.isTCPOpen = 0;
+            
             if (sendMsgFWUpdated() != SUCCESS) {
                 D(printf("ERROR: Send FW UPDATED\r\n"));
             }
@@ -181,7 +189,7 @@ ErrorStatus getPartFirmware(u8* reqData, u8* answBuf, u16 szAnsw, u8 szReq) {
         HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_SET);
         ret = ERROR;
     } else {
-        waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), szAnsw / SZ_TCP_PCKG, 200, 20000);
+        waitIdleCnt("wait IDLE part firmware", &(uInfoSim.irqFlags), szAnsw / SZ_TCP_PCKG + 1, 200, 20000);
         osDelay(100);
         HAL_GPIO_WritePin(LED4R_GPIO_Port, LED4R_Pin, GPIO_PIN_RESET);
         HAL_GPIO_TogglePin(LED4G_GPIO_Port, LED4G_Pin);

@@ -25,7 +25,7 @@
 #define BKTE_ID_TRAINCAR_MAX 2
 #define BKTE_IS_LORA_MASTER 1
 
-#define BKTE_ID_FIRMWARE 3
+#define BKTE_ID_FIRMWARE 4
 #define BKTE_ID_BOOT 2
 #define BKTE_ID_PCB 3
 #define BKTE_ID_TRAIN 1706
@@ -136,6 +136,7 @@ typedef struct {
     u8 tcpErrCnt;
     u8 csq;
     u8 idNewFirmware;
+    u32 szNewFirmware;
     u8 isSpiFlashReady;
     LastData lastData;
     //	FInfo	fInfo[NUM_READ_FILES];
@@ -189,6 +190,7 @@ typedef enum {
     TEL_CD_HW_BKTE_ALIVE,
     TEL_CD_HW_WIRELESS_SENS_RSSI,
     TEL_CD_HW_UPDATED,
+    TEL_CD_HW_UPDATE_LEN,
     TEL_CD_HW_UPDATE_ERR
 } TELEMETRY_CODE_STATES;
 
@@ -256,7 +258,7 @@ void offAllLeds();
 void offAllRedLeds();
 void toggleGreenLeds();
 void toggleRedLeds();
-void getServerTime();
+ErrorStatus getServerTime();
 
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 // void checkBufForWritingToFlash();
