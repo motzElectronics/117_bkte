@@ -6,8 +6,9 @@
  */
 
 #include "../Utils/Inc/utils_bkte.h"
-#include "../Utils/Inc/utils_flash.h"
+
 #include "../Utils/Inc/utils_crc.h"
+#include "../Utils/Inc/utils_flash.h"
 #include "../Utils/Inc/utils_pckgs_manager.h"
 #include "../Utils/Inc/utils_sd.h"
 GPIO_TypeDef* oneWirePorts[BKTE_MAX_CNT_1WIRE] = {
@@ -16,16 +17,16 @@ GPIO_TypeDef* oneWirePorts[BKTE_MAX_CNT_1WIRE] = {
 u16 oneWirePins[BKTE_MAX_CNT_1WIRE] = {ONEWIRE_1_EN_Pin, ONEWIRE_2_EN_Pin, ONEWIRE_3_EN_Pin, ONEWIRE_4_EN_Pin};
 
 extern UART_HandleTypeDef huart3;
-extern RTC_HandleTypeDef hrtc;
-extern osMutexId mutexRTCHandle;
-extern osMutexId mutexWriteToEnergyBufHandle;
-extern osMutexId mutexWebHandle;
-extern osMutexId mutexSpiFlashHandle;
-extern osThreadId getNewBinHandle;
-extern osSemaphoreId semCreateWebPckgHandle;
-static RTC_TimeTypeDef tmpTime;
-static RTC_DateTypeDef tmpDate;
-extern u8 SZ_PCKGENERGY;
+extern RTC_HandleTypeDef  hrtc;
+extern osMutexId          mutexRTCHandle;
+extern osMutexId          mutexWriteToEnergyBufHandle;
+extern osMutexId          mutexWebHandle;
+extern osMutexId          mutexSpiFlashHandle;
+extern osThreadId         getNewBinHandle;
+extern osSemaphoreId      semCreateWebPckgHandle;
+static RTC_TimeTypeDef    tmpTime;
+static RTC_DateTypeDef    tmpDate;
+extern u8                 SZ_PCKGENERGY;
 
 void bkteInit() {
     HAL_GPIO_WritePin(SD_PWR_EN_GPIO_Port, SD_PWR_EN_Pin, GPIO_PIN_RESET);
@@ -55,7 +56,7 @@ ErrorStatus getServerTime() {
         D(printf("ERROR: bad server time\r\n"));
         return ERROR;
     } else {
-        time_t t = bufTime[0] << 24 | bufTime[1] << 16 | bufTime[2] << 8 | bufTime[3];
+        time_t     t = bufTime[0] << 24 | bufTime[1] << 16 | bufTime[2] << 8 | bufTime[3];
         struct tm* pTm;
         pTm = gmtime(&t);
         if (pTm != NULL) {
@@ -109,7 +110,6 @@ void fillPckgEnergy(PckgEnergy* pckg, u16* data) {
                   data[BKTE_NUM_ACT_ENERGY + 1] << 8 |
                   data[BKTE_NUM_ACT_ENERGY];
 
-
     pckg->enReact = data[BKTE_NUM_REACT_ENERGY + 3] << 24 |
                     data[BKTE_NUM_REACT_ENERGY + 2] << 16 |
                     data[BKTE_NUM_REACT_ENERGY + 1] << 8 |
@@ -125,7 +125,7 @@ void fillPckgTemp(PckgTemp* pckg, s8* data) {
 }
 
 u32 getUnixTimeStamp() {
-    time_t t;
+    time_t           t;
     static struct tm curTime;
 
     osMutexWait(mutexRTCHandle, osWaitForever);
@@ -214,12 +214,12 @@ void updSpiFlash(CircularBuffer* cbuf) {
 
     spiFlashWriteNextPg(cbuf->buf, cbuf->readAvailable, 0);
     cBufReset(cbuf);
-    
+
     D(printf("updSpiFlash()\r\n"));
 }
 
 u8 waitGoodCsq(u32 timeout) {
-    u8 csq = 0;
+    u8  csq = 0;
     u16 cntNOCsq = 0;
     u16 cntNOCsqMax = timeout / 3;
     bkte.erFlags.simCSQINF = 0;
@@ -244,16 +244,17 @@ u8 waitGoodCsq(u32 timeout) {
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf) {
     u16 bufEnd[2] = {0, BKTE_PREAMBLE};
     osMutexWait(mutexWriteToEnergyBufHandle, osWaitForever);
-    
+
     if (cbuf->writeAvailable < sz + 2 + 4) {
         bufEnd[0] = calcCrc16(cbuf->buf, cbuf->readAvailable);
         cBufWriteToBuf(cbuf, (u8*)bufEnd, 4);
         spiFlashWriteNextPg(cbuf->buf, cbuf->readAvailable, 0);
         cBufReset(cbuf);
-    } else {
-        cBufWriteToBuf(cbuf, &cmdData, 1);
-        cBufWriteToBuf(cbuf, data, sz);
     }
+
+    cBufWriteToBuf(cbuf, &cmdData, 1);
+    cBufWriteToBuf(cbuf, data, sz);
+
     osMutexRelease(mutexWriteToEnergyBufHandle);
 }
 

@@ -21,48 +21,48 @@
 #include "usart.h"
 
 //!-------------CONFIGURE PARAMS---------------
-#define BKTE_ID_TRAINCAR 1
+#define BKTE_ID_TRAINCAR     1
 #define BKTE_ID_TRAINCAR_MAX 2
-#define BKTE_IS_LORA_MASTER 1
+#define BKTE_IS_LORA_MASTER  1
 
 #define BKTE_ID_FIRMWARE 4
-#define BKTE_ID_BOOT 2
-#define BKTE_ID_PCB 3
-#define BKTE_ID_TRAIN 1706
+#define BKTE_ID_BOOT     2
+#define BKTE_ID_PCB      3
+#define BKTE_ID_TRAIN    1706
 //!------------CONFIGURE PARAMS----------------
 #define BKTE_THRESHOLD_CNT_PAGES 2
-#define BKTE_AMOUNTS (BKTE_ID_TRAINCAR_MAX + 1)
-#define BKTE_ADDR_ID_MCU 0x1FFF7A10
-#define BKTE_MAX_CNT_1WIRE 4
-#define LEN_TIMESTAMP 13
+#define BKTE_AMOUNTS             (BKTE_ID_TRAINCAR_MAX + 1)
+#define BKTE_ADDR_ID_MCU         0x1FFF7A10
+#define BKTE_MAX_CNT_1WIRE       4
+#define LEN_TIMESTAMP            13
 
-#define BKTE_NUM_HEADER_55 11
-#define BKTE_NUM_HEADER_B9 22
-#define BKTE_NUM_CURRENT 12
-#define BKTE_NUM_VOLT 14
-#define BKTE_SZ_CURRENT 2
-#define BKTE_SZ_VOLT 2
-#define BKTE_NUM_ACT_ENERGY 16
-#define BKTE_SZ_ENERGY 4
+#define BKTE_NUM_HEADER_55    11
+#define BKTE_NUM_HEADER_B9    22
+#define BKTE_NUM_CURRENT      12
+#define BKTE_NUM_VOLT         14
+#define BKTE_SZ_CURRENT       2
+#define BKTE_SZ_VOLT          2
+#define BKTE_NUM_ACT_ENERGY   16
+#define BKTE_SZ_ENERGY        4
 #define BKTE_NUM_REACT_ENERGY 27
 
 #define BKTE_ID_DEV_BKTE 0x10
-#define BKTE_ID_DEV_BKT 0x11
-#define BKTE_ID_DEV_BSG 0x12
+#define BKTE_ID_DEV_BKT  0x11
+#define BKTE_ID_DEV_BSG  0x12
 
 #define SZ_PART_NEW_SOFTWARE 1300
 
-#define BKTE_VER_BETA_FIRMWARE (char)'B'
+#define BKTE_VER_BETA_FIRMWARE   (char)'B'
 #define BKTE_VER_STABLE_FIRMWARE (char)'S'
 
 #define BKTE_PERCENT_DEVIATION_ENERGY_DATA (float)0.03
-#define BKTE_MEASURE_FULL_LOOP (u8)60
+#define BKTE_MEASURE_FULL_LOOP             (u8)60
 
 #define SZ_MAX_TX_DATA 4096
 
-#define BKTE_MAX_TEMP 100
-#define BKTE_MIN_TEMP -100
-#define BKTE_NO_TEMP -127
+#define BKTE_MAX_TEMP      100
+#define BKTE_MIN_TEMP      -100
+#define BKTE_NO_TEMP       -127
 #define BKTE_WIRELESS_TEMP 101
 
 #define BKTE_BAD_TIMESTAMP 2997993600
@@ -71,16 +71,16 @@
 
 typedef union {
     struct {
-        u16 simAT : 1;
-        u16 simSAPBR : 1;
-        u16 simHINIT : 1;
-        u16 simHPARA : 1;
-        u16 simHDATA : 1;
-        u16 simHDATAU : 1;
-        u16 simHACT : 1;
-        u16 simHREAD : 1;
-        u16 simHCODE : 1;
-        u16 simCSQINF : 1;
+        u16 simAT      : 1;
+        u16 simSAPBR   : 1;
+        u16 simHINIT   : 1;
+        u16 simHPARA   : 1;
+        u16 simHDATA   : 1;
+        u16 simHDATAU  : 1;
+        u16 simHACT    : 1;
+        u16 simHREAD   : 1;
+        u16 simHCODE   : 1;
+        u16 simCSQINF  : 1;
         u16 flashNOIRQ : 1;
     };
     u16 errReg;
@@ -100,15 +100,15 @@ typedef struct {
 } LastData;
 
 typedef struct {
-    u32 posFile;
-    u32 lenLog;
+    u32   posFile;
+    u32   lenLog;
     char* fNameLog;
     char* fNameAddr;
 } FInfo;
 
 typedef union {
     struct {
-        u16 isChrgBat : 1;
+        u16 isChrgBat  : 1;
         u16 isPwrState : 1;
         u16 adcVoltBat : 9;
     };
@@ -118,31 +118,33 @@ typedef union {
 typedef union {
     struct {
         u8 isFatMount : 1;
-        u8 isDS2482 : 1;
+        u8 isDS2482   : 1;
         u8 isSPIFlash : 1;
-        u8 isLoraOk : 1;
+        u8 isLoraOk   : 1;
     };
     u8 regHardWareStat;
 } HardWareStatus;
 
 typedef struct {
-    u8 isOwActive[BKTE_MAX_CNT_1WIRE];
-    u32 idMCU[3];
+    u8             isOwActive[BKTE_MAX_CNT_1WIRE];
+    u32            idMCU[3];
     HardWareStatus hwStat;
-    PWRInfo pwrInfo;
-    ErrorFlags erFlags;
-    u8 isSentData;
-    u8 isTCPOpen;
-    u8 tcpErrCnt;
-    u8 csq;
-    u8 idNewFirmware;
-    u32 szNewFirmware;
-    u8 isSpiFlashReady;
-    LastData lastData;
+    PWRInfo        pwrInfo;
+    ErrorFlags     erFlags;
+    u8             isSentData;
+    u8             isTCPOpen;
+    u8             tcpErrCnt;
+    u8             csq;
+    u8             idNewFirmware;
+    u32            szNewFirmware;
+    u8             isSpiFlashReady;
+    LastData       lastData;
     //	FInfo	fInfo[NUM_READ_FILES];
 } BKTE;
 
-typedef enum { NUM_FILE_ENERGY = 0, NUM_FILE_TEMP, NUM_FILE_RSSI } NUM_FILE;
+typedef enum { NUM_FILE_ENERGY = 0,
+               NUM_FILE_TEMP,
+               NUM_FILE_RSSI } NUM_FILE;
 
 typedef enum {
     TEL_OFF_DEV = 0x0010,
@@ -169,7 +171,8 @@ typedef enum {
     TEL_LVL_CSQ = 0x7010
 } TYPE_TELEMETRY;
 
-typedef enum { TEL_GR_GENINF = 1, TEL_GR_HARDWARE_STATUS } TELEMETRY_GROUP;
+typedef enum { TEL_GR_GENINF = 1,
+               TEL_GR_HARDWARE_STATUS } TELEMETRY_GROUP;
 
 typedef enum {
     TEL_CD_GENINF_NUM_FIRMWARE = 1,
@@ -208,7 +211,8 @@ typedef enum {
     CMD_REQUEST_PART_FIRMWARE
 } CMD_REQUEST;
 
-typedef enum { MSG_TEMP = 0xF000, MSG_TELEMETRY = 0x0000 } TYPE_MSG;
+typedef enum { MSG_TEMP = 0xF000,
+               MSG_TELEMETRY = 0x0000 } TYPE_MSG;
 
 typedef struct {
     u32 unixTimeStamp;
@@ -225,13 +229,13 @@ typedef struct {
 typedef struct {
     u32 unixTimeStamp;
     u32 data;
-    u8 group;
-    u8 code;
+    u8  group;
+    u8  code;
 } PckgTelemetry;
 
 typedef struct {
     u32 unixTimeStamp;
-    s8 temp[BKTE_MAX_CNT_1WIRE];
+    s8  temp[BKTE_MAX_CNT_1WIRE];
 } PckgTemp;
 
 typedef struct {
@@ -251,23 +255,23 @@ void fillPckgVoltAmper(PckgVoltAmper* pckg, u16* data);
 void setDateTime(DateTime* dt);
 void setTM(time_t* pTimeStamp, DateTime* dt);
 
-u8 getDeviation(LastData* pCurData, LastData* pLastData);
-u8 crc8(char* pcBlock, int len);
-u8 isCrcOk(char* pData, int len);
-void offAllLeds();
-void offAllRedLeds();
-void toggleGreenLeds();
-void toggleRedLeds();
+u8          getDeviation(LastData* pCurData, LastData* pLastData);
+u8          crc8(char* pcBlock, int len);
+u8          isCrcOk(char* pData, int len);
+void        offAllLeds();
+void        offAllRedLeds();
+void        toggleGreenLeds();
+void        toggleRedLeds();
 ErrorStatus getServerTime();
 
 u8 getGnssPckg(u8* pBuf, u16 szBuf, PckgEnergy* pPckgGnss, u8 szPckg);
 // void checkBufForWritingToFlash();
 void updSpiFlash(CircularBuffer* cbuf);
-u8 waitGoodCsq(u32 timeout);
+u8   waitGoodCsq(u32 timeout);
 
 void saveData(u8* data, u8 sz, u8 cmdData, CircularBuffer* cbuf);
-u32 getUnixTimeStamp();
-u8 isDataFromFlashOk(char* pData, u8 len);
+u32  getUnixTimeStamp();
+u8   isDataFromFlashOk(char* pData, u8 len);
 void copyTelemetry(u8* buf, PckgTelemetry* pckgTel);
 void saveTelemetry(PckgTelemetry* pckg, CircularBuffer* cbuf);
 
