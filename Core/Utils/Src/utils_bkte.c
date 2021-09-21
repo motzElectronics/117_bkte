@@ -158,16 +158,6 @@ u8 isCrcOk(char* pData, int len) {
     return crcCalc == crcRecv;
 }
 
-u8 crc8(char* pcBlock, int len) {
-    u8 crc = 0xFF;
-    while (len--) {
-        crc ^= *pcBlock++;
-        for (u8 i = 0; i < 8; i++)
-            crc = crc & 0x80 ? (crc << 1) ^ 0x31 : crc << 1;
-    }
-    return crc;
-}
-
 void setTempLine(u8 numLine) {
     HAL_GPIO_WritePin(oneWirePorts[numLine], oneWirePins[numLine],
                       GPIO_PIN_SET);

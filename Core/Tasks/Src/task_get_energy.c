@@ -1,19 +1,19 @@
 #include "../Tasks/Inc/task_get_energy.h"
-#include "../Tasks/Inc/task_keep_alive.h"
+
 #include "../Tasks/Inc/task_iwdg.h"
+#include "../Tasks/Inc/task_keep_alive.h"
 
 extern u16 iwdgTaskReg;
 
-extern osThreadId getEnergyHandle;
-extern osThreadId webExchangeHandle;
-extern osThreadId getTempHandle;
-extern osThreadId keepAliveHandle;
-// extern osThreadId loraHandle;
-extern osThreadId createWebPckgHandle;
-extern osThreadId getNewBinHandle;
-extern osThreadId wirelessSensHandle;
+extern osThreadId    getEnergyHandle;
+extern osThreadId    webExchangeHandle;
+extern osThreadId    getTempHandle;
+extern osThreadId    keepAliveHandle;
+extern osThreadId    createWebPckgHandle;
+extern osThreadId    getNewBinHandle;
+extern osThreadId    wirelessSensHandle;
 extern osSemaphoreId semCreateWebPckgHandle;
-extern osMutexId mutexWriteToEnergyBufHandle;
+extern osMutexId     mutexWriteToEnergyBufHandle;
 
 extern CircularBuffer rxUart1CircBuf;
 extern CircularBuffer circBufAllPckgs;
@@ -21,23 +21,24 @@ extern CircularBuffer circBufAllPckgs;
 static u16 testBufUart1[SZ_RX_UART1];
 
 static PckgVoltAmper pckgVoltAmper;
-static PckgEnergy pckgEnergy;
+static PckgEnergy    pckgEnergy;
 
 u8 isVoltAmperFresh(PckgVoltAmper *pckg);
 u8 isEnergyFresh(PckgEnergy *pckg);
 
 // u8 test = 0;
 
-void taskGetEnergy(void const* argument) {
+void taskGetEnergy(void const *argument) {
     // vTaskSuspend(getEnergyHandle);
-    u8 numIteration = 0;
+    u8  numIteration = 0;
     u16 retLen;
 
     spiFlashInit(circBufAllPckgs.buf);
     cBufReset(&circBufAllPckgs);
     sdInit();
     simInit();
-    while(getServerTime() != SUCCESS);
+    while (getServerTime() != SUCCESS)
+        ;
 
     sendInitTelemetry();
     unLockTasks();
@@ -45,26 +46,27 @@ void taskGetEnergy(void const* argument) {
 
     for (;;) {
         memset(testBufUart1, '\0', sizeof(testBufUart1));
-        retLen = cBufRead(&rxUart1CircBuf, (u8*)testBufUart1, 0);
+        retLen = cBufRead(&rxUart1CircBuf, (u8 *)testBufUart1, 0);
         if (retLen == BKTE_SZ_UART_MSG) {
             numIteration = (numIteration + 1) % BKTE_MEASURE_FULL_LOOP;
             fillPckgVoltAmper(&pckgVoltAmper, testBufUart1);
             // D(printf("Energy: volt %d, amper %d (prev: %d %d)\r\n", pckgVoltAmper.volt, pckgVoltAmper.amper, bkte.lastData.volt, bkte.lastData.current));
             if (isVoltAmperFresh(&pckgVoltAmper) || !numIteration) {
-                saveData((u8*)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
+                saveData((u8 *)&pckgVoltAmper, SZ_CMD_VOLTAMPER, CMD_DATA_VOLTAMPER, &circBufAllPckgs);
                 // D(printf("Energy: volt %d, amper %d\r\n", pckgVoltAmper.volt, pckgVoltAmper.amper));
             }
 
             fillPckgEnergy(&pckgEnergy, testBufUart1);
             // D(printf("Energy: act %d, react %d (prev: %d %d)\r\n", pckgEnergy.enAct, pckgEnergy.enReact, bkte.lastData.enAct, bkte.lastData.enReact));
             if (isEnergyFresh(&pckgEnergy) || !numIteration) {
-                saveData((u8*)&pckgEnergy, SZ_CMD_ENERGY, CMD_DATA_ENERGY, &circBufAllPckgs);
+                saveData((u8 *)&pckgEnergy, SZ_CMD_ENERGY, CMD_DATA_ENERGY, &circBufAllPckgs);
                 // D(printf("Energy: act %d, react %d (prev: %d %d)\r\n", pckgEnergy.enAct, pckgEnergy.enReact, bkte.lastData.enAct, bkte.lastData.enReact));
             }
             // D(printf("OK: enAct: %08x, enReact: %08x", pckgEnergy.enAct, pckgEnergy.enReact));
         }
         osDelay(400);
         iwdgTaskReg |= IWDG_TASK_REG_ENERGY;
+        bkte.stat.enrg++;
     }
 }
 
@@ -93,7 +95,7 @@ u8 isEnergyFresh(PckgEnergy *pckg) {
     }
 
     if (pckg->enReact < bkte.lastData.enReact) {
-         if (pckg->enReact + 20 < bkte.lastData.enReact) {
+        if (pckg->enReact + 20 < bkte.lastData.enReact) {
             bkte.lastData.enReact = pckg->enReact;
         } else {
             pckg->enReact = 0;
@@ -120,8 +122,8 @@ void unLockTasks() {
 
 void generateInitTelemetry() {
     PckgTelemetry pckgTel;
-    long long phoneNum;
-    u32 tmp;
+    long long     phoneNum;
+    u32           tmp;
     pckgTel.group = TEL_GR_GENINF;
     pckgTel.code = TEL_CD_GENINF_NUM_FIRMWARE;
     pckgTel.data = BKTE_ID_FIRMWARE;

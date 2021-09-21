@@ -5,7 +5,6 @@
  *      Author: YOBA-i516G
  */
 
-
 #include "../Drivers/Inc/spiflash.h"
 
 SPIFlash spiFlash64;
@@ -19,7 +18,7 @@ void spiFlashReadMap();
 void spiFlashWriteMap();
 void spiFlashLoadInfo(u8* buf);
 
-void spiFlashInit(u8* buf){
+void spiFlashInit(u8* buf) {
     osMutexWait(mutexSpiFlashHandle, 60000);
     spiMemInfo.pHSpi = &hspi2;
     SPIFLASH_CS_UNSEL;
@@ -28,7 +27,7 @@ void spiFlashInit(u8* buf){
 
     id = spiFlashReadID();
     tmp = id & 0x0000FFFF;
-    if(tmp){ //! change to 2017
+    if (tmp) {  //! change to 2017
         bkte.hwStat.isSPIFlash = 1;
     }
     D(printf("spiFlashId, series: %d %x\r\n", (int)id, (int)tmp));
@@ -49,9 +48,9 @@ void spiFlashInit(u8* buf){
     spiFlashLoadInfo(buf);
 }
 
-u32 spiFlashReadID(void){
+u32 spiFlashReadID(void) {
     u32 id;
-    u8 tmp[4] = {SPIFLASH_CMD_JEDEC_ID, DUMMY_BYTE, DUMMY_BYTE, DUMMY_BYTE};
+    u8  tmp[4] = {SPIFLASH_CMD_JEDEC_ID, DUMMY_BYTE, DUMMY_BYTE, DUMMY_BYTE};
     SPIFLASH_CS_SEL;
     spiFlashTxRxCmd(tmp, sizeof(tmp));
     SPIFLASH_CS_UNSEL;
@@ -59,35 +58,34 @@ u32 spiFlashReadID(void){
     return id;
 }
 
-u8 spiFlashTxRxCmd(u8* data, u16 sz){
+u8 spiFlashTxRxCmd(u8* data, u16 sz) {
     static u8 ret = 0;
     spiMemInfo.irqFlags.regIrq = 0;
-    HAL_SPI_TransmitReceive_DMA(spiMemInfo.pHSpi, data, data, sz); // spi2
+    HAL_SPI_TransmitReceive_DMA(spiMemInfo.pHSpi, data, data, sz);  // spi2
     ret = waitRx("", &spiMemInfo.irqFlags, 50, WAIT_TIMEOUT);
     bkte.erFlags.flashNOIRQ = ~ret;
     return ret;
 }
 
-u8 spiFlashTxData(u8* data, u16 sz){
+u8 spiFlashTxData(u8* data, u16 sz) {
     static u8 ret = 0;
     spiMemInfo.irqFlags.regIrq = 0;
-    HAL_SPI_Transmit_DMA(spiMemInfo.pHSpi, data, sz); // spi2
+    HAL_SPI_Transmit_DMA(spiMemInfo.pHSpi, data, sz);  // spi2
     ret = waitTx("", &spiMemInfo.irqFlags, 50, WAIT_TIMEOUT);
     bkte.erFlags.flashNOIRQ = ~ret;
     return ret;
 }
 
-u8 spiFlashRxData(u8* data, u16 sz){
+u8 spiFlashRxData(u8* data, u16 sz) {
     static u8 ret = 0;
     spiMemInfo.irqFlags.regIrq = 0;
-    HAL_SPI_Receive_DMA(spiMemInfo.pHSpi, data, sz); // spi2
+    HAL_SPI_Receive_DMA(spiMemInfo.pHSpi, data, sz);  // spi2
     ret = waitRx("", &spiMemInfo.irqFlags, 50, WAIT_TIMEOUT);
     bkte.erFlags.flashNOIRQ = ~ret;
     return ret;
 }
 
-void spiFlashES(u32 numSec)
-{
+void spiFlashES(u32 numSec) {
     D(printf("spiFlash ErSec %d\r\n", numSec));
     u32 secAddr;
 
@@ -105,22 +103,22 @@ void spiFlashES(u32 numSec)
     osDelay(10);
 }
 
-u8 spiFlashWaitReady(){
+u8 spiFlashWaitReady() {
     u8 data[] = {SPIFLASH_RDSR, DUMMY_BYTE};
     osDelay(50);
     u8 i = 0, ret = 0;
-    do{
+    do {
         SPIFLASH_CS_SEL;
         osDelay(50);
         ret = spiFlashTxRxCmd(data, sizeof(data));
         i++;
         SPIFLASH_CS_UNSEL;
         osDelay(50);
-    } while(((data[1] & 0x01) == 0x01) && (i < 3));
+    } while (((data[1] & 0x01) == 0x01) && (i < 3));
     return ret;
 }
 
-void spiFlashWrEn(){
+void spiFlashWrEn() {
     u8 cmd = SPIFLASH_WREN;
     SPIFLASH_CS_SEL;
     spiFlashTxRxCmd(&cmd, 1);
@@ -128,9 +126,9 @@ void spiFlashWrEn(){
     osDelay(10);
 }
 
-void spiFlashWrPg(u8 *pBuf, u32 sz, u32 addr) {
+void spiFlashWrPg(u8* pBuf, u32 sz, u32 addr) {
     u8 data[] = {SPIFLASH_PP, ((addr & 0xFF0000) >> 16), ((addr & 0xFF00) >> 8), (addr & 0xFF)};
-    
+
     spiFlashWaitReady();
     spiFlashWrEn();
 
@@ -143,7 +141,7 @@ void spiFlashWrPg(u8 *pBuf, u32 sz, u32 addr) {
     osDelay(10);
 }
 
-void spiFlashRdPg(u8 *pBuf, u32 sz, u32 addr) {
+void spiFlashRdPg(u8* pBuf, u32 sz, u32 addr) {
     u8 data[] = {SPIFLASH_FAST_READ, ((addr & 0xFF0000) >> 16), ((addr & 0xFF00) >> 8), (addr & 0xFF), DUMMY_BYTE};
 
     SPIFLASH_CS_SEL;
@@ -173,10 +171,10 @@ void spiFlashMarkPgBad(u32 numPage) {
     badPgMap[curNumSec] |= 1 << numPgInSec;
 }
 
-u8 spiFlashWriteNextPg(u8 *pBuf, u32 sz, u32 offset) {
+u8 spiFlashWriteNextPg(u8* pBuf, u32 sz, u32 offset) {
     u32 addr;
-    u8 ret = 0;
-    u8 pdBad = 1;
+    u8  ret = 0;
+    u8  pdBad = 1;
     u32 numPage;
 
     osMutexWait(mutexSpiFlashHandle, 60000);
@@ -184,23 +182,24 @@ u8 spiFlashWriteNextPg(u8 *pBuf, u32 sz, u32 offset) {
 
     while (pdBad) {
         D(printf("spiFlash WrPg %d\r\n", numPage));
-        if(numPage % SPIFLASH_NUM_PG_IN_SEC == 0) {
+        if (numPage % SPIFLASH_NUM_PG_IN_SEC == 0) {
             spiFlashES(numPage / SPIFLASH_NUM_PG_IN_SEC);
             if (numPgFirstES == SPIFLASH_NUM_PG_GNSS) numPgFirstES = numPage;
         }
-        if(spiFlash64.tailNumPg > numPage && 
-                (spiFlash64.tailNumPg - numPage) < SPIFLASH_NUM_PG_IN_SEC && !(numPage % SPIFLASH_NUM_PG_IN_SEC)) {
+        if (spiFlash64.tailNumPg > numPage &&
+            (spiFlash64.tailNumPg - numPage) < SPIFLASH_NUM_PG_IN_SEC && !(numPage % SPIFLASH_NUM_PG_IN_SEC)) {
             spiFlash64.tailNumPg = (spiFlash64.tailNumPg + (SPIFLASH_NUM_PG_IN_SEC - (spiFlash64.tailNumPg % SPIFLASH_NUM_PG_IN_SEC)) + 1) % SPIFLASH_NUM_PG_GNSS;
             ret = 1;
         }
 
         if ((pdBad = spiFlashIsPgBad(numPage)) == 1) {
             D(printf("ERROR: bad page %d\r\n", numPage));
+            bkte.stat.pgWrBad++;
             numPage = (numPage + 1) % SPIFLASH_NUM_PG_GNSS;
         }
     }
-    
-    if((offset + sz) > spiFlash64.pgSz)
+
+    if ((offset + sz) > spiFlash64.pgSz)
         sz = spiFlash64.pgSz - offset;
 
     addr = (numPage * spiFlash64.pgSz) + offset;
@@ -211,9 +210,9 @@ u8 spiFlashWriteNextPg(u8 *pBuf, u32 sz, u32 offset) {
     return ret;
 }
 
-u8 spiFlashReadLastPg(u8 *pBuf, u32 sz, u32 offset) {
+u8 spiFlashReadLastPg(u8* pBuf, u32 sz, u32 offset) {
     u32 addr;
-    u8 len, pdBad = 1;
+    u8  len, pdBad = 1;
     u32 numPage;
 
     osMutexWait(mutexSpiFlashHandle, 60000);
@@ -228,16 +227,17 @@ u8 spiFlashReadLastPg(u8 *pBuf, u32 sz, u32 offset) {
 
         if ((pdBad = spiFlashIsPgBad(numPage)) == 1) {
             D(printf("ERROR: bad page %d\r\n", numPage));
+            bkte.stat.pgRdBad++;
             numPage = (numPage + 1) % SPIFLASH_NUM_PG_GNSS;
         }
     }
 
-    if((offset + sz) > spiFlash64.pgSz)
+    if ((offset + sz) > spiFlash64.pgSz)
         sz = spiFlash64.pgSz - offset;
 
     addr = (numPage * spiFlash64.pgSz) + offset;
     spiFlashRdPg(pBuf, sz, addr);
-    
+
     len = isDataFromFlashOk(pBuf, 256);
     if (len == 0) {
         D(printf("ERROR: bad crc isDataFromFlashOk()\r\n"));
@@ -246,35 +246,35 @@ u8 spiFlashReadLastPg(u8 *pBuf, u32 sz, u32 offset) {
         }
     }
     spiFlash64.tailNumPg = (numPage + 1) % SPIFLASH_NUM_PG_GNSS;
-    
+
     osMutexRelease(mutexSpiFlashHandle);
 
     return len;
 }
 
-int getDelayPages() {
-    u32 numPage;
-    int delayPages, delayGoodPages;
+u16 getDelayPages() {
+    u16 numPage;
+    u16 delayPages, delayGoodPages;
+    osMutexWait(mutexSpiFlashHandle, 60000);
 
-    delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? 
-                spiFlash64.headNumPg - spiFlash64.tailNumPg :
-                spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
+    delayPages = spiFlash64.headNumPg >= spiFlash64.tailNumPg ? spiFlash64.headNumPg - spiFlash64.tailNumPg : spiFlash64.headNumPg + (SPIFLASH_NUM_PG_GNSS - spiFlash64.tailNumPg);
     delayGoodPages = delayPages;
 
     numPage = spiFlash64.tailNumPg;
-    for (u8 i = 0; i < delayPages; ++i) {
+    for (u16 i = 0; i < delayPages || i < SPIFLASH_NUM_PG_GNSS; ++i) {
         if (spiFlashIsPgBad(numPage)) {
             delayGoodPages--;
         }
         numPage = (numPage + 1) % SPIFLASH_NUM_PG_GNSS;
     }
-    
+    osMutexRelease(mutexSpiFlashHandle);
+
     return delayGoodPages;
 }
 
 void spiFlashSaveInfo() {
     u32 addr;
-    u8 buf[32];
+    u8  buf[32];
 
     spiFlashWriteMap();
 
@@ -299,31 +299,30 @@ void spiFlashSaveInfo() {
 }
 
 void spiFlashLoadInfo(u8* buf) {
-    u8 isMapInFlash;
+    u8  isMapInFlash;
     u32 tmp;
     u32 addr;
 
     addr = (BKTE_SAVE_NUM_PAGE * spiFlash64.pgSz);
     spiFlashRdPg(buf, 256, addr);
-    
+
     bkte.lastData.enAct = buf[16] | buf[17] << 8 | buf[18] << 16 | buf[19] << 24;
     bkte.lastData.enReact = buf[20] | buf[21] << 8 | buf[22] << 16 | buf[23] << 24;
     if (bkte.lastData.enAct >= 0xA0000000) bkte.lastData.enAct = 0;
     if (bkte.lastData.enReact >= 0xA0000000) bkte.lastData.enReact = 0;
     D(printf("Read energy: act %d, react %d\r\n", bkte.lastData.enAct, bkte.lastData.enReact));
-    
+
     tmp = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
     spiFlash64.headNumPg = tmp;
     D(printf("Read headNumPg: %d\r\n", spiFlash64.headNumPg));
-    
+
     tmp = buf[4] | buf[5] << 8 | buf[6] << 16 | buf[7] << 24;
     spiFlash64.tailNumPg = tmp;
     D(printf("Read tailNumPg: %d\r\n", spiFlash64.tailNumPg));
 
     isMapInFlash = buf[31];
 
-    if (spiFlash64.headNumPg > SPIFLASH_NUM_PG_GNSS 
-          || spiFlash64.tailNumPg > SPIFLASH_NUM_PG_GNSS) {
+    if (spiFlash64.headNumPg > SPIFLASH_NUM_PG_GNSS || spiFlash64.tailNumPg > SPIFLASH_NUM_PG_GNSS) {
         spiFlash64.headNumPg = 0;
         spiFlash64.tailNumPg = spiFlash64.headNumPg;
         osMutexWait(mutexSpiFlashHandle, 60000);
@@ -343,7 +342,7 @@ void spiFlashLoadInfo(u8* buf) {
 
 void spiFlashWriteMap() {
     u32 addr;
-    u8 *pMap = (u8*)badPgMap;
+    u8* pMap = (u8*)badPgMap;
     u16 curNumPg = BKTE_BAD_PG_MAP_NUM_PAGE;
 
     osMutexWait(mutexSpiFlashHandle, 60000);
@@ -363,7 +362,7 @@ void spiFlashWriteMap() {
 
 void spiFlashReadMap() {
     u32 addr;
-    u8 *pMap = (u8*)badPgMap;
+    u8* pMap = (u8*)badPgMap;
     u16 curNumPg = BKTE_BAD_PG_MAP_NUM_PAGE;
 
     osMutexWait(mutexSpiFlashHandle, 60000);

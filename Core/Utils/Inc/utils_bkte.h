@@ -25,7 +25,7 @@
 #define BKTE_ID_TRAINCAR_MAX 2
 #define BKTE_IS_LORA_MASTER  1
 
-#define BKTE_ID_FIRMWARE 4
+#define BKTE_ID_FIRMWARE 5
 #define BKTE_ID_BOOT     2
 #define BKTE_ID_PCB      3
 #define BKTE_ID_TRAIN    1706
@@ -126,6 +126,20 @@ typedef union {
 } HardWareStatus;
 
 typedef struct {
+    u32 cr_web;
+    // u32 cr_web_err;
+    u32 enrg;
+    u32 new_bin;
+    u32 temp;
+    u32 alive;
+    u32 web_exchng;
+    u32 wireless;
+
+    u32 pgWrBad;
+    u32 pgRdBad;
+} task_stat_t;
+
+typedef struct {
     u8             isOwActive[BKTE_MAX_CNT_1WIRE];
     u32            idMCU[3];
     HardWareStatus hwStat;
@@ -139,6 +153,7 @@ typedef struct {
     u32            szNewFirmware;
     u8             isSpiFlashReady;
     LastData       lastData;
+    task_stat_t    stat;
     //	FInfo	fInfo[NUM_READ_FILES];
 } BKTE;
 
@@ -147,32 +162,10 @@ typedef enum { NUM_FILE_ENERGY = 0,
                NUM_FILE_RSSI } NUM_FILE;
 
 typedef enum {
-    TEL_OFF_DEV = 0x0010,
-    TEL_ON_DEV = 0x0001,
-    TEL_KEEP_ALIVE = 0x0013,
-    TEL_ID_FIRMWARE = 0x1001,
-    TEL_CHANGE_TIME = 0x1011,
-    TEL_BIG_DIFFER_RTC_SERVERTIME = 0x1030,
-    TEL_SERV_FLASH_CIRC_BUF_FULL = 0x2001,
-    TEL_SERV_FLASH_CIRC_BUF_END_HEAD = 0x2002,
-    TEL_SERV_FLASH_CIRC_BUF_END_TAIL = 0x2003,
-    TEL_SERV_FLASH_CIRC_BUF_HALF_HEAD = 0x2004,
-    TEL_SERV_FLASH_CIRC_BUF_HALF_TAIL = 0x2005,
-    TEL_BAD_RESPONSE_SERVER = 0x2006,
-    TEL_BAD_RTC_TIME = 0x2007,
-    TEL_BAD_ALL_CRC = 0x2008,
-    TEL_LORA_LINK_EDGE = 0x2020,
-    TEL_LORA_LINK_MASTER = 0x2021,
-    TEL_LORA_FLAGS = 0x2022,
-    TEL_LORA_BAD_CRC = 0x2023,
-    TEL_NO_FATFS = 2030,
-    TEL_NO_DS2482 = 2031,
-    TEL_PERIPH_STAT = 2032,
-    TEL_LVL_CSQ = 0x7010
-} TYPE_TELEMETRY;
-
-typedef enum { TEL_GR_GENINF = 1,
-               TEL_GR_HARDWARE_STATUS } TELEMETRY_GROUP;
+    TEL_GR_GENINF = 1,
+    TEL_GR_HARDWARE_STATUS,
+    TEL_GR_TASK_STAT
+} TELEMETRY_GROUP;
 
 typedef enum {
     TEL_CD_GENINF_NUM_FIRMWARE = 1,
@@ -196,6 +189,17 @@ typedef enum {
     TEL_CD_HW_UPDATE_LEN,
     TEL_CD_HW_UPDATE_ERR
 } TELEMETRY_CODE_STATES;
+
+typedef enum {
+    TEL_CD_TASK_CR_WEB = 1,
+    TEL_CD_TASK_ENERGY,
+    TEL_CD_TASK_NEW_BIN,
+    TEL_CD_TASK_TEMP,
+    TEL_CD_TASK_ALIVE,
+    TEL_CD_TASK_WEB_EXCHANGE,
+    TEL_CD_TASK_WIRELESS,
+    TEL_CD_TASK_CR_WEB_ERR
+} TELEMETRY_CODE_TASK_STAT;
 
 typedef enum {
     CMD_DATA_VOLTAMPER = 1,

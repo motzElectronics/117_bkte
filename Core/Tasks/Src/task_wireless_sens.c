@@ -7,7 +7,7 @@ extern u16 iwdgTaskReg;
 extern osThreadId wirelessSensHandle;
 char              bufSens[USART_SZ_BUF_RX_USART2];
 CircularBuffer    circBufWirelessSens = {.buf = NULL, .max = 0};
-// static u16 lenData, lenAllPckg;
+
 static PckgTemp       pckgTempWireless;
 static PckgTelemetry  pckgTelWireless;
 extern CircularBuffer circBufAllPckgs;
@@ -20,11 +20,13 @@ void taskWirelessSens(void const* argument) {
     USART_RE2_READ_EN();
     for (;;) {
         iwdgTaskReg |= IWDG_TASK_REG_WIRELESS;
+        bkte.stat.wireless++;
         uInfoWirelessSens.irqFlags.isIrqIdle = 0;
         memset(bufSens, '\0', USART_SZ_BUF_RX_USART2);
         // read data from cBuf
         while (!waitIdle("", &uInfoWirelessSens.irqFlags, 1, 30000)) {
             D(printf("ERROR: NO WIRELESS SENS\r\n"));
+            bkte.stat.wireless++;
             iwdgTaskReg |= IWDG_TASK_REG_WIRELESS;
             continue;
         }

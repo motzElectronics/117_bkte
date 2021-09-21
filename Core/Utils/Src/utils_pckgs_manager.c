@@ -2,11 +2,11 @@
 
 #include "../Utils/Inc/utils_bkte.h"
 
-WebPckg webPckgs[CNT_WEBPCKGS + 1];
-static u16 webPream = BKTE_PREAMBLE;
-static u8 endBytes[] = {0x0D, 0x0A};  // reverse order
+WebPckg             webPckgs[CNT_WEBPCKGS + 1];
+static u16          webPream = BKTE_PREAMBLE;
+static u8           endBytes[] = {0x0D, 0x0A};  // reverse order
 extern osMessageQId queueWebPckgHandle;
-extern osMutexId mutexWebHandle;
+extern osMutexId    mutexWebHandle;
 
 void addInfo(WebPckg* pPckg, u8* src, u16 sz) {
     memcpy(&pPckg->buf[pPckg->shift], src, sz);
@@ -111,7 +111,7 @@ void waitAnswServer(u8 req) {
 }
 
 WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq) {
-    u8 req[10];
+    u8       req[10];
     WebPckg* curPckg;
     req[0] = CMD_REQ;
     req[1] = 1;
@@ -128,11 +128,11 @@ WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq) {
 
 ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq) {
     ErrorStatus ret = SUCCESS;
-    WebPckg* curPckg;
-    u8 statSend;
-    u8 cnt = 0;
-    u8 req[128];
-    
+    WebPckg*    curPckg;
+    u8          statSend;
+    u8          cnt = 0;
+    u8          req[128];
+
     req[0] = CMD_DATA;
     req[1] = szReq;
     curPckg = getFreePckg();
@@ -145,7 +145,7 @@ ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq) {
     showWebPckg(curPckg);
 
     osMutexWait(mutexWebHandle, osWaitForever);
-   while ((statSend = sendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && cnt < 5) {
+    while ((statSend = sendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && cnt < 3) {
         D(printf("ERROR: sendWebPckgData %d\r\n", cnt));
         cnt++;
     }
@@ -160,10 +160,10 @@ ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq) {
 
 ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u16 szAnsw) {
     ErrorStatus ret = SUCCESS;
-    WebPckg* curPckg;
-    u8 statSend;
-    u8 cnt = 0;
-    u8 req[10];
+    WebPckg*    curPckg;
+    u8          statSend;
+    u8          cnt = 0;
+    u8          req[10];
 
     req[0] = CMD_REQ;
     req[1] = 1;
@@ -177,7 +177,7 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
         showWebPckg(curPckg);
 
         osMutexWait(mutexWebHandle, osWaitForever);
-        while ((statSend = sendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && cnt < 5) {
+        while ((statSend = sendTcp(curPckg->buf, curPckg->shift)) != TCP_OK && cnt < 3) {
             D(printf("ERROR: generateWebPckgReq %d\r\n", cnt));
             cnt++;
         }
@@ -185,7 +185,7 @@ ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, 
         if (statSend != TCP_OK) {
             ret = ERROR;
         } else if (uInfoSim.pRxBuf[11] == '\0' && uInfoSim.pRxBuf[12] == '\0' &&
-                 uInfoSim.pRxBuf[13] == '\0' && uInfoSim.pRxBuf[14] == '\0') {
+                   uInfoSim.pRxBuf[13] == '\0' && uInfoSim.pRxBuf[14] == '\0') {
             uInfoSim.irqFlags.isIrqIdle = 0;
             if (waitIdle("wait req answ", &(uInfoSim.irqFlags), 10, 10000)) {
                 memcpy(answ, &uInfoSim.pRxBuf[11], szAnsw);

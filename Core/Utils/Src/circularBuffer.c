@@ -7,10 +7,6 @@
 
 #include "../Utils/Inc/circularBuffer.h"
 
-// u8 circularBuffer[SZ_CIRCULAR_BUF] = {0};
-
-// CircularBuffer dmaBuffer;
-
 void cBufInit(CircularBuffer* cbuf, u8* buf, u16 szBuf, CircTypeBuf type) {
     cbuf->buf = buf;
     cbuf->max = szBuf;
@@ -28,21 +24,6 @@ void cBufReset(CBufHandle cbuf) {
     cbuf->curLenMsg = 0;
     memset(cbuf->buf, '\0', cbuf->max);
 }
-
-// u8 cBufIsEmpty(CBufHandle cbuf){
-//	return (!cbuf->isFull && (cbuf->head == cbuf->tail));
-//}
-
-// u8 cBufGetQuantity(CBufHandle cbuf){
-//
-//	u8 sz = cbuf->max;
-//	if(!cbuf->isFull){
-//		sz = cbuf->head >= cbuf->tail ? cbuf->head - cbuf->tail :
-//cbuf->max + cbuf->head - cbuf->tail;
-//	}
-//
-//	return sz;
-//}
 
 void cBufWriteToBuf(CBufHandle cbuf, u8* data, u8 sz) {
     if (cbuf->writeAvailable > sz) {
@@ -68,23 +49,6 @@ void cBufSafeWrite(CBufHandle cbuf, u8* data, u8 sz, osMutexId mutex, TickType_t
     cBufWriteToBuf(cbuf, data, sz);
     osMutexRelease(mutex);
 }
-
-// u8 cBufRead(CBufHandle cbuf, u8* dist, u8 sz){
-//	while( cbuf->head != cbuf->tail){
-//		if(cbuf->buf[cbuf->tail] == HEADER_BYTE1 && cbuf->buf[(cbuf->tail
-//+ 1) % cbuf->max] == HEADER_BYTE2){ 			cbuf->buf[cbuf->tail] = 0;
-//			cbuf->buf[(cbuf->tail + 1) % cbuf->max] = 0;
-//			cbuf->tail = (cbuf->tail + 2) % cbuf->max;
-//
-//			copyGetDatafromBuf(cbuf, dist, sz);
-//			return 1;
-//		}
-//		(++(cbuf->tail)) % cbuf->max;
-//	}
-//	memset(cbuf->buf, 0, cbuf->max);
-//	cBufReset(cbuf);
-//	return 0;
-//}
 
 u16 cBufRead(CBufHandle cbuf, u8* dist, u8 sz) {
     u16 lenMsg;
@@ -138,7 +102,7 @@ void copyGetDatafromBuf(CBufHandle cbuf, u8* dist, u16 sz, CircTypeBuf type) {
         memcpy(dist, cbuf->buf + cbuf->tail, sz);
         memset(cbuf->buf + cbuf->tail, '\0', sz);
     }
-    
+
     if (type == CIRC_TYPE_SIM_UART) {
         cbuf->tail = (cbuf->tail + sz + CIRC_LEN_ENDS) % cbuf->max;
         cbuf->writeAvailable += CIRC_LEN_ENDS;
@@ -216,7 +180,7 @@ u16 getLenMsgWirelessSens(CircularBuffer* cbuf) {
 
     lenData = cbuf->buf[(tail + 3) % cbuf->max] << 8 | cbuf->buf[(tail + 2) % cbuf->max];
     lenFull = lenData + 6;
-    
+
     if (tail == 195) {
         tail = cbuf->tail;
     }

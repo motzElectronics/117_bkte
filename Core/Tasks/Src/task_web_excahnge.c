@@ -1,24 +1,25 @@
-#include "../Tasks/Inc/task_web_exchange.h"
 #include "../Tasks/Inc/task_iwdg.h"
+#include "../Tasks/Inc/task_web_exchange.h"
 
 extern u16 iwdgTaskReg;
 
-extern osThreadId webExchangeHandle;
-extern osThreadId createWebPckgHandle;
-extern osThreadId createWebPckgHandle;
-extern osMutexId mutexWebHandle;
+extern osThreadId   webExchangeHandle;
+extern osThreadId   createWebPckgHandle;
+extern osThreadId   createWebPckgHandle;
+extern osMutexId    mutexWebHandle;
 extern osMessageQId queueWebPckgHandle;
 
 static WebPckg* curPckg = NULL;
 
 void taskWebExchange(void const* argument) {
-    u8 statSend = TCP_OK;
+    u8  statSend = TCP_OK;
     u32 order_num = 0;
     offAllLeds();
     vTaskSuspend(webExchangeHandle);
 
     for (;;) {
         iwdgTaskReg |= IWDG_TASK_REG_WEB_EXCH;
+        bkte.stat.web_exchng++;
         if (bkte.isTCPOpen == 0) {
             osMutexWait(mutexWebHandle, osWaitForever);
             openTcp();

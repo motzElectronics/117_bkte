@@ -1,19 +1,20 @@
 #include "../Tasks/Inc/task_get_temp.h"
+
 #include "../Tasks/Inc/task_iwdg.h"
 
 extern u16 iwdgTaskReg;
 
-extern osThreadId getTempHandle;
-extern osMutexId mutexWriteToEnergyBufHandle;
+extern osThreadId     getTempHandle;
+extern osMutexId      mutexWriteToEnergyBufHandle;
 extern CircularBuffer circBufAllPckgs;
-static PckgTemp pckgTemp;
-static s8 temps[BKTE_MAX_CNT_1WIRE];
-u32 testTimestamp, tmpTime;
+static PckgTemp       pckgTemp;
+static s8             temps[BKTE_MAX_CNT_1WIRE];
+u32                   testTimestamp, tmpTime;
 
 u8 readTemp();
 u8 isTemperatureFresh(PckgTemp *pckg);
 
-void taskGetTemp(void const* argument) {
+void taskGetTemp(void const *argument) {
     u8 numIteration = 0;
     ds2482Init();
     vTaskSuspend(getTempHandle);
@@ -24,6 +25,7 @@ void taskGetTemp(void const* argument) {
 
     for (;;) {
         iwdgTaskReg |= IWDG_TASK_REG_TEMP;
+        bkte.stat.temp++;
         testTimestamp = HAL_GetTick();
 
         if (readTemp() == 0) {
@@ -38,7 +40,7 @@ void taskGetTemp(void const* argument) {
         osDelay(52);
         fillPckgTemp(&pckgTemp, temps);
         if (isTemperatureFresh(&pckgTemp) || !numIteration) {
-            saveData((u8*)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
+            saveData((u8 *)&pckgTemp, SZ_CMD_TEMP, CMD_DATA_TEMP, &circBufAllPckgs);
             D(printf("OK: TEMP |%d %d %d %d| %d\r\n", temps[0], temps[1], temps[2], temps[3], tmpTime));
         }
         numIteration = (numIteration + 1) % BKTE_MEASURE_FULL_LOOP;

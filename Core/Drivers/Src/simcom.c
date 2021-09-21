@@ -19,9 +19,9 @@ u8 isJson = 1;
 void simInit() {
     char* retMsg;
     char* token;
-    u8 fail = 0;
-    u8 simBadAnsw = 0;
-    u8 isInit = 0;
+    u8    fail = 0;
+    u8    simBadAnsw = 0;
+    u8    isInit = 0;
 
     bkte.isTCPOpen = 0;
 
@@ -130,7 +130,7 @@ char* simDownloadData(char* data, u16 sz) {
 }
 
 u8 simCheckCSQ() {
-    u8 csq = 0;
+    u8    csq = 0;
     char* retMsg;
     char* token;
 
@@ -237,7 +237,7 @@ u8 simTCPinit() {
 
 u8 simTCPOpen() {
     static char params[40];
-    char* token;
+    char*       token;
     memset(params, '\0', 40);
     sprintf(params, "\"%s\",\"%s\",%d", (char*)"TCP", urls.tcpAddr, urls.tcpPort);
     if (simCmd(SIM_CIPSTART, params, 3, SIM_OK_TEXT) == SIM_FAIL) {
@@ -263,8 +263,8 @@ u8 simTCPOpen() {
 
 u8 simTCPSend(u8* data, u16 sz) {
     static char params[8];
-    char* token;
-    char* retMsg;
+    char*       token;
+    char*       retMsg;
 
     u32 ttt = HAL_GetTick();
 
@@ -324,12 +324,12 @@ u8 procReturnStatus(u8 ret) {
 
     if (ret == TCP_SEND_ER) {
         D(printf("TCP_SEND_ER %d!\r\n\r\n", notSend));
-        if (notSend == 5) {
-            D(printf("UNABLE TO SEND 5!\r\n"));
-            simReset();
-            ret = TCP_SEND_ER_LOST_PCKG;
-            notSend = 0;
-        }
+        //if (notSend == 5) {
+        //    D(printf("UNABLE TO SEND 5!\r\n"));
+        simReset();
+        ret = TCP_SEND_ER_LOST_PCKG;
+        notSend = 0;
+        //}
     } else if (ret == TCP_CONNECT_ER) {
         HAL_GPIO_WritePin(BAT_PWR_EN_GPIO_Port, BAT_PWR_EN_Pin, GPIO_PIN_RESET);  // OFF
         osDelay(1000);

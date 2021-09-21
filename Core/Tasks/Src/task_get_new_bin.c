@@ -1,9 +1,9 @@
 #include "../Tasks/Inc/task_get_new_bin.h"
-#include "../Tasks/Inc/task_keep_alive.h"
-#include "../Utils/Inc/utils_pckgs_manager.h"
-#include "../Utils/Inc/utils_crc.h"
-#include "../Tasks/Inc/task_iwdg.h"
 
+#include "../Tasks/Inc/task_iwdg.h"
+#include "../Tasks/Inc/task_keep_alive.h"
+#include "../Utils/Inc/utils_crc.h"
+#include "../Utils/Inc/utils_pckgs_manager.h"
 
 extern u16 iwdgTaskReg;
 
@@ -12,30 +12,29 @@ extern osThreadId webExchangeHandle;
 extern osThreadId getTempHandle;
 extern osThreadId getNewBinHandle;
 extern osThreadId keepAliveHandle;
-// extern osThreadId loraHandle;
 extern osThreadId createWebPckgHandle;
 extern osThreadId wirelessSensHandle;
-extern osTimerId timerPowerOffHandle;
-extern osMutexId mutexWriteToEnergyBufHandle;
-extern osMutexId mutexWebHandle;
-extern osMutexId mutexRTCHandle;
-extern osMutexId mutexSDHandle;
-extern osMutexId mutexSpiFlashHandle;
+extern osTimerId  timerPowerOffHandle;
+extern osMutexId  mutexWriteToEnergyBufHandle;
+extern osMutexId  mutexWebHandle;
+extern osMutexId  mutexRTCHandle;
+extern osMutexId  mutexSDHandle;
+extern osMutexId  mutexSpiFlashHandle;
 
 extern CircularBuffer circBufAllPckgs;
 
-u8 isRxNewFirmware = 0;
-static u8 bufNumBytesFirmware[8];
+u8                     isRxNewFirmware = 0;
+static u8              bufNumBytesFirmware[8];
 static PckgUpdFirmware pckgInfoFirmware;
-static u8 partNewFW[SZ_PART_FIRMW + 1];
-static u32 flashAddrFirmware = FLASH_ADDR_BUF_NEW_FIRMWARE;
-static u32 szNewFW = 0;
-static u32 crcNewFW;
+static u8              partNewFW[SZ_PART_FIRMW + 1];
+static u32             flashAddrFirmware = FLASH_ADDR_BUF_NEW_FIRMWARE;
+static u32             szNewFW = 0;
+static u32             crcNewFW;
 
 void taskGetNewBin(void const* argument) {
     u32 curSzSoft = 0;
     u32 szPartSoft;
-    u8 cntFailTCPReq = 0;
+    u8  cntFailTCPReq = 0;
 
     FLASH_Erase_Sector(FLASH_SECTOR_3, VOLTAGE_RANGE_3);
 
@@ -46,7 +45,8 @@ void taskGetNewBin(void const* argument) {
     bkte.isTCPOpen = 0;
     osTimerStop(timerPowerOffHandle);
 
-    while (!(szNewFW = getSzFirmware()));
+    while (!(szNewFW = getSzFirmware()))
+        ;
     bkte.szNewFirmware = szNewFW;
     if (sendMsgFWUpdateBegin() != SUCCESS) {
         D(printf("ERROR: Send FW UPDATED\r\n"));
@@ -59,6 +59,7 @@ void taskGetNewBin(void const* argument) {
 
     for (;;) {
         iwdgTaskReg |= IWDG_TASK_REG_NEW_BIN;
+        bkte.stat.new_bin++;
         if (szNewFW != curSzSoft) {
             if (szNewFW - curSzSoft > SZ_PART_FIRMW) {
                 szPartSoft = SZ_PART_FIRMW;
@@ -72,12 +73,12 @@ void taskGetNewBin(void const* argument) {
             memset(partNewFW, 0xFF, SZ_PART_FIRMW + 1);
 
             if (!bkte.isTCPOpen) {
-                while (openTcp() != TCP_OK);
+                while (openTcp() != TCP_OK) {}
                 cntFailTCPReq = 0;
             }
 
             if (getPartFirmware(bufNumBytesFirmware, partNewFW, szPartSoft + 4, 8) == SUCCESS &&
-                    isCrcOk(partNewFW, szPartSoft)) {
+                isCrcOk(partNewFW, szPartSoft)) {
                 crc32_chank(&crcNewFW, partNewFW, szPartSoft);
                 // D(printf("crcNewFW 0x%08x\r\n", crcNewFW));
                 curSzSoft += szPartSoft;
@@ -102,7 +103,7 @@ void taskGetNewBin(void const* argument) {
             spiFlashSaveInfo();
             osDelay(1000);
             bkte.isTCPOpen = 0;
-            
+
             if (sendMsgFWUpdated() != SUCCESS) {
                 D(printf("ERROR: Send FW UPDATED\r\n"));
             }
@@ -139,7 +140,7 @@ void updBootInfo() {
 
     while (HAL_FLASH_Lock() != HAL_OK) D(printf("ERROR: HAL_FLASH_Lock()\r\n"));
     D(printf("BOOT_ID: %d\r\n", (int)getFlashData(FLASH_ADDR_ID_BOOT)));
-    D(printf("IS_NEW_FIRMARE: %d\r\n",(int)getFlashData(FLASH_ADDR_IS_NEW_FIRMWARE)));
+    D(printf("IS_NEW_FIRMARE: %d\r\n", (int)getFlashData(FLASH_ADDR_IS_NEW_FIRMWARE)));
 }
 
 void lockAllTasks() {
@@ -162,7 +163,6 @@ void lockAllTasks() {
     osMutexRelease(mutexSpiFlashHandle);
     osMutexRelease(mutexSDHandle);
     osMutexRelease(mutexWebHandle);
-    
 }
 
 u32 getSzFirmware() {
@@ -179,7 +179,7 @@ u32 getSzFirmware() {
 }
 
 ErrorStatus getPartFirmware(u8* reqData, u8* answBuf, u16 szAnsw, u8 szReq) {
-    WebPckg* curPckg;
+    WebPckg*    curPckg;
     ErrorStatus ret = SUCCESS;
     curPckg = createWebPckgReq(CMD_REQUEST_PART_FIRMWARE, reqData, szReq, SZ_REQUEST_GET_PART_FIRMWARE);
     osMutexWait(mutexWebHandle, osWaitForever);

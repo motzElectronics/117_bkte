@@ -1,4 +1,5 @@
 #include "../Tasks/Inc/task_iwdg.h"
+
 #include "../Drivers/Inc/spiflash.h"
 
 extern u8 isRxNewFirmware;
@@ -11,8 +12,8 @@ void taskManageIWDG(void const* argument) {
     iwdgErrCount = 0;
 
     for (;;) {
-        if ((isRxNewFirmware && (iwdgTaskReg & IWDG_TASK_REG_NEW_BIN) == IWDG_TASK_REG_NEW_BIN) || 
-               (!isRxNewFirmware && (iwdgTaskReg & IWDG_TASK_REG_ALL) == IWDG_TASK_REG_ALL)) {
+        if ((isRxNewFirmware && (iwdgTaskReg & IWDG_TASK_REG_NEW_BIN) == IWDG_TASK_REG_NEW_BIN) ||
+            (!isRxNewFirmware && (iwdgTaskReg & IWDG_TASK_REG_ALL) == IWDG_TASK_REG_ALL)) {
             iwdgTaskReg = 0;
             iwdgErrCount = 0;
         } else {
