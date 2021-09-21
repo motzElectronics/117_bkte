@@ -281,9 +281,6 @@ ErrorStatus sendMsgTaskStat() {
     pckgTel.code = TEL_CD_TASK_WIRELESS;
     pckgTel.data = bkte.stat.wireless;
     copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
-    pckgTel.code = TEL_CD_TASK_CR_WEB_ERR;
-    pckgTel.data = bkte.stat.cr_web_err;
-    copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
     pckgTel.code = 8;
     pckgTel.data = bkte.stat.pgWrBad;
     copyTelemetry(&bufTxData[SZ_CMD_TELEMETRY * ptr++], &pckgTel);
