@@ -117,7 +117,7 @@ void taskGetNewBin(void const* argument) {
 void updBootInfo() {
     u8 diff = 4 - (szNewFW % 4);
     szNewFW = szNewFW % 4 == 0 ? szNewFW : ((szNewFW / 4) + 1) * 4;
-    if (diff != 0) {
+    if (diff > 0 && diff < 4) {
         memset(partNewFW, 0xFF, diff);
         crc32_chank(&crcNewFW, partNewFW, diff);
         // szNewFW += diff;
