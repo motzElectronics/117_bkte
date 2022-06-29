@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    stm32f4xx_it.c
-  * @brief   Interrupt Service Routines.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    stm32f4xx_it.c
+ * @brief   Interrupt Service Routines.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under Ultimate Liberty license
+ * SLA0044, the "License"; You may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at:
+ *                             www.st.com/SLA0044
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -32,7 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -53,6 +53,7 @@
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 #include "../Drivers/Inc/simcom.h"
+#include "../Tasks/Inc/task_wireless_sens.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -75,7 +76,6 @@ extern UART_HandleTypeDef huart6;
 extern TIM_HandleTypeDef htim1;
 
 /* USER CODE BEGIN EV */
-
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -334,17 +334,17 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-
+    u16 cnt;
+    u16 lenData, lenAllPckg;
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
     if ((__HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE) != RESET) &&
-		  (__HAL_UART_GET_IT_SOURCE(&huart2, UART_IT_IDLE) != RESET)){
-	  uInfoWirelessSens.irqFlags.isIrqIdle += 1;
-//	  printf("INTERRUPT: IDLE\r\n");
-  }
-
-  __HAL_UART_CLEAR_PEFLAG(&huart2);
+        (__HAL_UART_GET_IT_SOURCE(&huart2, UART_IT_IDLE) != RESET)) {
+        uInfoWirelessSens.irqFlags.isIrqIdle = 1;
+        
+        __HAL_UART_CLEAR_IDLEFLAG(&huart2);
+    }
   /* USER CODE END USART2_IRQn 1 */
 }
 
@@ -458,12 +458,11 @@ void USART6_IRQHandler(void)
   /* USER CODE BEGIN USART6_IRQn 1 */
 
     if ((__HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE) != RESET) &&
-		  (__HAL_UART_GET_IT_SOURCE(&huart6, UART_IT_IDLE) != RESET)){
-	  uInfoSim.irqFlags.isIrqIdle += 1;
-//	  printf("INTERRUPT: IDLE\r\n");
-  }
+        (__HAL_UART_GET_IT_SOURCE(&huart6, UART_IT_IDLE) != RESET)) {
+        uInfoSim.irqFlags.isIrqIdle += 1;
+    }
 
-  __HAL_UART_CLEAR_PEFLAG(&huart6);
+    __HAL_UART_CLEAR_PEFLAG(&huart6);
   /* USER CODE END USART6_IRQn 1 */
 }
 

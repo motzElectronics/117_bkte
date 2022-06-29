@@ -59,11 +59,11 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, USART2_RE_Pin|SPI1_CS_LORA_Pin|UART1_RE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, ONEWIRE_3_EN_Pin|ONEWIRE_2_EN_Pin|ONEWIRE_4_EN_Pin|ONEWIRE_1_EN_Pin
-                          |LED2G_Pin|LED1R_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, MEM_HOLD_Pin|RF_PWR_Pin|SPI2_CS_MEM_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, RF_PWR_Pin|SPI2_CS_MEM_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, ONEWIRE_3_EN_Pin|ONEWIRE_2_EN_Pin|ONEWIRE_4_EN_Pin|ONEWIRE_1_EN_Pin
+                          |LED2G_Pin|LED1R_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GSM_PWRKEY_Pin|SD_PWR_EN_Pin|LED1G_Pin|LED3G_Pin
@@ -101,6 +101,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PWR_STATE_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PBPin PBPin PBPin */
+  GPIO_InitStruct.Pin = MEM_HOLD_Pin|RF_PWR_Pin|SPI2_CS_MEM_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PEPin PEPin PEPin PEPin
                            PEPin PEPin */
   GPIO_InitStruct.Pin = ONEWIRE_3_EN_Pin|ONEWIRE_2_EN_Pin|ONEWIRE_4_EN_Pin|ONEWIRE_1_EN_Pin
@@ -109,13 +116,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = RF_PWR_Pin|SPI2_CS_MEM_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PDPin PDPin PDPin PDPin
                            PDPin PDPin PDPin */

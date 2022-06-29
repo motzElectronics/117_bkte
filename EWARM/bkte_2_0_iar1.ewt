@@ -1198,9 +1198,6 @@
             <file>
                 <name>$PROJ_DIR$\..\Core\Drivers\Src\spiflash.c</name>
             </file>
-            <file>
-                <name>$PROJ_DIR$\..\Core\Drivers\Src\sx1272.c</name>
-            </file>
         </group>
         <group>
             <name>EWARM</name>
@@ -1301,9 +1298,6 @@
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\Core\Tasks\Src\task_keep_alive.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Core\Tasks\Src\task_lora.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\Core\Tasks\Src\task_web_excahnge.c</name>

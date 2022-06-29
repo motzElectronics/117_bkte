@@ -29,6 +29,8 @@ WebPckg* getFreePckg();
 WebPckg* getFreePckgReq();
 u8 getCntFreePckg();
 void freeWebPckg(WebPckg* pckg);
-ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u16 answSz);
+
 WebPckg* createWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq);
+ErrorStatus sendWebPckgData(u8 CMD_DATA, u8* data, u8 sz, u8 szReq);
+ErrorStatus generateWebPckgReq(u8 CMD_REQ, u8* data, u8 sz, u8 szReq, u8* answ, u16 answSz);
 #endif
